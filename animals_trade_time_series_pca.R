@@ -31,7 +31,7 @@ library(GPArotation) #rotation functions for PCA and EFA
 ###### Functions used in this script
 
 script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts"
-function_time_series_analyses <- "animals_trade_time_series_analyses_functions_05222017.R" #PARAM 1
+function_time_series_analyses <- "animals_trade_time_series_analyses_functions_05222017d.R" #PARAM 1
 source(file.path(script_path,function_time_series_analyses ))
 
 #####  Parameters and argument set up ###########
@@ -54,7 +54,7 @@ out_suffix <-"animals_trade_time_series_05222017" #output suffix for the files a
 #ARGS 8
 create_out_dir_param <- TRUE 
 #ARGS 9
-n_pca <- 6 #number of pca to produce 
+npc <- 6 #number of pca to produce 
 #Args 10
 produce_scores <- TRUE
 
@@ -105,76 +105,39 @@ if(is.null(n_pca)){
 
 ##### Performing PCA
   
-run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loadings=TRUE,scores_opt=TRUE){
-  #This function performs PCA with an input data or square matrix.
-  #This is to be use for smal datasets.
-    
-  #INPUTS:
-  #1) A: data matrix 
-  #2) mode: T, s mode or other mode , note that this option is not in use at this moment, use matrix_val
-  #3) rotation_opt: which option to use to rotate pc components, the default is none
-  #4) npc: number of components produced
-  #5) matrix_val: square matrix used in the computation of eigen values, vectors
-  #
-  #OUTPUTS
-  #obj_principal: object in the form of list with the following items
-  #1) pca_principal
-  #2) loadings
-  #3) scores
-  #4) data_matrix")
-  
-  #######
-    
-    
-  if(is.null(matrix_val)){
-    matrix_val <- cor(A)
-  }
-    
-  ##Cross product PCA S modes
-    
-  pca_principal_obj <-principal(r=matrix_val, #
-                                  nfactors = npc, 
-                                  residuals = FALSE, 
-                                  covar=TRUE, #use covar option...
-                                  rotate = rotation_opt,
-                                  scores=scores_opt,
-                                  oblique.scores=TRUE,
-                                  method="regression")
-    
-  principal_loadings_df <- as.data.frame(unclass(pca_principal_obj$loadings)) # extract the matrix of ??
-  #Add scores...
-  if(scores_opt==T){
-    principal_scores <- predict(pca_principal_obj,A)
-  }
-
-  ###
-  obj_principal <- list(pca_principal_obj,principal_loadings_df,principal_scores,A)
-  names(obj_principal) <- c("pca_principal","loadings","scores","data_matrix")
-  return(obj_principal)
-    
-}
-
-
-principal_pca_obj <- run_pca_fun(A=df_dat,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loadings=TRUE,scores_opt=TRUE)
+## By default we use the correlation matrix in T mode, this will be changed later on.
+#debug(run_pca_fun)
+principal_pca_obj <- run_pca_fun(A=df_dat,mode="T",rotation_opt="none",matrix_val=NULL,npc=npc,loadings=TRUE,scores_opt=TRUE)
 pca_mod <- principal_pca_obj$pca_principal
 
-## This is T-mode!!! should have option for S-mode
-#pca_mod <-principal(df_dat,nfactors=n_factors,rotate="none",covar = FALSE)
+#Save eigenvalues
+df_eigen <- data.frame(variable=names(df_dat),eigenvalue=pca_mod$values)
+df_eigen_filename <- file.path(out_dir,paste("df_eigen_",out_suffix_str,".txt",sep=""))
+write.table(df_eigen,file=df_eigen_filename,sep=",")
 
 #Save correlation matrix
+out_suffix_str <- paste0("cor_",out_suffix)
+pca_input_square_matrix_filename <- file.path(out_dir,paste("pca_input_square_matrix_",out_suffix_str,".txt",sep=""))
+write.table(principal_pca_obj$matrix_val,file=pca_input_square_matrix_filename,sep=",")
 
 #Save loadings matrix
-
-#Save eigenvalues
+pca_loadings_filename <- file.path(out_dir,paste("pca_loadings_",out_suffix,".txt",sep=""))
+write.table(principal_pca_obj$loadings,file=pca_loadings_filename,sep=",")
 
 #Save scores if produce_scores==T
+if(produce_scores==T){
+  #
+  pca_scores_filename <- file.path(out_dir,paste("pca_scores_",out_suffix,".txt",sep=""))
+  write.table(principal_pca_obj$scores,file=pca_scores_filename,sep=",")
+}
 
-
+############################
 ##### plotting of PCAs
 
+#Add option for non time series
 plot_pca_loadings_time_series(1,pca_mod=pca_mod,dates_val,out_dir=out_dir, out_suffix=out_suffix)
 
-lapply(1:10,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
+lapply(1:6,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
 
 ## Add scree plot of eigen values
 png_filename <- file.path(out_dir,paste("Figure_scree_plots_eigen_values_components_",out_suffix,".png",sep=""))
@@ -209,6 +172,9 @@ plot(pca_mod$values/sum(pca_mod$values)*100,
      xlab="components")
 
 dev.off()
+
+######## Plot in pc space
+
 
 
 ################### End of script ################
