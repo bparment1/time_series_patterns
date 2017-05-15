@@ -100,13 +100,66 @@ names_col <- as.character(df_dat_animals$country)
 ### PART II: PCA analyses #######
 
 if(is.null(n_pca)){
-  n_pca <- ncol(df_dat)
+  npc <- ncol(df_dat)
 }
 
 ##### Performing PCA
+  
+run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loadings=TRUE,scores_opt=TRUE){
+  #This function performs PCA with an input data or square matrix.
+  #This is to be use for smal datasets.
+    
+  #INPUTS:
+  #1) A: data matrix 
+  #2) mode: T, s mode or other mode , note that this option is not in use at this moment, use matrix_val
+  #3) rotation_opt: which option to use to rotate pc components, the default is none
+  #4) npc: number of components produced
+  #5) matrix_val: square matrix used in the computation of eigen values, vectors
+  #
+  #OUTPUTS
+  #obj_principal: object in the form of list with the following items
+  #1) pca_principal
+  #2) loadings
+  #3) scores
+  #4) data_matrix")
+  
+  #######
+    
+    
+  if(is.null(matrix_val)){
+    matrix_val <- cor(A)
+  }
+    
+  ##Cross product PCA S modes
+    
+  pca_principal_obj <-principal(r=matrix_val, #
+                                  nfactors = npc, 
+                                  residuals = FALSE, 
+                                  covar=TRUE, #use covar option...
+                                  rotate = rotation_opt,
+                                  scores=scores_opt,
+                                  oblique.scores=TRUE,
+                                  method="regression")
+    
+  principal_loadings_df <- as.data.frame(unclass(pca_principal_obj$loadings)) # extract the matrix of ??
+  #Add scores...
+  if(scores_opt==T){
+    principal_scores <- predict(pca_principal_obj,A)
+  }
+
+  ###
+  obj_principal <- list(pca_principal_obj,principal_loadings_df,principal_scores,A)
+  names(obj_principal) <- c("pca_principal","loadings","scores","data_matrix")
+  return(obj_principal)
+    
+}
+
+
+principal_pca_obj <- run_pca_fun(A=df_dat,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loadings=TRUE,scores_opt=TRUE)
+pca_mod <- principal_pca_obj$pca_principal
 
 ## This is T-mode!!! should have option for S-mode
-pca_mod <-principal(df_dat,nfactors=n_factors,rotate="none",covar = FALSE)
+#pca_mod <-principal(df_dat,nfactors=n_factors,rotate="none",covar = FALSE)
 
 #Save correlation matrix
 
@@ -122,64 +175,6 @@ pca_mod <-principal(df_dat,nfactors=n_factors,rotate="none",covar = FALSE)
 plot_pca_loadings_time_series(1,pca_mod=pca_mod,dates_val,out_dir=out_dir, out_suffix=out_suffix)
 
 lapply(1:10,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
-
-plot_pca_loadings_time_series <- function(i,pca_mod,dates_val,out_dir=".", out_suffix=""){
-  #This function generates loadings plots based on a pca model object from psych package in R.
-  #
-  #INPUTS
-  #1) i: component i e.g. 1
-  #2) pca_mod: pca model object from psych R package
-  #3) dates_val: list of dates matching the temporal sequence
-  #4) out_dir: output directory
-  #5) out_suffix: output suffix
-  #
-  #OUTPUTS
-  #1) png_filename: png files with plot of of pca loadings
-  #
-  #TO DO: add option for mutiple plots
-  
-  ########## BEGIN SCRIPT  ############
-  # 
-  ## Select loadings
-  
-  loadings_df <- as.data.frame(pca_mod$loadings[,i])
-  pca_loadings_dz <- zoo(loadings_df,dates_val) #create zoo object from data.frame and date sequence object
-  
-  
-  ##Figure components
-  
-  png_filename <- file.path(out_dir,paste("Figure_pc_components_",i,"_",out_suffix,".png",sep=""))
-  
-  res_pix<-960
-  col_mfrow<- 1
-  row_mfrow<- 1
-  png(filename= png_filename,
-      width=col_mfrow*res_pix,height=row_mfrow*res_pix)
-  #par(mfrow=c(1,2))
-  
-  plot(pca_loadings_dz,
-       type="b",
-       xlab="time steps",
-       ylab="PC loadings",
-       ylim=c(-1,1),
-       col="blue")
-  
-  title(paste0("Loadings for component ", i))
-  
-  names_vals <- paste0("pc",i)
-  
-  legend("topright",legend=names_vals,
-         pt.cex=0.8,cex=1.1,col=c("black"),
-         lty=c(1,1), # set legend symbol as lines
-         pch=1, #add circle symbol to line
-         lwd=c(1,1),bty="n")
-  
-  dev.off()
-  
-  return(png_filename)
-  
-}
-
 
 ## Add scree plot of eigen values
 png_filename <- file.path(out_dir,paste("Figure_scree_plots_eigen_values_components_",out_suffix,".png",sep=""))
