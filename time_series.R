@@ -95,7 +95,12 @@ plot((df_ts[,1]))
 
 ## Fourier Analysis, Wavelet etc.
 
+test<-(fft(df_ts[,1]))
+plot(test)
+View(test)
+class(fft(df_ts[,1]))
 
+plot(Re(fft(test))^2)
 
 ### Theil Sen slope slope calculation
 
@@ -114,5 +119,6 @@ formula_mblm <- as.formula(formula_str)
 mod_mblm<- mblm(formula_mblm,df_mblm)
 #can get the conf interval or significance if wanted
 plot(mod_mblm)
+
 
 ################### End of script ################
