@@ -70,7 +70,7 @@ run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loa
   #1) pca_principal
   #2) loadings
   #3) scores
-  #4) data_matrix")
+  #4) data_matrix
   
   #######
   
@@ -93,12 +93,12 @@ run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loa
   principal_loadings_df <- as.data.frame(unclass(pca_principal_obj$loadings)) # extract the matrix of ??
   #Add scores...
   if(scores_opt==T){
-    principal_scores <- predict(pca_principal_obj,A)
+    principal_scores <- as.data.frame(predict(pca_principal_obj,A))
   }
   
   ###
-  obj_principal <- list(pca_principal_obj,principal_loadings_df,principal_scores,A)
-  names(obj_principal) <- c("pca_principal","loadings","scores","data_matrix")
+  obj_principal <- list(pca_principal_obj,principal_loadings_df,principal_scores,matrix_val,A)
+  names(obj_principal) <- c("pca_principal","loadings","scores","matrix_val","data_matrix")
   return(obj_principal)
   
 }
