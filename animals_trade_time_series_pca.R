@@ -27,6 +27,7 @@ library(nlme) #mixed models and GLS
 library(forecast) #moving average, ARIMA and other tools
 library(psych) #pca/eigenvector decomposition functionalities
 library(GPArotation) #rotation functions for PCA and EFA
+library(plotrix)
 
 ###### Functions used in this script
 
@@ -174,6 +175,45 @@ plot(pca_mod$values/sum(pca_mod$values)*100,
 dev.off()
 
 ######## Plot in pc space
+
+loadings_df <- as.data.frame(pca_mod$loadings[,pcs_selected])
+#pca_loadings_dz <- zoo(loadings_df,dates_val) #create zoo object from data.frame and date sequence object
+
+pcs_selected <- c(1,2)
+
+
+png_filename <- file.path(out_dir,paste("Figure_pc_components_space_loadings",pcs_selected[1],pcs_selected[2],"_",out_suffix,".png",sep=""))
+
+res_pix<-960
+col_mfrow<- 1
+row_mfrow<- 1
+png(filename= png_filename,
+    width=col_mfrow*res_pix,height=row_mfrow*res_pix)
+#par(mfrow=c(1,2))
+
+plot(loadings_df[,1],loadings_df[,2],
+     type="p",
+     pch = 20,
+     col ="blue",
+     xlab=names(loadings_df)[1],
+     ylab=names(loadings_df)[2],
+     ylim=c(-1,1),
+     xlim=c(-1,1),
+     axes = FALSE,
+     cex.lab = 1.2)
+axis(1, at=c(-1,-0.8,-0.6,-0.4,-0.2,0,0.2,0.4,0.6,0.8,1),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
+axis(2, las=1,at=c(-1,-0.8,-0.6,-0.4,-0.2,0,0.2,0.4,0.6,0.8,1),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
+
+box()    #This draws a box...
+
+title(paste0("Loadings for component ", names(loadings_df)[1]," and " ,names(loadings_df)[2] ))
+draw.circle(0,0,c(1.0,1),nv=200)#,border="purple",
+text(loadings_df[,1],loadings_df[,2],rownames(loadings_df),pos=1,cex=1)            
+grid(2,2)
+
+dev.off()
+
+
 
 
 
