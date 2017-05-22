@@ -52,10 +52,11 @@ ref_poly_shp_fname <- ""  #country shapefile
 #ARGS 7
 out_suffix <-"animals_trade_time_series_05222017" #output suffix for the files and ouptu folder #PARAM 8
 #ARGS 8
-create_out_dir_param=TRUE 
+create_out_dir_param <- TRUE 
 #ARGS 9
 n_pca <- 6 #number of pca to produce 
-
+#Args 10
+produce_scores <- TRUE
 
 ################# START SCRIPT ###############################
 
@@ -102,17 +103,52 @@ if(is.null(n_pca)){
   n_pca <- ncol(df_dat)
 }
 
+##### Performing PCA
+
+## This is T-mode!!! should have option for S-mode
 pca_mod <-principal(df_dat,nfactors=n_factors,rotate="none",covar = FALSE)
 
-plot_pca_loadings_time_series(1,pca_mod=pca_mod,out_dir=out_dir, out_suffix=out_suffix)
+#Save correlation matrix
+
+#Save loadings matrix
+
+#Save eigenvalues
+
+#Save scores if produce_scores==T
 
 
-plot_pca_loadings_time_series <- function(i,pca_mod,out_dir=".", out_suffix=""){
+##### plotting of PCAs
+
+plot_pca_loadings_time_series(1,pca_mod=pca_mod,dates_val,out_dir=out_dir, out_suffix=out_suffix)
+
+lapply(1:10,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
+
+plot_pca_loadings_time_series <- function(i,pca_mod,dates_val,out_dir=".", out_suffix=""){
+  #This function generates loadings plots based on a pca model object from psych package in R.
   #
+  #INPUTS
+  #1) i: component i e.g. 1
+  #2) pca_mod: pca model object from psych R package
+  #3) dates_val: list of dates matching the temporal sequence
+  #4) out_dir: output directory
+  #5) out_suffix: output suffix
   #
+  #OUTPUTS
+  #1) png_filename: png files with plot of of pca loadings
+  #
+  #TO DO: add option for mutiple plots
+  
+  ########## BEGIN SCRIPT  ############
+  # 
+  ## Select loadings
+  
+  loadings_df <- as.data.frame(pca_mod$loadings[,i])
+  pca_loadings_dz <- zoo(loadings_df,dates_val) #create zoo object from data.frame and date sequence object
+  
+  
   ##Figure components
   
-  png_filename <- file.path(out_dir,paste("Figure_pc_components_",i,out_suffix,".png",sep=""))
+  png_filename <- file.path(out_dir,paste("Figure_pc_components_",i,"_",out_suffix,".png",sep=""))
   
   res_pix<-960
   col_mfrow<- 1
@@ -121,7 +157,8 @@ plot_pca_loadings_time_series <- function(i,pca_mod,out_dir=".", out_suffix=""){
       width=col_mfrow*res_pix,height=row_mfrow*res_pix)
   #par(mfrow=c(1,2))
   
-  plot(pca_mod$loadings[,i],type="b",
+  plot(pca_loadings_dz,
+       type="b",
        xlab="time steps",
        ylab="PC loadings",
        ylim=c(-1,1),
@@ -143,31 +180,40 @@ plot_pca_loadings_time_series <- function(i,pca_mod,out_dir=".", out_suffix=""){
   
 }
 
-##Make this a time series
-loadings_df <- as.data.frame(pca_mod$loadings[,1:3])
-pca_loadings_dz <- zoo(loadings_df,dates_val) #create zoo object from data.frame and date sequence object
-#?plot.zoo to find out about zoo time series plotting of indexes
-plot(pca_loadings_dz,
+
+## Add scree plot of eigen values
+png_filename <- file.path(out_dir,paste("Figure_scree_plots_eigen_values_components_",out_suffix,".png",sep=""))
+
+res_pix<-960
+col_mfrow<- 1
+row_mfrow<- 1
+png(filename= png_filename,
+    width=col_mfrow*res_pix,height=row_mfrow*res_pix)
+
+plot(pca_mod$values,
+     main="Scree plot: Eigen values",
      type="b",
-     plot.type="single",
-     col=c("blue","red","black"),
-     xlab="time steps",
-     ylab="PC loadings",
-     ylim=c(-1,1))
-title("Loadings for the first three components using T-mode")
-names_vals <- c("pc1","pc2","pc3")
-legend("topright",legend=names_vals,
-       pt.cex=0.8,cex=1.1,col=c("blue","red","black"),
-       lty=c(1,1), # set legend symbol as lines
-       pch=1, #add circle symbol to line
-       lwd=c(1,1),bty="n")
+     ylab="Eigenvalue",
+     xlab="components")
 
-## Add scree plot
-plot(pca_mod$values,main="Scree plot: Variance explained",type="b")
+dev.off()
 
-#make a function from previous code
+## Add scree plot of variance from components
+png_filename <- file.path(out_dir,paste("Figure_scree_plots_percent_variance_components_",out_suffix,".png",sep=""))
 
+res_pix<-960
+col_mfrow<- 1
+row_mfrow<- 1
+png(filename= png_filename,
+    width=col_mfrow*res_pix,height=row_mfrow*res_pix)
 
+plot(pca_mod$values/sum(pca_mod$values)*100,
+     main="Scree plot: Variance from component in %",
+     type="b",
+     ylab="% variance",
+     xlab="components")
+
+dev.off()
 
 
 ################### End of script ################
