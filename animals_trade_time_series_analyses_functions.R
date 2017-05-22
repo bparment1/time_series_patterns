@@ -161,5 +161,66 @@ plot_pca_loadings_time_series <- function(i,pca_mod,dates_val,out_dir=".", out_s
   
 }
 
+plot_pca_loadings_time_series <- function(pcs_selected,pca_mod,var_labels=NULL,out_dir=".", out_suffix=""){
+  #This function generates loadings plots in pc space based on a pca model object from psych package in R.
+  #
+  #INPUTS
+  #1) pcs_selected: components defining the pc space
+  #2) pca_mod: pca model object from psych R package
+  #3) var_labels: names of input variables, if null it is taken from the row names
+  #4) out_dir: output directory
+  #5) out_suffix: output suffix
+  #
+  #OUTPUTS
+  #1) png_filename: png files with plot of of pca loadings
+  #
+  #TO DO:
+  
+  ########## BEGIN SCRIPT  ############
+  # 
+  ## Select loadings
+  
+  loadings_df <- as.data.frame(pca_mod$loadings[,pcs_selected])
+  
+  if(is.null(var_labels)){
+    var_labels <- rownames(loadings_df)
+  }
+  
+  png_filename <- file.path(out_dir,paste("Figure_pc_components_space_loadings",pcs_selected[1],"_",pcs_selected[2],"_",out_suffix,".png",sep=""))
+  
+  res_pix<-960
+  col_mfrow<- 1
+  row_mfrow<- 1
+  png(filename= png_filename,
+      width=col_mfrow*res_pix,height=row_mfrow*res_pix)
+  #par(mfrow=c(1,2))
+  
+  plot(loadings_df[,1],loadings_df[,2],
+       type="p",
+       pch = 20,
+       col ="blue",
+       xlab=names(loadings_df)[1],
+       ylab=names(loadings_df)[2],
+       ylim=c(-1,1),
+       xlim=c(-1,1),
+       axes = FALSE,
+       cex.lab = 1.2)
+  axis(1, at=seq(-1,1,0.2),cex=1.2)
+  #axis(1, at=c(-1,-0.8,-0.6,-0.4,-0.2,0,0.2,0.4,0.6,0.8,1),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
+  axis(2, las=1,at=seq(-1,1,0.2),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
+  
+  box()    #This draws a box...
+  
+  title(paste0("Loadings for component ", names(loadings_df)[1]," and " ,names(loadings_df)[2] ))
+  draw.circle(0,0,c(1.0,1),nv=200)#,border="purple",
+  text(loadings_df[,1],loadings_df[,2],var_labels,pos=1,cex=1)            
+  grid(2,2)
+  
+  dev.off()
+  
+  return(png_filename)
+}
+
+
 
 ################### End of script ################
