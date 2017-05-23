@@ -9,7 +9,7 @@
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: initial commit functions for time series pattern analysis
+## COMMIT: add output argument to Theil Sen
 ##
 
 ###################################################
@@ -53,13 +53,21 @@ calculate_theil_sen_time_series <- function(i,data_df,out_dir,out_suffix){
   formula_str <- paste0(names(df_mblm)[1]," ~ ","time_index")
   formula_mblm <- as.formula(formula_str) #transform object into formula
   
-  mod_mblm<- mblm(formula_mblm,df_mblm)
+  mod_mblm <- mblm(formula_mblm,df_mblm)
   #can get the conf interval or significance if wanted
   #plot(mod_mblm)
+  coef_theil_sen <- coef(mod_mblm)
   
   #### Prepare object to return
+  obj_theil_sen <- list(mod_mblm,coef_theil_sen)
+  names(obj_theil_sen) <- c("mod_mblm","coef_theil_sen")
   
-  return(mod_mblm)
+  ##### save to disk
+  
+  obj_theil_sen_filename <- file.path(out_dir,paste("theil_sen_obj_",subset_name,"_",out_suffix,".RData",sep=""))
+  save(obj_theil_sen,file= obj_theil_sen_filename)
+  
+  return(obj_theil_sen)
 }
 
 
