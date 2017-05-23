@@ -217,7 +217,7 @@ plot_pca_components_space_loadings <- function(pcs_selected,pca_mod,var_labels=N
   return(png_filename)
 }
 
-run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
+run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
   ##General function to run PCA/EOF analyses. The function includes options for T and S mode or a matrix
   ##given by the user.
   #INPUTS
@@ -225,17 +225,21 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   #1) data_df
   #2) matrix_val
   #3) npc=1
-  #4)pcs_selected=NULL
-  #5)time_series_loadings=F
-  #6)var_labels=NULL
-  #7)mode_val=T
-  #8)rotation_opt="none"
-  #9)scores_opt=FALSE
-  #10)out_dir="."
-  #11)out_suffix=""
+  #4) pcs_selected=NULL
+  #5) time_series_loadings=F
+  #6) save_opt=TRUE
+  #7) var_labels=NULL
+  #8) mode_val=T
+  #9) rotation_opt="none"
+  #10) scores_opt=FALSE
+  #11) out_dir="."
+  #12) out_suffix=""
   #
   #OUTPUTS
-  #
+  #  obj_run_pca_analysis object as list with the following items/objects:
+  #1) principal_pca_obj
+  #2) mode_val
+  #3) matrix_val
   #
   
   ########### Beging function ###########
@@ -314,7 +318,7 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
          out_suffix=out_suffix)
   
   ### Plot loadings as sequence: if time series
-  if(time_series_loadings=F){
+  if(time_series_loadings==FALSE){
     pcs_selected_unique <- unique(unlist(pcs_selected))
     #plot_pca_loadings_time_series(1,pca_mod=pca_mod,dates_val,out_dir=out_dir, out_suffix=out_suffix)
     
@@ -323,8 +327,17 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   }
   
   ## generate object
+  #### Prepare object to return
+  obj_run_pca_analysis <- list(principal_pca_obj,mode_val,matrix_val)
+  names(obj_run_pca_analysis) <- c("principal_pca_obj","mode_val","matrix_val")
   
-  return()
+  ##### save to disk
+  if(save_opt==TRUE){
+    obj_run_pca_analysis_filename <- file.path(out_dir,paste("obj_run_pca_analysis_",out_suffix,".RData",sep=""))
+    save(obj_run_pca_analysis,file = obj_run_pca_analysis_filename)
+  }
+  
+  return(obj_run_pca_analysis)
 }
 
 
