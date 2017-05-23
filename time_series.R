@@ -9,7 +9,7 @@
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: making a function for Theil Sen slope estimator
+## COMMIT: moving function for Theil Sen slope estimator to function script
 ##
 
 ###################################################
@@ -24,43 +24,11 @@ library(lubridate)
 
 ###### Functions used in this script
 
-calculate_theil_sen_time_series <- function(i,data_df,out_dir,out_suffix){
-  #This function generates Theil Sen slope estimate using mblm package.
-  #
-  #INPUTS
-  #1) i: column index for input data.frame, used as y variable (trend variable)
-  #2) data_df: input data containing time series
-  #4) out_dir: output directory
-  #5) out_suffix: output suffix appended to written output on drive
-  #
-  #OUTPUTS
-  #1)
-  #
-  #TO DO: 
-  
-  ############# BEGIN FUNCTION #############
-  
-  #setting up the data input: data.frame with 2 columns
-  time_index <- 1:nrow(data_df) #x
-  subset_name <- names(data_df)[i]
-  df_mblm <- subset(df_ts,select=subset_name) #subset using relevant name
-  
-  df_mblm <- as.data.frame(df_mblm) #convert to data.frame since it was a zoo df
-  df_mblm$time_index <- time_index
-  #names(df_mblm)
-  
-  ### automate formula input
-  formula_str <- paste0(names(df_mblm)[1]," ~ ","time_index")
-  formula_mblm <- as.formula(formula_str) #transform object into formula
-  
-  mod_mblm<- mblm(formula_mblm,df_mblm)
-  #can get the conf interval or significance if wanted
-  #plot(mod_mblm)
-  
-  #### Prepare object to return
-  
-  return(mod_mblm)
-}
+functions_time_series_analyses_script <- "time_series_functions_05232017b.R" #PARAM 1
+
+script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
+
 
 #####  Parameters and argument set up ###########
 
@@ -147,11 +115,19 @@ mod_mblm_test <- calculate_theil_sen_time_series(i=1,
                                                  data_df=df_ts,
                                                  out_dir=".",
                                                  out_suffix="time_series_analyses_05232017")
+
 #debug(calculate_theil_sen_time_series)  
-list_mod_mblm_test <- lapply(1:2, # input parameter i as a list
+list_mod_mblm_test <- lapply(1:ncol(df_ts), # input parameter i as a list
                              FUN=calculate_theil_sen_time_series,
                              data_df=df_ts,
                              out_dir=".",
                              out_suffix="time_series_analyses_05232017")
+
+mod_mblm <- list_mod_mblm_test[[3]] #Look at model for the USA
+
+mod_mblm
+coef(mod_mblm)
+
+
 
 ################### End of script ################
