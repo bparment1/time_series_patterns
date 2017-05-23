@@ -6,7 +6,7 @@
 ## 3) Mann Kenall trend test 
 ##
 ## DATE CREATED: 05/22/2017
-## DATE MODIFIED: 05/22/2017
+## DATE MODIFIED: 05/23/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 2
 ## PROJECT: Animals trade
@@ -161,7 +161,7 @@ plot_pca_loadings_time_series <- function(i,pca_mod,dates_val,out_dir=".", out_s
   
 }
 
-plot_pca_loadings_time_series <- function(pcs_selected,pca_mod,var_labels=NULL,out_dir=".", out_suffix=""){
+plot_pca_copmonents_space_loadings <- function(pcs_selected,pca_mod,var_labels=NULL,out_dir=".", out_suffix=""){
   #This function generates loadings plots in pc space based on a pca model object from psych package in R.
   #
   #INPUTS
@@ -193,7 +193,6 @@ plot_pca_loadings_time_series <- function(pcs_selected,pca_mod,var_labels=NULL,o
   row_mfrow<- 1
   png(filename= png_filename,
       width=col_mfrow*res_pix,height=row_mfrow*res_pix)
-  #par(mfrow=c(1,2))
   
   plot(loadings_df[,1],loadings_df[,2],
        type="p",
@@ -206,7 +205,6 @@ plot_pca_loadings_time_series <- function(pcs_selected,pca_mod,var_labels=NULL,o
        axes = FALSE,
        cex.lab = 1.2)
   axis(1, at=seq(-1,1,0.2),cex=1.2)
-  #axis(1, at=c(-1,-0.8,-0.6,-0.4,-0.2,0,0.2,0.4,0.6,0.8,1),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
   axis(2, las=1,at=seq(-1,1,0.2),cex=1.2) # "1' for side=below, the axis is drawned  on the right at location 0 and 1
   
   box()    #This draws a box...
