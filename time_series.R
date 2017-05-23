@@ -9,7 +9,7 @@
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: moving function for Theil Sen slope estimator to function script
+## COMMIT: add automatic output dir function to analyses
 ##
 
 ###################################################
@@ -24,7 +24,7 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_05232017b.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_05232017c.R" #PARAM 1
 
 script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
@@ -41,8 +41,34 @@ infile_name <- "Gekko gecko PCA.csv"
 date_range <- c("2011/1/1","2017/3/1")
 #ARGS 4
 scaling_factor <- 1000
+#ARGS 5
+out_dir <- "/research-home/bparmentier/Data/projects/animals_trade/outputs" #parent directory where the new output directory is located
+#ARGS 6
+create_out_dir_param=TRUE #create a new ouput dir if TRUE
+#ARGS 7
+out_suffix <- "time_series_analyses_05232017"
 
 ################# START SCRIPT ###############################
+
+
+### PART I READ AND PREPARE DATA #######
+#set up the working directory
+#Create output directory
+
+if(is.null(out_dir)){
+  out_dir <- in_dir #output will be created in the input dir
+  
+}
+#out_dir <- in_dir #output will be created in the input dir
+
+out_suffix_s <- out_suffix #can modify name of output suffix
+if(create_out_dir_param==TRUE){
+  out_dir <- create_dir_fun(out_dir,out_suffix)
+  setwd(out_dir)
+}else{
+  setwd(out_dir) #use previoulsy defined directory
+}
+
 
 ## Step 1: read in the data and generate time stamps
 
@@ -113,21 +139,24 @@ plot((df_ts[,1]))
 #make this a function later: example with the first country
 mod_mblm_test <- calculate_theil_sen_time_series(i=1,
                                                  data_df=df_ts,
-                                                 out_dir=".",
+                                                 out_dir=out_dir,
                                                  out_suffix="time_series_analyses_05232017")
 
 #debug(calculate_theil_sen_time_series)  
 list_mod_mblm_test <- lapply(1:ncol(df_ts), # input parameter i as a list
                              FUN=calculate_theil_sen_time_series,
                              data_df=df_ts,
-                             out_dir=".",
-                             out_suffix="time_series_analyses_05232017")
+                             out_dir=out_dir,
+                             out_suffix=out_suffix)
 
 mod_mblm <- list_mod_mblm_test[[3]] #Look at model for the USA
 
 mod_mblm
 coef(mod_mblm)
 
+list_theil_sen_obj <- list.files(path=out_dir,pattern="*.RData")
 
+test_obj <- load_obj(list_theil_sen_obj[[1]])
+test_obj
 
 ################### End of script ################
