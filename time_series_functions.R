@@ -9,7 +9,7 @@
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: add output argument to Theil Sen
+## COMMIT: adding output dir function
 ##
 
 ###################################################
@@ -23,6 +23,27 @@ library(mblm) #Theil Sen estimator
 library(lubridate) 
 
 ###### Functions used in this script
+
+##create an output directory
+create_dir_fun <- function(out_dir,out_suffix){
+  #if out_suffix is not null then append out_suffix string
+  if(!is.null(out_suffix)){
+    out_name <- paste("output_",out_suffix,sep="")
+    out_dir <- file.path(out_dir,out_name)
+  }
+  #create if does not exists
+  if(!file.exists(out_dir)){
+    dir.create(out_dir)
+  }
+  return(out_dir)
+}
+
+load_obj <- function(f){
+  env <- new.env()
+  nm <- load(f, env)[1]
+  env[[nm]]
+}
+
 
 calculate_theil_sen_time_series <- function(i,data_df,out_dir,out_suffix){
   #This function generates Theil Sen slope estimate using mblm package.
