@@ -2,7 +2,7 @@
 ##
 ## 
 ## DATE CREATED: 05/22/2017
-## DATE MODIFIED: 05/23/2017
+## DATE MODIFIED: 05/24/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 2
 ## PROJECT: Animals trade
@@ -32,8 +32,8 @@ library(plotrix) #additional plotting and drawing options
 ###### Functions used in this script
 
 script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts"
-function_time_series_analyses <- "animals_trade_time_series_analyses_functions_05222017e.R" #PARAM 1
-functions_pca_script <- "pca_eof_functions_05232017c.R" #PARAM 1
+function_time_series_analyses <- "animals_trade_time_series_analyses_functions_05232017.R" #PARAM 1
+functions_pca_script <- "pca_eof_functions_05242017.R" #PARAM 1
 source(file.path(script_path,function_time_series_analyses ))
 source(file.path(script_path,functions_pca_script)) #source all functions used in this script 1.
 
@@ -53,7 +53,7 @@ scaling_factor <- 1000
 #ARGS 6
 ref_poly_shp_fname <- ""  #country shapefile
 #ARGS 7
-out_suffix <-"animals_trade_time_series_05222017" #output suffix for the files and ouptu folder #PARAM 8
+out_suffix <-"animals_trade_time_series_05242017" #output suffix for the files and ouptu folder #PARAM 8
 #ARGS 8
 create_out_dir_param <- TRUE 
 #ARGS 9
@@ -128,7 +128,7 @@ run_pca_analysis(data_df=data_df_subset,
                  mode_val=T, 
                  rotation_opt="none",
                  scores_opt=produce_scores,
-                 out_dir=".",
+                 out_dir=out_dir,
                  out_suffix=out_suffix_str)
 
 #functions_pca_script <- "pca_eof_functions_05232017c.R" #PARAM 1
