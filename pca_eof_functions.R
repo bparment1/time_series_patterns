@@ -5,12 +5,12 @@
 #
 #AUTHOR: Benoit Parmentier                                                                #
 #DATE CREATED: 05/22/2017 
-#DATE MODIFIED: 05/23/2017
+#DATE MODIFIED: 05/24/2017
 #Version: 1
 #PROJECT: General script
 #   
-#COMMIT: initial code PCA and EOF, utility analyses
-#TODO:
+#COMMIT: formatting cor matrix and debugging PCA and EOF
+#TODO: Add function to plot scores of PCA.
 
 #################################################################################################
 
@@ -220,12 +220,16 @@ plot_pca_components_space_loadings <- function(pcs_selected,pca_mod,var_labels=N
 run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
   ##General function to run PCA/EOF analyses. The function includes options for T and S mode or a matrix
   ##given by the user.
+  #
+  #DATE CREATED: 05/23/2017
+  #DATE UPDATED: 05/24/2017
+  #
   #INPUTS
   #
-  #1) data_df
-  #2) matrix_val
-  #3) npc=1
-  #4) pcs_selected=NULL
+  #1) data_df: input data.frame 
+  #2) matrix_val: square matrix used in the PCA
+  #3) npc: number of PCA considered, default is 1
+  #4) pcs_selected: selected pca components to consider for plotting, NULL is default then match npc
   #5) time_series_loadings=F
   #6) save_opt=TRUE
   #7) var_labels=NULL
@@ -256,12 +260,14 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   
   #Save correlation matrix
   #reformat, two digits
+  square_matrix <- format(principal_pca_obj$matrix_val,digits=4)
   pca_input_square_matrix_filename <- file.path(out_dir,paste("pca_input_square_matrix_",out_suffix,".txt",sep=""))
-  write.table(principal_pca_obj$matrix_val,file=pca_input_square_matrix_filename,sep=",")
+  write.table(square_matrix,file=pca_input_square_matrix_filename,sep=",")
   
   #Save loadings matrix
+  loadings_val <- format(principal_pca_obj$loadings,digits=4)
   pca_loadings_filename <- file.path(out_dir,paste("pca_loadings_",out_suffix,".txt",sep=""))
-  write.table(principal_pca_obj$loadings,file=pca_loadings_filename,sep=",")
+  write.table(loadings_val,file=pca_loadings_filename,sep=",")
   
   #Save scores if users is asking for it
   if(scores_opt==T){
@@ -324,6 +330,7 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
     
     lapply(pcs_selected,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
     
+    ## Also add function to plot scores.
   }
   
   ## generate object
