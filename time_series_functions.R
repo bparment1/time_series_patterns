@@ -64,7 +64,7 @@ calculate_theil_sen_time_series <- function(i,data_df,out_dir,out_suffix){
   #setting up the data input: data.frame with 2 columns
   time_index <- 1:nrow(data_df) #x
   subset_name <- names(data_df)[i]
-  df_mblm <- subset(df_ts,select=subset_name) #subset using relevant name
+  df_mblm <- subset(data_df,select=subset_name) #subset using relevant name
   
   df_mblm <- as.data.frame(df_mblm) #convert to data.frame since it was a zoo df
   df_mblm$time_index <- time_index
