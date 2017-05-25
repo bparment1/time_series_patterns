@@ -165,8 +165,9 @@ df_w_ts_ref[,1] + df_w_ts_current[,1]
 plot(df_w_ts_current[,1])
 plot(df_w_ts_ref[,1])
 
+
 ####
-debug(calculate_theil_sen_time_series)
+#undebug(calculate_theil_sen_time_series)
 mod_mblm_df_w_ts_ref <- calculate_theil_sen_time_series(i=1,
                                                  data_df=df_w_ts_ref,
                                                  out_dir=out_dir,
@@ -176,5 +177,60 @@ mod_mblm_df_w_ts_current <- calculate_theil_sen_time_series(i=1,
                                                         data_df=df_w_ts_current,
                                                         out_dir=out_dir,
                                                         out_suffix="time_series_analyses_05232017")
+
+plot(df_ts[,1])
+nt <- nrow(df_ts)
+nt <- 76
+##
+year_start <- year(date(df_ts)[1])
+year_end <- year(date(df_ts)[nt])
+#year_start
+ts_val <- as.ts(as.numeric(df_ts[1:72,1]),start= year_start,end=year_end,frequency=12)
+
+decompose(ts_val)
+rollmean_ts <- rollmean(df_ts[,1:10], 2)
+var(rollmean_ts[,1])
+var(df_ts[,1])
+plot(rollmean_ts[,1])
+plot(df_ts[,1])
+
+mod_mblm_rollmean <- calculate_theil_sen_time_series(i=1,
+                                                      data_df=rollmean_ts,
+                                                      out_dir=out_dir,
+                                                      out_suffix="time_series_analyses_05232017")
+coef(mod_mblm_rollmean$mod_mblm)
+
+df_ts[1,1]
+0.0008147/df_ts[1,1]*100
+
+
+
+mod_mblm_df_w_ts_current$
+
+
+
+#1. short-term acute increase
+#compare the last 4 months (current) to the previous 8 months (ref)
+df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end=as.Date("2016-12-01")) #previous 8 months
+df_w_ts_current <- window(df_ts,start=as.Date("2017-01-01"),end=as.Date("2017-04-01")) #last 4 months
+df_w_ts_combined <- window(df_ts,start=as.Date("2016-05-01"),end=as.Date("2017-04-01")) #entire test window
+
+#compare the last 4 months (current) to the previous 12 months (ref)
+df_w_ts_ref <- window(df_ts,start=as.Date("2016-01-01"),end=as.Date("2016-12-01")) #previous 12 months
+df_w_ts_current <- window(df_ts,start=as.Date("2017-01-01"),end=as.Date("2017-04-01")) #last 4 months
+df_w_ts_combined <- window(df_ts,start=as.Date("2016-01-01"),end=as.Date("2017-04-01")) #entire test window
+
+
+#2. long-term steady increase
+#compare the last 4 months (current) to the previous 24 months (ref)
+df_w_ts_ref <- window(df_ts,start=as.Date("2015-01-01"),end=as.Date("2016-12-01"))
+df_w_ts_current <- window(df_ts,start=as.Date("2017-01-01"),end=as.Date("2017-04-01"))
+df_w_ts_combined <- window(df_ts,start=as.Date("2015-01-01"),end=as.Date("2017-04-01"))
+
+#compare the last 4 months (current) to the previous 48 months (ref)
+df_w_ts_ref <- window(df_ts,start=as.Date("2014-01-01"),end=as.Date("2016-12-01"))
+df_w_ts_current <- window(df_ts,start=as.Date("2017-01-01"),end=as.Date("2017-04-01"))
+df_w_ts_combined <- window(df_ts,start=as.Date("2014-01-01"),end=as.Date("2017-04-01"))
+
 
 ################### End of script ################
