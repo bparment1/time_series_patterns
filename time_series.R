@@ -2,14 +2,14 @@
 ##
 ## 
 ## DATE CREATED: 05/15/2017
-## DATE MODIFIED: 05/23/2017
+## DATE MODIFIED: 05/25/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: add automatic output dir function to analyses
+## COMMIT: fixing bug in theil Sen function
 ##
 
 ###################################################
@@ -24,7 +24,7 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_05232017c.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_05252017.R" #PARAM 1
 
 script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
@@ -33,20 +33,20 @@ source(file.path(script_path,functions_time_series_analyses_script)) #source all
 #####  Parameters and argument set up ###########
 
 #ARGS 1
-in_dir <- "/research-home/bparmentier/projects/animals_trade"
+in_dir <- "/research-home/bparmentier/Data/projects/animals_trade"
 #ARGS 2
-infile_name <- "Gekko gecko PCA.csv"
+infile_name <- "FB_malaysia_sp_norm.csv"
 #ARGS 3
 #date_range <- c("2011.01.01","2017.03.01") #
-date_range <- c("2011/1/1","2017/3/1")
+date_range <- c("2011/1/1","2017/4/1")
 #ARGS 4
-scaling_factor <- 1000
+scaling_factor <- 100000
 #ARGS 5
 out_dir <- "/research-home/bparmentier/Data/projects/animals_trade/outputs" #parent directory where the new output directory is located
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <- "time_series_analyses_05232017"
+out_suffix <- "malaysia_time_series_analyses_05242017"
 
 ################# START SCRIPT ###############################
 
@@ -75,7 +75,7 @@ if(create_out_dir_param==TRUE){
 dates_val <- seq(as.Date(date_range[1]), as.Date(date_range[2]), by="month")
 df_dat_animals <- read.table(file.path(in_dir,infile_name),sep=",",header=T)
 
-df_dat_animals * scaling_factor
+#test<- df_dat_animals * scaling_factor
 
 dim(df_dat_animals)
 #View(df_dat_animals)
@@ -84,13 +84,13 @@ dim(df_dat_animals)
 names(df_dat_animals)
 dates_years <- year(dates_val)
 
-df_dat <- df_dat_animals[,15:89]
+df_dat <- df_dat_animals[,87:162]*scaling_factor
 #df_dat <- subset(df_dat_animals,) #improve later
-names_col <- as.character(df_dat_animals$country)
+names_countries <- as.character(df_dat_animals$country)
+names_species <- as.character(df_dat_animals$sci_name)
+names_species <- sub(" ","_",names_species)
 
-### PCA analyses
-
-#make a function from previous code
+names_col <- paste(names_countries,names_species,sep="_")
 
 ### Zoo analyses
 
@@ -125,15 +125,6 @@ par(mfrow=c(1,1))
 plot(rollmean_ts)
 plot((df_ts[,1]))
 
-## Fourier Analysis, Wavelet etc.
-
-#test<-(fft(df_ts[,1]))
-#plot(test)
-#View(test)
-#class(fft(df_ts[,1]))
-
-#plot(Re(fft(test))^2)
-
 ### Theil Sen slope slope calculation
 
 #make this a function later: example with the first country
@@ -158,5 +149,32 @@ list_theil_sen_obj <- list.files(path=out_dir,pattern="*.RData")
 
 test_obj <- load_obj(list_theil_sen_obj[[1]])
 test_obj
+
+########
+## Example of windowing by dates
+
+df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2016-12-01"))
+df_w_ts_current <- window(df_ts,start=as.Date("2017-01-01"),end= as.Date("2017-04-01"))
+
+df_w_ts_combined <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-04-01"))
+
+plot(df_w_ts_combined[,1]) 
+names(df_w_ts_current)[1]
+
+df_w_ts_ref[,1] + df_w_ts_current[,1] 
+plot(df_w_ts_current[,1])
+plot(df_w_ts_ref[,1])
+
+####
+debug(calculate_theil_sen_time_series)
+mod_mblm_df_w_ts_ref <- calculate_theil_sen_time_series(i=1,
+                                                 data_df=df_w_ts_ref,
+                                                 out_dir=out_dir,
+                                                 out_suffix="time_series_analyses_05232017")
+
+mod_mblm_df_w_ts_current <- calculate_theil_sen_time_series(i=1,
+                                                        data_df=df_w_ts_current,
+                                                        out_dir=out_dir,
+                                                        out_suffix="time_series_analyses_05232017")
 
 ################### End of script ################
