@@ -2,7 +2,7 @@
 ##
 ## 
 ## DATE CREATED: 05/15/2017
-## DATE MODIFIED: 05/25/2017
+## DATE MODIFIED: 05/26/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -24,7 +24,7 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_05252017.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_05262017.R" #PARAM 1
 
 script_path <- "/research-home/bparmentier/Data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
@@ -128,6 +128,7 @@ plot((df_ts[,1]))
 ### Theil Sen slope slope calculation
 
 #make this a function later: example with the first country
+#debug(calculate_theil_sen_time_series)
 mod_mblm_test <- calculate_theil_sen_time_series(i=1,
                                                  data_df=df_ts,
                                                  out_dir=out_dir,
