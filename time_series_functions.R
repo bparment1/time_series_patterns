@@ -2,7 +2,7 @@
 ##
 ## 
 ## DATE CREATED: 05/23/2017
-## DATE MODIFIED: 05/25/2017
+## DATE MODIFIED: 05/26/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -94,6 +94,10 @@ calculate_theil_sen_time_series <- function(i,data_df,save_opt=FALSE,out_dir="."
     nt <- length(dates_val)
     start_date <- dates_val[1]
     end_date <- dates_val[nt]
+  }else{
+    nt <- NA
+    start_date <- NA
+    end_date <- NA
   }
 
   duration_ts <- nt
