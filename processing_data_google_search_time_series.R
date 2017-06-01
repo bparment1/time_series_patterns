@@ -9,7 +9,7 @@
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: documenting and testing function to import data sent by google
+## COMMIT: fix naming problem in data.frame related to dates
 ##
 ## Links to investigate:
 
@@ -79,7 +79,7 @@ load_obj <- function(f){
 ## 3)
 ### Other functions ####
 
-function_processing_data <- "processing_data_google_search_time_series_functions_06012017.R" #PARAM 1
+function_processing_data <- "processing_data_google_search_time_series_functions_06012017b.R" #PARAM 1
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 
 source(file.path(script_path,function_processing_data)) #source all functions used in this script 1.
 
@@ -94,6 +94,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs" #param 2
 #in_dir <- "/nfs/edaut-data/Time Series MARSS"
 #out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs"
 
+n_col_start_date <- 4
 scaling <- 1000
 infile_name <- "gst40k_original_5262017.csv"
 
@@ -111,13 +112,49 @@ out_suffix <-"processing_ts_06012017" #output suffix for the files and ouptu fol
 #download_file <- FALSE #param 14
 #unzip_files <- F #param 15
 
+############## START SCRIPT ############################
+
 ######### PART 0: Set up the output dir ################
 
+if(is.null(out_dir)){
+  out_dir <- in_dir #output will be created in the input dir
+  
+}
+#out_dir <- in_dir #output will be created in the input dir
 
-lf_processed <- import_data_ts(infile_name,in_dir=".",
+out_suffix_s <- out_suffix #can modify name of output suffix
+if(create_out_dir_param==TRUE){
+  out_dir <- create_dir_fun(out_dir,out_suffix)
+  setwd(out_dir)
+}else{
+  setwd(out_dir) #use previoulsy defined directory
+}
+
+### PART I READ AND PREPARE DATA #######
+#set up the working directory
+#Create output directory
+
+#############
+
+debug(import_data_ts)
+lf_processed <- import_data_ts(infile_name,
+                               in_dir=in_dir,
                                scaling=1,
-                               n_col_start_date=4,
+                               n_col_start_date=n_col_start_date,
                                start_date="2004-01-01",
                                end_date=NULL,
-                               out_dir=".", 
-                               out_suffix="")
+                               out_dir=out_dir, 
+                               out_suffix=out_suffix)
+
+df_test <- read.table(lf_processed[1])
+df_test <- read.table(lf_processed[1])
+
+df_test <- read.table(lf_processed[1],sep=",",header = T)
+names(df)
+names_test <- as.character(seq(as.Date(start_date),by = "month",length.out=160))
+
+library(assertive.code)
+is_valid_variable_name(names_test)
+
+
+############################# END OF SCRIPT ##############################
