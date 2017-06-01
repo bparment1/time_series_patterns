@@ -1,20 +1,17 @@
-############### SESYNC Research Support: Urbanization Impact on Biodiversity ########## 
-##
+############### SESYNC Research Support: Animals Trade ########## 
+## Functions used in the processing of data from google search on species for the animals-trade project at SESYNC.
 ## 
-## DATE CREATED: 05/30/2017
-## DATE MODIFIED: 05/30/2017
-## AUTHORS: Benoit Parmentier 
+## DATE CREATED: 05/31/2017
+## DATE MODIFIED: 06/01/2017
+## AUTHORS: Benoit Parmentier and Elizabeth Daut 
 ## Version: 1
-## PROJECT: Urbanization impact on biodiversity
+## PROJECT: Animals trade by Elizabeth Daut
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: initial commit
+## COMMIT: documenting and testing function to import data sent by google
 ##
 ## Links to investigate:
-#https://gis.stackexchange.com/questions/119993/convert-line-shapefile-to-raster-value-total-length-of-lines-within-cell
-#https://edzer.github.io/sfr/articles/sfr.html
-#https://geographicdatascience.com/2017/01/06/first-impressions-from-sf-the-simple-features-r-package/
 
 ###################################################
 #
@@ -65,6 +62,8 @@ import_data_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,s
   
   out_filename_tmp <- sub(extension(infile_name),"",infile_name)#
   out_filename <- file.path(out_dir,paste0(out_filename_tmp,"_",out_suffix,".csv"))
-  write.table(df,filename=out_filename)
+  write.table(df,file=out_filename)
   return(out_filename)
 }
+
+### plotting ?
