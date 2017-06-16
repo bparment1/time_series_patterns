@@ -3,7 +3,7 @@
 ## 
 ## DATE CREATED: 05/31/2017
 ## DATE MODIFIED: 06/01/2017
-## AUTHORS: Benoit Parmentier and Elizabeth Daut 
+## AUTHORS: Benoit Parmentier  
 ## Version: 1
 ## PROJECT: Animals trade by Elizabeth Daut
 ## ISSUE: 
