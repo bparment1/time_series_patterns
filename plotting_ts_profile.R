@@ -1,3 +1,26 @@
+############### SESYNC Research Support: Animals Trade project ########## 
+##
+## 
+## DATE CREATED: 05/31/2017
+## DATE MODIFIED: 06/16/2017
+## AUTHORS: Benoit Parmentier and Elizabeth Daut
+## Version: 1
+## PROJECT: Animals trade
+## ISSUE: 
+## TO DO:
+##
+## COMMIT: fixing for import of new google data
+##
+
+###################################################
+#
+
+###### Library used
+
+library(xts) #extension for time series object and analyses
+library(zoo) # time series object and analysis
+library(mblm) #Theil Sen estimator
+library(lubridate) 
 library(dplyr)
 library(tidyr)
 library(ggplot2)
@@ -5,56 +28,133 @@ library(lubridate)
 library(gridExtra)
 library(grid)
 
+###### Functions used in this script
+
+create_dir_fun <- function(outDir,out_suffix=NULL){
+  #if out_suffix is not null then append out_suffix string
+  if(!is.null(out_suffix)){
+    out_name <- paste("output_",out_suffix,sep="")
+    outDir <- file.path(outDir,out_name)
+  }
+  #create if does not exists
+  if(!file.exists(outDir)){
+    dir.create(outDir)
+  }
+  return(outDir)
+}
+
+#Used to load RData object saved within the functions produced.
+load_obj <- function(f){
+  env <- new.env()
+  nm <- load(f, env)[1]
+  env[[nm]]
+}
+
+functions_processing_data_script <- "processing_data_google_search_time_series_functions_06162017.R" #PARAM 1
+script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
+
+
 ##########  Parameters and argument set up ###########
+
 #ARGS 1
-in_dir <- "/nfs/edaut-data/Time Series MARSS"
+in_dir <- "/nfs/edaut-data/Time Series MARSS/outputs/output_vert_sp_gst_06162017"
+#~/Data/projects/animals_trade/outputs/output_vert_sp_gst_06162017
 #ARGS 2
-infile_name <-"gst40k_original_5262017.csv"
+#infile_name <- "vert_sp_gst_original_06122017.csv"
+infile_name <- "vert_sp_gst_original_06122017_vert_sp_gst_06162017.csv"
 #ARGS 3
-start_date="2004-01-01" 
+start_date="2004-01-01"
 #ARGS 4
-scaling_factor <- 1000 
+end_date <- NULL
 #ARGS 5
-out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs" #parent directory where the new output directory is placed
+scaling_factor <- 1000
 #ARGS 6
-create_out_dir_param=TRUE #create a new output dir if TRUE
+out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs" #parent directory where the new output directory is located
+#out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs"
+#ARGS 6
+create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <- "imported_ts_05312017"  # CHANGE THIS FOR EACH OUTPUT
+out_suffix <- "plot_ts_06162017"  # CHANGE THIS FOR EACH OUTPUT
+#ARGS 8
+n_col_start_date <- 4
+
+
+################# START SCRIPT ###############################
+
+### PART I READ AND PREPARE DATA #######
+#set up the working directory
+#Create output directory
+
+if(is.null(out_dir)){
+  out_dir <- in_dir #output will be created in the input dir
+  
+}
+#out_dir <- in_dir #output will be created in the input dir
+
+out_suffix_s <- out_suffix #can modify name of output suffix
+if(create_out_dir_param==TRUE){
+  out_dir <- create_dir_fun(out_dir,out_suffix)
+  setwd(out_dir)
+}else{
+  setwd(out_dir) #use previoulsy defined directory
+}
+
+############## Plotting time series #############
 
 #testing to create the function - must give the arguments without the word function y {}
 #calling the function
-lf_processed <- import_data_ts(infile_name=infile_name,
-               in_dir=in_dir,
-               scaling=1,
-               n_col_start_date=4,
-               start_date="2004-01-01",
-               end_date=NULL,
-               out_dir=out_dir,
-               out_suffix=out_suffix)
 
-infile_name <- lf_processed[1] #for testing
-  
-
-  
 ####### BEGIN FUNCTION #######
 #for testing you want to read the data just for testing
-plot_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,start_date="2004-01-01",end_date=NULL,out_dir=".", out_suffix=""){
- #general function to plot ts data
+#df <- read.table(infile_name,sep=",",header=T) #just for testing
+df <- read.table(file.path(in_dir,infile_name),sep=",",header=T,stringsAsFactors = F) 
 
+
+plot_ts <- function(df,in_dir=".",scaling=1,
+                    n_col_start_date=4,start_date="2004-01-01",
+                    end_date=NULL,selected_countries=NULL,
+                    selected_species=NULL,out_dir=".", 
+                    out_suffix=""){
+  #general function to plot ts data
+
+  if(is.null(selected_countries)){
+    selected_countries <- c("USA")
+  }
   
-  #df <- read.table(infile_name,sep=",",header=T) #just for testing
-  df <- read.table(file.path(in_dir,infile_name),sep=",",header=T) 
+  if(is.null(selected_species)){
+    selected_species <- df$sci_name[1]
+  }
   
-############ TO DO
-  #copy code from the theilsen file that subsets by country, dates, species??
-  #plotting code
+  df_subset <- subset(df,df$sci_name%in%selected_species 
+                        & df$country%in%selected_countries)
+  
+  #### transform subset data into a time series zoo object
+  
+  #TO DO:
+  #df_ts 
+  #
+  # need to transpose, keep as a df, and add column name
+  gst60k_1<- gather(gst60k_select, "date", "gst", -name, -country) #change if selecting 1 country
+  
+  #make real date for R code
+  gst60k_1$date <- as.Date(gst60k_1$date, format = "X%m.%d.%Y")
+  
+  if(is.null(end_date)){
+    
+    n_col <- ncol(df)
+    nt <- n_col - n_col_start_date #we are dropping the last date because it is often incomplete
+    range_dates <- seq.Date(from=as.Date(start_date),by="month",
+                            length.out = nt )
+    range_dates_str <- as.character(range_dates)
+    end_date <- range_dates[nt]
+    ## EXAMPLE of windowing by dates using the zoo package
+    df_w_ts <- window(df_ts,start=start_date,end= end_date)
+  }else{
+    df_w_ts <- window(df_ts,start=start_date,end= end_date)
+  }
   
   
-##################
-  
-  
-  ## EXAMPLE of windowing by dates using the zoo package
-  df_w_ts <- window(df_ts,start=as.Date("2016-01-01"),end= as.Date("2017-01-01"))
   plot(df_w_ts[,1:3]) #this is plotting a zoo object (check class - should be zoo) which is different from regular plotting
   
   df_agg_ts <- aggregate(df_ts, by=as.yearqtr) # depending on the input - in this case from zoo
@@ -63,13 +163,9 @@ plot_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,start_da
   class(df_agg_ts)
   dim(df_agg_ts)
   
-  
   #plot(df_agg_ts[,1:3]) #the default is to plot separately
   plot(df_agg_ts[,1:3], plot.type="single") #this plots all 3 on the same graph #???? WOULD NEED A LEGEND Y COLORS IF DID IT THIS WAY.
   #BETTER TO DO REAL PLOTS WITH GGPLOT??
-  
-  
-  
   
   ### to compare monthly and quarterly
   # should be able to plot both on the same plot  #########???? THESE PLOTS ARE OF THE FIRST COLUMN, RIGHT?  NEED LEGEND
