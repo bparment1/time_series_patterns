@@ -2,14 +2,14 @@
 ##
 ## 
 ## DATE CREATED: 05/23/2017
-## DATE MODIFIED: 05/26/2017
+## DATE MODIFIED: 06/28/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: adding output dir function
+## COMMIT: adding plotting time series function
 ##
 
 ###################################################
@@ -126,5 +126,100 @@ calculate_theil_sen_time_series <- function(i,data_df,save_opt=FALSE,out_dir="."
   return(obj_theil_sen)
 }
 
+plot_ts <- function(df,in_dir=".",scaling=1,
+                    n_col_start_date=4,start_date="2004-01-01",
+                    end_date=NULL,selected_countries=NULL,
+                    selected_species=NULL,save_fig=FALSE,out_dir=".", 
+                    out_suffix=""){
+  #general function to plot ts data
+  ## add conditions to select all countries and/or species
+  #e.g. selected_countries==ALL
+  #e.g. selected_species==ALL
+  
+  if(is.null(selected_countries)){
+    selected_countries <- c("USA")
+  }
+  
+  if(is.null(selected_species)){
+    selected_species <- df$sci_name[1]
+  }
+  
+  df_subset <- subset(df,df$sci_name%in%selected_species 
+                      & df$country%in%selected_countries)
+  
+  #### transform subset data into a time series zoo object
+  
+  #TO DO:
+  #df_ts 
+  #
+  # need to transpose, keep as a df, and add column name
+  #gst60k_1<- gather(gst60k_select, "date", "gst", -name, -country) #change if selecting 1 country
+  names_countries <- as.character(df_subset$country)
+  names_species <- as.character(df_subset$sci_name)
+  names_species <- sub(" ","_",names_species)
+  
+  names_col <- paste(names_countries,names_species,sep="_")
+  
+  n_col <- ncol(df_subset)
+  df_ts <- t(df_subset[,n_col_start_date:n_col]) #transpose, the result is a matrix
+  df_ts <- as.data.frame(df_ts) #coerce in data.frame object
+  names(df_ts) <- names_col #in this case, country code
+  
+  ### checkt that we are not dropping columns
+  if(is.null(end_date)){
+    
+    n_col <- ncol(df_subset)
+    nt <- n_col - n_col_start_date #we are dropping the last date because it is often incomplete
+    range_dates <- seq.Date(from=as.Date(start_date),by="month",
+                            length.out = nt )
+    range_dates_str <- as.character(range_dates)
+    end_date <- range_dates[nt]
+  }
+  
+  #else{
+  #  df_w_ts <- window(df_ts,start=start_date,end= end_date)
+  #}
+  
+  ## EXAMPLE of windowing by dates using the zoo package
+  #df_w_ts <- window(df_ts,start=start_date,end= end_date)
+  
+  df_ts <- zoo(df_ts,range_dates)
+  
+  plot(df_ts)
+  
+  if(save_fig==TRUE){
+    
+    res_pix<-480 #set as function argument...
+    col_mfrow<-1
+    #row_mfrow<-2
+    row_mfrow<-1
+    
+    png_file_name<- paste("Figure_",selected_countries,"_",selected_species,
+                          out_suffix,".png", sep="")
+    
+    png(filename=file.path(out_dir,png_file_name),
+        width=col_mfrow*res_pix,height=row_mfrow*res_pix)
+    par(mfrow=c(row_mfrow,col_mfrow))
+    
+    plot(df_ts) #plot now
+    dev.off()
+    
+  }else{
+    png_file_name<- paste("Figure_",selected_countries,"_",selected_species,
+                          out_suffix,".png", sep="")
+  }
+  
+  return(png_file_name)
+}
+
+
+#remove low gst volume species-country combinations
+above_threshold <- function(x,threshold_val=0.004) {
+  #x <- x[x > 0]
+  median(x, na.rm=FALSE) > threshold_val #change to see various amounts of species retained;
+  #var(x,na.rm=FALSE) !=0
+  # max(x, na.rm=FALSE) >0.001 #remove those with 0 values
+  #median(x, na.rm=FALSE) >0.0000005 #change to see various amounts of species retained; #use this if normalized
+}
 
 ################### End of script ################
