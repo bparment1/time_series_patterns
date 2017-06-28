@@ -2,7 +2,7 @@
 ##
 ## 
 ## DATE CREATED: 05/15/2017
-## DATE MODIFIED: 06/26/2017
+## DATE MODIFIED: 06/28/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -24,7 +24,7 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_06262017.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_06282017b.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_06162017.R" #PARAM 1
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
@@ -48,7 +48,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs" #parent d
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <- "60k_time_series_analyses_06262017"
+out_suffix <- "60k_time_series_analyses_06282017"
 #ARGS_9
 n_col_start_date <- 4
 #ARGS 10
@@ -76,8 +76,7 @@ if(create_out_dir_param==TRUE){
 }
 
 
-## Step 1: read in the data and generate time stamps
-
+############### PART 1: Imported and time series transformation #####
 ## Step 1: read in the data and generate time stamps
 
 data_ts_filename <- import_data_ts(infile_name = infile_name,
@@ -100,6 +99,7 @@ range_dates <- names(df)[n_col_start_date:ncol(df)]
 range_dates_str <- as.character(range_dates)
 
 range_dates<- ymd(range_dates_str)
+
 #class(range_dates)
 #start_date
 #names_col <- c("g_id","sci_name","country",range_dates_str)
@@ -121,15 +121,6 @@ names_col <- paste(names_countries,names_species,sep="_")
 names(df_ts) <- names_col
 View(df_ts)
 
-#remove low gst volume species-country combinations
-above_threshold <- function(x,threshold_val=0.004) {
-  #x <- x[x > 0]
-  median(x, na.rm=FALSE) > threshold_val #change to see various amounts of species retained;
-  #var(x,na.rm=FALSE) !=0
-  # max(x, na.rm=FALSE) >0.001 #remove those with 0 values
-  #median(x, na.rm=FALSE) >0.0000005 #change to see various amounts of species retained; #use this if normalized
-}
-
 ########
 ## Example of windowing by dates
 
@@ -143,18 +134,20 @@ df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-05-01
 
 index_selected <- lapply(df_w_ts_ref,
                       FUN=above_threshold,
-                      threshold_val=0.00004)
+                      threshold_val=0.04)
 columns_selected <- unlist(index_selected)
 df_ts_subset <- df_ts[,columns_selected]
 dim(df_ts_subset)
 
-#select high gst volume rows for last 12 months
-#rows_to_accept <- apply(df[151:164],1, above_threshold)
-#hi_gst_species <- df[rows_to_accept, ]
-# names(hi_gst_species)
-#df_ts <- hi_gst_species[, 4:164]#*scaling_factor ### how to multilply these columns and keep the others
-#### WHY IS THE SCALING FACTOR ABOVE NOT WORKING?
+#undebug(plot_ts)
 
+test_plot <- plot_ts(df_subset,in_dir=".",scaling=1,
+                     n_col_start_date=4,start_date="2004-01-01",
+                     end_date=NULL,selected_countries="USA",
+                     selected_species="Aegithina tiphia",save_fig = TRUE,out_dir=".", 
+                     out_suffix=out_suffix)
+
+############## PART 2: THEIL SEN AND TREND DETECTION ############
 
 ### Theil Sen slope slope calculation
 
@@ -180,13 +173,13 @@ list_mod_mblm_test <- lapply(1:10, # input parameter i as a list
                              out_suffix=out_suffix)
 
 
-#list_mod_mblm_test <- mclapply(1:16, # input parameter i as a list
-#                             FUN=calculate_theil_sen_time_series,
-#                             data_df=df_ts_subset,
-#                             out_dir=out_dir,
-#                             out_suffix=out_suffix,
-#                             mc.preschedule=FALSE,
-#                             mc.ores=num_cores)
+list_mod_mblm_test <- mclapply(1:16, # input parameter i as a list
+                             FUN=calculate_theil_sen_time_series,
+                             data_df=df_ts_subset,
+                             out_dir=out_dir,
+                             out_suffix=out_suffix,
+                             mc.preschedule=FALSE,
+                             mc.cores=num_cores)
 
 
 class(list_mod_mblm_test[[1]])
@@ -200,5 +193,36 @@ View(df_theil_sen)
 test_df <- arrange(df_theil_sen,desc(slope)) #order data by magnitude of slope (theil sen)
 View(test_df)
 
+
+###############
+
+
+
+
+
+####
+#undebug(calculate_theil_sen_time_series)
+
+test <- trend_pattern_detection(df_ts_subset,range1=NULL,range2=NULL,out_suffix="",out_dir=".")
+  
+out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".txt")
+write.table(test,out_filename,sep=",",row.names = F)
+out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".csv")
+write.table(test,out_filename,row.names = F)
+
+range1 <- c("2016-05-01","2016-12-01")
+range2 <- c("2016-05-01","2017-04-01")
+test1 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
+
+range1 <- c("2016-05-01","2016-12-01")
+range2 <- c("2016-05-01","2017-04-01")
+
+test2 <- trend_pattern_detection(df_ts_subset,range1=NULL,range2=NULL,out_suffix="",out_dir=".")
+
+
+
+
+
+#########
 
 ################### End of script ################
