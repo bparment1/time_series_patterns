@@ -20,31 +20,33 @@
 library(xts) #extension for time series object and analyses
 library(zoo) # time series object and analysis
 library(mblm) #Theil Sen estimator
-library(lubridate) 
+library(lubridate)
+library(dplyr)
 
 ###### Functions used in this script
 
 functions_time_series_analyses_script <- "time_series_functions_06282017b.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_06162017.R" #PARAM 1
-script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+script_path <- "/nfs/edaut-data/Time Series MARSS" #path to script #PARAM 2
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
+
 
 #####  Parameters and argument set up ###########
 
 #ARGS 1
-in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
+in_dir <- "/nfs/edaut-data/Time Series MARSS"
 #ARGS 2
-#infile_name <- ""
-infile_name <- "vert_sp_gst_original_06122017.csv"
+infile_name <- "vert_sp_gst_original_06122017.csv" 
 #ARGS 3
 start_date <- "2004-01-01"
 #ARGS 4
 end_date <- NULL
 #ARGS 5
+#scaling_factor <- 100000 #MODIFY THE SCALING FACTOR - FOR NORMALIZED DATA SHOULD BE 10,000 AT LEAST
 scaling_factor <- 1000 
 #ARGS 6
-out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs" #parent directory where the new output directory is located
+out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs" #parent directory where the new output directory is placed
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
@@ -94,6 +96,21 @@ df <- read.table(data_ts_filename,sep=",",fill=T,header=T,check.names = F)
 #test<- df_dat_animals * scaling_factor
 
 dim(df)
+
+
+############## RUN WITHOUT "ALL" CATEGORY BECAUSE WANT COUNTRY-SPECIFIC RESULTS AND "ALL" IS DOMINATING##################
+df <- filter(df, !(country == "All")) #to run all country categories except All      
+
+
+
+########### NEED TO FILTER TO KEEP JUST THOSE ROWS WHERE THE LAST VALUE IS GREATER THAN THE SECOND TO LAST VALUE ##################
+
+selected_last <- df[,c("2017-05-01")] > df[,c("2017-04-01")]  #need to change dates to compare different ending time periods
+#sum(selected_last)
+df_last <- df[selected_last,]
+df <- df_last
+
+
 #View(df_dat_animals)
 range_dates <- names(df)[n_col_start_date:ncol(df)]
 range_dates_str <- as.character(range_dates)
@@ -111,7 +128,12 @@ df_subset <- df
 
 df_ts <- t(df[n_col_start_date:ncol(df_subset)])
 df_ts <- as.data.frame(df_ts)
-df_ts <- zoo(df_ts,range_dates)
+dim(df_ts)
+df_ts_test <- df_ts[,]*1000  ############### ADDED SCALING HERE ###################################################
+
+
+
+df_ts <- zoo(df_ts_test,range_dates)
 
 names_countries <- as.character(df_subset$country)
 names_species <- as.character(df_subset$sci_name)
@@ -124,7 +146,7 @@ View(df_ts)
 ########
 ## Example of windowing by dates
 
-df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-05-01"))
+df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-05-01")) # filter low volumn gst rows based on last 12 months
 
 #df_subset <- mclapply(df_ts[1:16],
 #                      thresold_val=0.00004,
@@ -132,33 +154,77 @@ df_w_ts_ref <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-05-01
 #              mc.preschedule=FALSE,
 #              mc.ores=num_cores)
 
-index_selected <- lapply(df_w_ts_ref,
+index_selected <- lapply(df_w_ts_ref, #for the windowed period identified in the functions file
                       FUN=above_threshold,
-                      threshold_val=0.04)
+                      threshold_val=4)  #### THIS IS SO HIGH BECAUSE DATA HAVE BEEN SCALED
 columns_selected <- unlist(index_selected)
 df_ts_subset <- df_ts[,columns_selected]
-dim(df_ts_subset)
+dim(df_ts_subset)  #THIS IS A ZOO OBJECT
+
 
 #undebug(plot_ts)
 
-test_plot <- plot_ts(df_subset,in_dir=".",scaling=1,
+############### WHAT IS PLOTTING FUNCTION PLOTTING??? ##################################### 
+
+test_plot <- plot_ts(df_ts_subset,in_dir=".",scaling=1,
                      n_col_start_date=4,start_date="2004-01-01",
                      end_date=NULL,selected_countries="USA",
-                     selected_species="Aegithina tiphia",save_fig = TRUE,out_dir=".", 
+                     selected_species="Aythya affinis",save_fig = TRUE,out_dir=".",
                      out_suffix=out_suffix)
 
+
+############## TRY SOME SORT OF SMOOTHING BEFORE THEIL-SEN TO SEE IF GET BETTER RESULTS ##############
+
+# NEED TO TEST WITH SOME SP-CO WHERE THE LAST MONTH INCREASES DRAMATICALLY TO SEE WHAT THE SMOOTHING DOES
+
+## Moving average, smoothing and rollingmean
+#an example of smoothing from zoo
+rollmean_ts <- rollmean(df_ts_subset[,888], 12) #can change the length
+
+rollmean_ts <- rollmean(df_ts_subset[,"Malaysia_Balaenoptera_musculus"], 12) #HOW TO DO BY SP_CO
+rollmean_ts <- rollmean(df_ts_subset[,], 12) #HOW TO RUN FOR EACH ROW
+rollmean_ts <- as.data.frame(rollmean_ts)
+dim(rollmean_ts)
+
+# can also do the rollmedian, rollmax
+#could look at the difference from the max-mean to find peaks
+#the weight is just one
+#if don't overlap the windows
+#can also "align" to R or L; use the center one for smoothing; and the running mean for prediction
+#could have very small windows and not overlap
+#can do rollapply with a function to identify the peaks
+
+dim(rollmean_ts) #need to fix this  ############################################### 
+
+par(mfrow=c(1,1))
+plot(rollmean_ts)
+plot((df_ts_subset[,888]))
+plot((df_ts_subset[,"Malaysia_Balaenoptera_musculus"]))  #HOW TO DO BY SP_CO
+
+#########################
+
+
+
+
 ############## PART 2: THEIL SEN AND TREND DETECTION ############
+
+############ SKIP DOWN TO TEST SECTION ###################
 
 ### Theil Sen slope slope calculation
 
 #make this a function later: example with the first country
 #undebug(calculate_theil_sen_time_series)
-mod_mblm_test <- calculate_theil_sen_time_series(i=2,
+
+###### TESTING SINGLE ROWS
+mod_mblm_test <- calculate_theil_sen_time_series(i=55,
                                                  data_df=df_ts_subset,
                                                  out_dir=out_dir,
                                                  out_suffix=out_suffix)
 mod_mblm_test
+
 #debug(calculate_theil_sen_time_series)  
+
+##### TESTING THE ENTIRE SUBSET- FULL TIME PERIOD
 list_mod_mblm_test <- lapply(1:ncol(df_ts_subset), # input parameter i as a list
                              FUN=calculate_theil_sen_time_series,
                              data_df=df_ts_subset,
@@ -166,6 +232,7 @@ list_mod_mblm_test <- lapply(1:ncol(df_ts_subset), # input parameter i as a list
                              out_suffix=out_suffix)
 
 
+#### TESTING A FEW ROWS OF SUBSET
 list_mod_mblm_test <- lapply(1:10, # input parameter i as a list
                              FUN=calculate_theil_sen_time_series,
                              data_df=df_ts_subset,
@@ -173,14 +240,16 @@ list_mod_mblm_test <- lapply(1:10, # input parameter i as a list
                              out_suffix=out_suffix)
 
 
-list_mod_mblm_test <- mclapply(1:16, # input parameter i as a list
-                             FUN=calculate_theil_sen_time_series,
-                             data_df=df_ts_subset,
-                             out_dir=out_dir,
-                             out_suffix=out_suffix,
-                             mc.preschedule=FALSE,
-                             mc.cores=num_cores)
+#### NEED TO FIX THE MCL APPLY
+# list_mod_mblm_test <- mclapply(1:16, # input parameter i as a list
+#                              FUN=calculate_theil_sen_time_series,
+#                              data_df=df_ts_subset,
+#                              out_dir=out_dir,
+#                              out_suffix=out_suffix,
+#                              mc.preschedule=FALSE,
+#                              mc.cores=num_cores)
 
+###### PRODUCES AN OUTPUT TABLE - ORIGINAL ORDER AND DESCENDING 
 
 class(list_mod_mblm_test[[1]])
 names(list_mod_mblm_test[[1]])
@@ -194,30 +263,49 @@ test_df <- arrange(df_theil_sen,desc(slope)) #order data by magnitude of slope (
 View(test_df)
 
 
-###############
 
 
 
+################################################################################################
 
+# df_ts_subset <- rollmean_ts  # NEED TO FIX THE ROLLMEAN_TS SO IT CAN BE SEEN... A ZOO OBJECT, BUT NOT WORKING
+# dim(df_ts_subset)
 
 ####
 #undebug(calculate_theil_sen_time_series)
 
+# TEST (ORIGINAL RANGE DATES:  REF = "2014-12-01","2016-12-01" AND CURRENT = "2017-01-01","2017-05-01"
 test <- trend_pattern_detection(df_ts_subset,range1=NULL,range2=NULL,out_suffix="",out_dir=".")
-  
-out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".txt")
-write.table(test,out_filename,sep=",",row.names = F)
-out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".csv")
-write.table(test,out_filename,row.names = F)
+test <- arrange(trend_pattern_detection,desc(slope)) #order data by magnitude of slope (theil sen)
+View(test)
+out_filename <- paste0("theil_sen_trend_detection_test",out_suffix,".csv")
+write.csv(test,out_filename,row.names = F)
 
-range1 <- c("2016-05-01","2016-12-01")
-range2 <- c("2016-05-01","2017-04-01")
-test1 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
 
-range1 <- c("2016-05-01","2016-12-01")
-range2 <- c("2016-05-01","2017-04-01")
 
-test2 <- trend_pattern_detection(df_ts_subset,range1=NULL,range2=NULL,out_suffix="",out_dir=".")
+# TEST3 
+range1 <- c("2011-01-01","2016-12-01") #reference
+range2 <- c("2017-01-01","2017-05-01") #current
+test22 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
+View(test22)
+out_filename <- paste0("theil_sen_trend_detection_test22_",out_suffix,".csv")
+write.csv(test22,out_filename,row.names = F)
+
+
+
+# TEST2 
+range1 <- c("2013-12-01","2016-12-01") #reference  #MIDWAY - 1/2 OF TIME OF TIME SERIES EXCLUDING LAST 5 TEST MONTHS
+range2 <- c("2017-01-01","2017-05-01") #current
+test20 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
+#View(test2)
+out_filename <- paste0("theil_sen_trend_detection_test20_",out_suffix,".csv")
+write.csv(test20,out_filename,row.names = F)
+
+
+
+# out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".txt")
+# write.table(test,out_filename,sep=",",row.names = F)
+
 
 
 
