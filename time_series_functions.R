@@ -223,7 +223,10 @@ above_threshold <- function(x,threshold_val=0.004) {
 }
 
 
-trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,out_suffix="",out_dir="."){
+trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NULL,out_suffix="",out_dir="."){
+  
+  library(zoo)
+  
   #add documentation
   #
   if(is.null(range1)){
@@ -233,10 +236,20 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,out_suffix="",
     range2 <- c("2016-05-01","2017-04-01")
   }
   
+  if(!is.null(roll_window)){
+    #smooth time series if not null
+    df_ts <- rollmean(df_ts,roll_window) #HOW TO RUN FOR EACH ROW
+  }else{
+    roll_window <- NA
+  }
+  
   #df_w_ts_ref <- window(df_ts_subset,start=as.Date(range1[1]),end= as.Date(range1[2]))
   #df_w_ts_current <- window(df_ts_subset,start=as.Date(range2[1]),end= as.Date(range2[2]))
-  df_w_ts_ref <- window(df_ts,start=as.Date(range1[1]),end= as.Date(range1[2]))
   df_w_ts_current <- window(df_ts,start=as.Date(range2[1]),end= as.Date(range2[2]))
+  
+  df_w_ts_ref <- window(df_ts,start=as.Date(range1[1]),end= as.Date(range1[2]))
+  #detach_package("quantmod", TRUE)
+  #library(zoo)
   
   #df_w_ts_combined <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-04-01"))
   
@@ -283,6 +296,8 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,out_suffix="",
   df_theil_sen_combined$ts_ratio <- df_theil_sen_combined$slope2/df_theil_sen_combined$slope1
   
   df_theil_sen_combined <- arrange(df_theil_sen_combined,desc(ts_ratio))
+  
+  df_theil_sen_combined$roll_window <- roll_window
   
   return(df_theil_sen_combined)  
 }
