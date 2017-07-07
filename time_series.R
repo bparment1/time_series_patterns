@@ -286,13 +286,27 @@ out_filename <- paste0("theil_sen_trend_detection_test22_",out_suffix,".csv")
 write.csv(test22,out_filename,row.names = F)
 
 
-functions_time_series_analyses_script <- "time_series_functions_07062017.R" #PARAM 1
-source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
+#functions_time_series_analyses_script <- "time_series_functions_07072017.R" #PARAM 1
+#source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 
 #debug(trend_pattern_detection)
-test23 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,roll_window=12,out_suffix="",out_dir=".")
-test22 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
+out_suffix_str <- paste0(c("test23_v1"),"_",out_suffix)
+test23_v1 <- trend_pattern_detection(df_ts_subset,
+                                     range1=range1,
+                                     range2=range2,
+                                     roll_window=12,
+                                     out_suffix=out_suffix_str,
+                                     out_dir=out_dir)
+## don't smooth current window (range2), use version 2
+out_suffix_str <- paste0(c("test23_v2"),"_",out_suffix)
+test23_v2 <- trend_pattern_detection2(df_ts_subset,
+                                      range1=range1,
+                                      range2=range2,
+                                      roll_window=12,
+                                      out_suffix=out_suffix_str,
+                                      out_dir=out_dir)
 
+#test22 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
 
 View(test23)
 out_filename <- paste0("theil_sen_trend_detection_test23_",out_suffix,".csv")
@@ -300,23 +314,51 @@ write.csv(test23,out_filename,row.names = F)
 
 
 # TEST2 
-range1 <- c("2013-12-01","2016-12-01") #reference  #MIDWAY - 1/2 OF TIME OF TIME SERIES EXCLUDING LAST 5 TEST MONTHS
-range2 <- c("2017-01-01","2017-05-01") #current
-test20 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
+#range1 <- c("2013-12-01","2016-12-01") #reference  #MIDWAY - 1/2 OF TIME OF TIME SERIES EXCLUDING LAST 5 TEST MONTHS
+#range2 <- c("2017-01-01","2017-05-01") #current
+#test20 <- trend_pattern_detection(df_ts_subset,range1=range1,range2=range2,out_suffix="",out_dir=".")
 #View(test2)
 out_filename <- paste0("theil_sen_trend_detection_test20_",out_suffix,".csv")
 write.csv(test20,out_filename,row.names = F)
 
+################### Dealing with Seasonality ##########
 
+### let's analyze a specific time series
+i <- 1 #change the index to choose specific time series
+ts_zoo_obs <- df_ts[,i]
+plot(ts_zoo_obs)
+## Not sure what to choose for frequency, use 12 to say monthly??
+ts_decomp <- decompose(ts(ts_zoo_obs,frequency=12))
 
-# out_filename <- paste0("theil_sen_trend_detection_",out_suffix,".txt")
-# write.table(test,out_filename,sep=",",row.names = F)
+plot(ts_decomp)
+ts_decomp$seasonal
+which.max(ts_decomp$seasonal) # this suggests peaks of seasonality in August!!!
 
+length(ts_decomp$seasonal) - length(ts_zoo_obs) #ok no data point lost
 
+### use stl for experimentation
+ts_stl <- stl(ts(ts_zoo_obs,frequency=12),s.window=12)
+plot(ts_stl)
 
+str(ts_stl)
 
+dim(ts_stl$time.series)
+class(ts_stl$time.series)
+plot(ts_stl$time.series[,1]) #seasonality
+plot(ts_stl$time.series[,2]) #trend
+length(ts_stl$time.series[,2]) #ok 161
 
+#### Now remove periodic cycle:
+ts_test <- as.numeric(ts_zoo_obs) - as.numeric(ts_stl$time.series[,1])
+ts_test <- zoo(ts_test,date(ts_zoo_obs))
+plot(ts_test)
+lines(ts_zoo_obs,add=T,col="red")
 
-#########
+#decomp
+ts_test <- as.numeric(ts_zoo_obs) - as.numeric(ts_decomp$seasonal)
+ts_test <- zoo(ts_test,date(ts_zoo_obs))
+plot(ts_test)
+lines(ts_zoo_obs,add=T,col="red")
+
 
 ################### End of script ################
