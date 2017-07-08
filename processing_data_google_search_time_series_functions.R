@@ -35,7 +35,7 @@ library(ggplot2)
 
 ###### Functions used in this script
 
-import_data_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,start_date="2004-01-01",end_date=NULL,out_dir=".", out_suffix=""){
+import_data_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,start_date="2011-01-01",end_date=NULL,out_dir=".", out_suffix=""){
   #Import data sent by google and format columns for future processing and visualization.
   
   ##### BEGIN FUNCTION ####
@@ -56,6 +56,8 @@ import_data_ts <- function(infile_name,in_dir=".",scaling=1,n_col_start_date=4,s
   #start_date
   names_col <- c("g_id","sci_name","country",range_dates_str)
   df <- df[-1,-n_col] #remove the first row with incomplete header and last column with incomplete data
+  #df <- df[-1, n_col] #remove the first row with incomplete header and last column with incomplete data ############### OKAY???
+ # df <- df[-1,] #remove the first row with incomplete header and last column with incomplete data ############### OKAY???
   names(df) <- names_col
   df[,n_col_start_date] <- sub('"',"",df[,n_col_start_date])
   
