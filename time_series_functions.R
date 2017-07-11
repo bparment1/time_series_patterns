@@ -2,14 +2,15 @@
 ##
 ## 
 ## DATE CREATED: 05/23/2017
-## DATE MODIFIED: 06/28/2017
+## DATE MODIFIED: 07/11/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: adding plotting time series function
+## COMMIT: rolling alone not working to remove seasonality; 
+          #removed trend_pattern_detection2 with NO rolling for current ts
 ##
 
 ###################################################
@@ -230,10 +231,10 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NU
   #add documentation
   #
   if(is.null(range1)){
-    range1 <- c("2016-05-01","2016-12-01")
+    range1 <- c("2011-01-01","2016-12-01")
   }
   if(is.null(range2)){
-    range2 <- c("2016-05-01","2017-05-01")
+    range2 <- c("2017-01-01","2017-05-01")
   }
   
   if(!is.null(roll_window)){
@@ -309,24 +310,99 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NU
 }
 
 
-trend_pattern_detection2 <- function(df_ts,range1=NULL,range2=NULL,roll_window=NULL,out_suffix="",out_dir="."){
+
+
+cycle_pattern_detection <-function(i,df_ts_data,method_opt="decompose",freq_val=12,save_fig=F){
+  #comments about the function
+  #df_ts_data = df_ts_subset
+  
+  ##### Begin script ####
+  
+  ts_zoo_obs <- df_ts_data[,i]
+ 
+  if(method_opt=="decompose"){
+    
+    ts_cycle <- decompose(ts(ts_zoo_obs,frequency=freq_val))
+    
+    #plot(ts_decomp)
+    #ts_decomp$seasonal
+    #max_peak <- which.max(ts_cycle$seasonal) # this suggests peaks of seasonality in ??? 
+    
+    #length(ts_decomp$seasonal) - length(ts_zoo_obs) #ok no data point lost
+    
+    #decomp
+    ts_test <- as.numeric(ts_zoo_obs) - as.numeric(ts_cycle$seasonal)
+    ts_test <- zoo(ts_test,date(ts_zoo_obs))
+    
+  }
+  
+  if(method_opt=="stl"){
+    
+   
+    ts_cycle <- stl(ts(ts_zoo_obs,frequency=freq_val),s.window=freq_val)
+    #plot(ts_stl)
+    #str(ts_stl)
+    
+    # dim(ts_stl$time.series)
+    # class(ts_stl$time.series)
+    # plot(ts_stl$time.series[,1]) #seasonality
+    # plot(ts_stl$time.series[,2]) #trend
+    # length(ts_stl$time.series[,2]) #ok 161  (or 77 if using normalized data)
+    
+    
+    #### Now remove periodic cycle:
+   # ts_test <- as.numeric(ts_zoo_obs) - as.numeric(ts_cycle$time.series[,4]) # FOR COUNTRY-SPECIES WITH KNOWN SEASONALITY, 
+    # #I'M GETTING AN ERROR Error in `[.default`(ts_stl$time.series, , 4) : subscript out of bounds
+    # ts_test <- zoo(ts_test,date(ts_zoo_obs))
+    # #plot(ts_test)
+    # #lines(ts_zoo_obs,add=T,col="red")
+    # 
+    # 
+   # ts_test <- as.numeric(ts_zoo_obs) - as.numeric(ts_cycle$seasonal)
+    ts_test <- as.numeric(ts_zoo_obs) - (ts_cycle$time.series[,1]) #### is this right??
+    #ts_test <- as.numeric(ts_zoo_obs) - (ts_cycle$seasonal)
+    ts_test <- zoo(ts_test,date(ts_zoo_obs))
+    
+  }
+  
+  
+  #
+  if(save_fig==T){
+    #
+    #plot(ts_test)
+    #lines(ts_zoo_obs,add=T,col="red")
+    
+  }
+  
+  
+  
+  ### 
+  cycle_obj <-  list(ts_test,ts_zoo_obs,ts_cycle)
+  names(cycle_obj) <- c("ts_test","ts_zoo_obs","ts_cycle")
+  return(cycle_obj)
+}
+
+
+
+
+################## theilsen with decomposed data ###############
+
+trend_pattern_detection_decom <- function(df_ts_decom,range1=NULL,range2=NULL,roll_window=NULL,out_suffix="",out_dir="."){
   
   library(zoo)
   
   #add documentation
   #
   if(is.null(range1)){
-    range1 <- c("2016-05-01","2016-12-01")
+    range1 <- c("2011-01-01","2016-12-01")
   }
   if(is.null(range2)){
-    range2 <- c("2016-05-01","2017-05-01")
+    range2 <- c("2017-01-01","2017-05-01")
   }
   
   if(!is.null(roll_window)){
     #smooth time series if not null
-    df_ts_original <- df_ts #keep a copy of original data
-    df_ts <- rollmean(df_ts,roll_window)
-    
+    df_ts_decom <- rollmean(df_ts_decom,roll_window)
     #note that the time series is cut by roll_window -1 
     #e.g. if roll_window is 12, 11 timesteps are lost, 5 at the beginning and 6 at the end.
     #df_ts <- rollmean(df_ts,roll_window,fill=TRUE) #HOW TO RUN FOR EACH ROW
@@ -336,9 +412,9 @@ trend_pattern_detection2 <- function(df_ts,range1=NULL,range2=NULL,roll_window=N
   
   #df_w_ts_ref <- window(df_ts_subset,start=as.Date(range1[1]),end= as.Date(range1[2]))
   #df_w_ts_current <- window(df_ts_subset,start=as.Date(range2[1]),end= as.Date(range2[2]))
-  df_w_ts_current <- window(df_ts_original,start=as.Date(range2[1]),end= as.Date(range2[2]))
+  df_w_ts_current <- window(df_ts_decom,start=as.Date(range2[1]),end= as.Date(range2[2]))
   
-  df_w_ts_ref <- window(df_ts,start=as.Date(range1[1]),end= as.Date(range1[2]))
+  df_w_ts_ref <- window(df_ts_decom,start=as.Date(range1[1]),end= as.Date(range1[2]))
   #detach_package("quantmod", TRUE)
   #library(zoo)
   
@@ -389,11 +465,112 @@ trend_pattern_detection2 <- function(df_ts,range1=NULL,range2=NULL,roll_window=N
   df_theil_sen_combined <- arrange(df_theil_sen_combined,desc(ts_ratio))
   
   df_theil_sen_combined$roll_window <- roll_window
-
+  
   out_filename <- paste0("df_theil_sen_combined_",out_suffix,".csv")
   write.csv(df_theil_sen_combined,out_filename,row.names = F)
   
   return(df_theil_sen_combined)  
 }
+
+
+
+
+
+
+
+################## theilsen with stl data ###############
+
+trend_pattern_detection_stl<- function(df_ts_stl,range1=NULL,range2=NULL,roll_window=NULL,out_suffix="",out_dir="."){
+  
+  library(zoo)
+  
+  #add documentation
+  #
+  if(is.null(range1)){
+    range1 <- c("2011-01-01","2016-12-01")
+  }
+  if(is.null(range2)){
+    range2 <- c("2017-01-01","2017-05-01")
+  }
+  
+  if(!is.null(roll_window)){
+    #smooth time series if not null
+    df_ts_stl <- rollmean(df_ts_stl,roll_window)
+    #note that the time series is cut by roll_window -1 
+    #e.g. if roll_window is 12, 11 timesteps are lost, 5 at the beginning and 6 at the end.
+    #df_ts <- rollmean(df_ts,roll_window,fill=TRUE) #HOW TO RUN FOR EACH ROW
+  }else{
+    roll_window <- NA
+  }
+  
+  #df_w_ts_ref <- window(df_ts_subset,start=as.Date(range1[1]),end= as.Date(range1[2]))
+  #df_w_ts_current <- window(df_ts_subset,start=as.Date(range2[1]),end= as.Date(range2[2]))
+  df_w_ts_current <- window(df_ts_stl,start=as.Date(range2[1]),end= as.Date(range2[2]))
+  
+  df_w_ts_ref <- window(df_ts_stl,start=as.Date(range1[1]),end= as.Date(range1[2]))
+  #detach_package("quantmod", TRUE)
+  #library(zoo)
+  
+  #df_w_ts_combined <- window(df_ts,start=as.Date("2016-05-01"),end= as.Date("2017-04-01"))
+  
+  #plot(df_w_ts_combined[,1]) 
+  #names(df_w_ts_current)[1]
+  
+  #df_w_ts_ref[,1] + df_w_ts_current[,1] 
+  #plot(df_w_ts_current[,1])
+  #plot(df_w_ts_ref[,1])
+  #out_suffix="time_series_analyses_05232017")
+  mod_mblm_df_w_ts_ref <- lapply(1:ncol(df_w_ts_ref), # input parameter i as a list
+                                 FUN=calculate_theil_sen_time_series,
+                                 data_df=df_w_ts_ref,
+                                 out_dir=out_dir,
+                                 out_suffix=out_suffix)
+  
+  mod_mblm_df_w_ts_current<- lapply(1:ncol(df_w_ts_current), # input parameter i as a list
+                                    FUN=calculate_theil_sen_time_series,
+                                    data_df=df_w_ts_current,
+                                    out_dir=out_dir,
+                                    out_suffix=out_suffix)
+  
+  #class(list_mod_mblm_test[[1]])
+  #names(list_mod_mblm_test[[1]])
+  list_df_theil_sen_ref <- lapply(mod_mblm_df_w_ts_ref,FUN=function(x){x$df_theil_sen})
+  list_df_theil_sen_current <- lapply(mod_mblm_df_w_ts_current,FUN=function(x){x$df_theil_sen})
+  
+  df_theil_sen_ref <- do.call(rbind,list_df_theil_sen_ref)
+  df_theil_sen_current <- do.call(rbind,list_df_theil_sen_current)
+  
+  ## compare ratio of coef
+  #mod_mblm_df_w_ts_current$
+  
+  ### Ordering will change
+  #c("ID_ts","start_date","end_date","duration","method","intercept","slope","slope_sign")
+  names(df_theil_sen_ref) <- c("ID_ts","intercept1","slope1","slope_sign1","method1","start_date1","end_date1","duration1")
+  names(df_theil_sen_current) <- c("ID_ts","intercept2","slope2","slope_sign2","method2","start_date2","end_date2","duration2")
+  
+  #merge(df_theil_sen_ref,df_theil_sen_current,by=ID_ts) #not unique identifier
+  #Use cbind
+  #drop method column too
+  df_theil_sen_combined <- cbind(df_theil_sen_ref,df_theil_sen_current[,-1])
+  
+  df_theil_sen_combined$ts_ratio <- df_theil_sen_combined$slope2/df_theil_sen_combined$slope1
+  
+  df_theil_sen_combined <- arrange(df_theil_sen_combined,desc(ts_ratio))
+  
+  df_theil_sen_combined$roll_window <- roll_window
+  
+  out_filename <- paste0("df_theil_sen_combined_stl_",out_suffix,".csv")
+  write.csv(df_theil_sen_combined,out_filename,row.names = F)
+  
+  return(df_theil_sen_combined)  
+}
+
+
+
+
+
+
+
+
 
 ################### End of script ################
