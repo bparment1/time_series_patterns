@@ -224,7 +224,7 @@ above_threshold <- function(x,threshold_val=0.004) {
 }
 
 
-trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NULL,out_suffix="",out_dir="."){
+trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NULL,align_val="right",out_suffix="",out_dir="."){
   
   library(zoo)
   
@@ -239,7 +239,7 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NU
   
   if(!is.null(roll_window)){
     #smooth time series if not null
-    df_ts <- rollmean(df_ts,roll_window)
+    df_ts <- rollmean(df_ts,roll_window,align_val)
     #note that the time series is cut by roll_window -1 
     #e.g. if roll_window is 12, 11 timesteps are lost, 5 at the beginning and 6 at the end.
     #df_ts <- rollmean(df_ts,roll_window,fill=TRUE) #HOW TO RUN FOR EACH ROW
@@ -252,6 +252,18 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NU
   df_w_ts_current <- window(df_ts,start=as.Date(range2[1]),end= as.Date(range2[2]))
   
   df_w_ts_ref <- window(df_ts,start=as.Date(range1[1]),end= as.Date(range1[2]))
+  
+  
+  #1:ncol(df_w_ts
+  #df_ts_removed_ratio[,1] <- mean(df_ts_removed_current[,1])/mean(df_ts_removed_ref[,1])
+         
+  #df_ts_ratio <- df_w_ts
+  
+  mean_ratio <- lapply(1:ncol(df_w_ts_ref),
+         FUN=function(i){  mean_ratio_val <- mean(df_w_ts_current[,i])/mean(df_w_ts_ref[,i])}
+  )
+  mean_ratio <- unlist(mean_ratio)
+  
   #detach_package("quantmod", TRUE)
   #library(zoo)
   
@@ -298,6 +310,7 @@ trend_pattern_detection <- function(df_ts,range1=NULL,range2=NULL,roll_window=NU
   df_theil_sen_combined <- cbind(df_theil_sen_ref,df_theil_sen_current[,-1])
   
   df_theil_sen_combined$ts_ratio <- df_theil_sen_combined$slope2/df_theil_sen_combined$slope1
+  df_theil_sen_combined$mean_ratio <- mean_ratio
   
   df_theil_sen_combined <- arrange(df_theil_sen_combined,desc(ts_ratio))
   
