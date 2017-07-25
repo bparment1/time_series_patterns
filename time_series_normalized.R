@@ -27,8 +27,8 @@ library(lubridate)
 
 functions_time_series_analyses_script <- "time_series_functions_07112017c.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-script_path <- "/nfs/edaut-data/Time Series MARSS" #path to script #PARAM 2
-#script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+#script_path <- "/nfs/edaut-data/Time Series MARSS" #path to script #PARAM 2
+script_path <- "/nfs/bparmentier-data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 
@@ -36,7 +36,8 @@ source(file.path(script_path,functions_time_series_analyses_script)) #source all
 #####  Parameters and argument set up ###########
 
 #ARGS 1
-in_dir <- "/nfs/edaut-data/Time Series MARSS"
+#in_dir <- "/nfs/bparmentier-data/"
+in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
 #ARGS 2
 infile_name <- "hi_gst60k_species_concatenated2.csv" 
 #infile_name <- "hi_gst60k_species_normalized_csv2.csv" 
@@ -48,12 +49,12 @@ end_date <- NULL
 #scaling_factor <- 100000 #MODIFY THE SCALING FACTOR - FOR NORMALIZED DATA SHOULD BE 10,000 AT LEAST
 scaling_factor <- 1000 
 #ARGS 6
-out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs" #parent directory where the new output directory is placed
-#out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
+#out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs" #parent directory where the new output directory is placed
+out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <- "60k_time_series_analyses_07202017_norm"
+out_suffix <- "60k_time_series_analyses_07242017_norm"
 #ARGS_9
 n_col_start_date <- 4
 #ARGS 10
@@ -202,7 +203,7 @@ plot(df_ts[,"USA_Aegithina tiphia"])  ###################### script out of bound
 
 ## Moving average, smoothing and rollingmean
 # #an example of smoothing from zoo
- rollmean_ts <- rollmean(df_ts_subset[,108], 6) #can change the length #108 is seasonal
+rollmean_ts <- rollmean(df_ts_subset[,108], 6) #can change the length #108 is seasonal
 # 
 # rollmean_ts <- rollmean(df_ts_subset[,"Malaysia_Balaenoptera_musculus"], 12) #HOW TO DO BY SP_CO
 # rollmean_ts <- rollmean(df_ts_subset[,], 12) #HOW TO RUN FOR EACH ROW
@@ -429,6 +430,49 @@ View(df_ts_removed)
 dim(df_ts_removed)
 class(df_ts_removed)
 
+#####################################
+##### Add code to compute de ratio: 07/24
+df_ts_removed[,1]
+mean(df_ts_removed[,1])
+
+range1 <- c("2011-01-01","2016-11-01") #reference  # total 2 years; 6month current
+range2 <- c("2016-12-01","2017-05-01") #current
+df_ts_removed_ref <- window(df_ts_removed,start=range1[1],end=range1[2])
+df_ts_removed_current <- window(df_ts_removed,start=range2[1],end=range2[2])
+
+plot(df_ts_removed[,1])
+
+df_ts_removed_ratio[,1] <- mean(df_ts_removed_current[,1])/mean(df_ts_removed_ref[,1])
+
+
+
+
+lapply(1:ncol(df_w_ts_ref),
+       FUN=function(i){  df_ts_ratio[,i] <- mean(df_w_ts_current[,i])/mean(df_w_ts_removed[,i])})
+
+
+### New updated function 07/24/2017
+test_ratio <- trend_pattern_detection(df_ts_removed,
+                        range1=NULL,
+                        range2=NULL,
+                        roll_window=12,
+                        align_val="right",
+                        out_suffix="",
+                        out_dir=".")
+  
+
+
+df_ts_removed_roll <- rollmean(df_ts_removed,k=12,align="right")
+plot(df_ts_removed_roll[,1])
+
+length(df_ts_removed_roll[,1])
+
+#df_ts_removed_ratio[,1] <- df_ts_removed_current[,1]/mean(df_ts_removed_ref[,1])
+
+plot(df_ts_removed_ratio[,1]) #
+
+
+#df_ts_removed
 
 # FOR GRAPHS
 df_ts_removed_stl <- as.data.frame(df_ts_removed)
