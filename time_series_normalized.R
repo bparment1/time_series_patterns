@@ -111,41 +111,38 @@ df_original_subset <- subset(df_original,selected_country_names_totals %in% df_o
 df_original_subset <- subset(df_original_subset, df_original_subset$country != c("All"))
 
 #View(df_original_subset)
-rownames(df_original_subset) <-NULL
+rownames(df_original_subset) <- NULL
 
-normalize_by_country_totalsfunction(df_input,df_gst_totals,country_name,n_col_start_date){
+
+test<- normalize_by_country_totals(df_input=df_original_subset,df_gst_totals,country_name="USA",n_col_start_date)
+  
+normalize_by_country_totals <- function(df_input,df_gst_totals,country_name,n_col_start_date){
   #This functions normalizes data using monthly totals by countries.
   
   #### BEGIN #####
   
   n_col <- ncol(df_input)
   
+  n_select <- n_col_start_date-1
+
+  
   df_input_subset <- df_input[,n_col_start_date:n_col]
-  df_input_subset <- t(subset(df_input_subset,country_name==df_input$country))
-  #df_input_subset <- df_input_subset[n_col_start_date:n_col,]
+  df_input_subset <- subset(df_input_subset,country_name==df_input$country)
+  df_input_info <- df_input_subset[,1:n_select]
   
-  #rownames(df_input_subset) <- NULL
+  df_input_subset <- t(df_input_subset)
+  
+
   df_gst_totals_subset <- subset(df_gst_totals,select=country_name)
+  monthly_averages <- as.numeric(df_gst_totals_subset[,1])
   
-  monthly_averages <- as.data.frame(t(df_gst_totals_subset))
-  df_input_norm <- df_input_subset/as.numeric(df_gst_totals_subset[,1])
+  df_input_norm <- df_input_subset/monthly_averages
   
-  #as.numeric(df_gst_totals_subset[,1])[1:13]
-  #species 13
-  df_input[13,4]/as.numeric(df_gst_totals_subset[,1])[1]
-  
-  list_test <- lapply(1:ncol(df_input_subset),
-                          function(i){df_input_subset[,i]/as.numeric(df_gst_totals_subset[,1])})
-  test <- do.call(list_test,rbind)
-  
+  df_input_norm <- t(df_input_norm)
   rownames(df_input_norm)<- NULL
-  #df_input_subset[13,4]
-  #test[13,1]
-  #View(df_input_subset)
-  #df_gst_totals_subset[13,1]
   
-  #df_input_subset[,n_col_start_date:n_col]
-  
+  df_import_norm <- cbind(df_input_info,df_input_norm)
+
   return(df_input_norm)
 }
 
