@@ -2,14 +2,14 @@
 ##
 ## 
 ## DATE CREATED: 05/15/2017
-## DATE MODIFIED: 07/17/2017
+## DATE MODIFIED: 08/01/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: using normalized data with common species removed
+## COMMIT: adding normalization to account for general trends
 ##
 
 ###################################################
@@ -25,7 +25,7 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_07272017_rolling_right.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -114,41 +114,23 @@ df_original_subset <- subset(df_original_subset, df_original_subset$country != c
 rownames(df_original_subset) <- NULL
 
 
-test<- normalize_by_country_totals(df_input=df_original_subset,df_gst_totals,country_name="USA",n_col_start_date)
-  
-normalize_by_country_totals <- function(df_input,df_gst_totals,country_name,n_col_start_date){
-  #This functions normalizes data using monthly totals by countries.
-  
-  #### BEGIN #####
-  
-  n_col <- ncol(df_input)
-  
-  n_select <- n_col_start_date-1
+#debug(normalize_by_country_totals)
+test<- normalize_by_country_totals(country_name="USA",df_input=df_original_subset,df_gst_totals,n_col_start_date)
+dim(test)
 
-  
-  df_input_subset <- df_input[,n_col_start_date:n_col]
-  df_input_subset <- subset(df_input_subset,country_name==df_input$country)
-  df_input_info <- df_input_subset[,1:n_select]
-  
-  df_input_subset <- t(df_input_subset)
-  
+##  
+list_countries <- grep(c("Date"),names(df_gst_totals),value=T,invert=T) # countries available for normalization
+list_df_norm <- mclapply(list_countries,
+                         FUN=normalize_by_country_totals,
+                         df_input=df_original_subset,
+                         df_gst_totals=df_gst_totals,
+                         n_col_start_date=n_col_start_date,
+                         mc.preschedule = FALSE,
+                         mc.cores = num_cores)
 
-  df_gst_totals_subset <- subset(df_gst_totals,select=country_name)
-  monthly_averages <- as.numeric(df_gst_totals_subset[,1])
-  
-  df_input_norm <- df_input_subset/monthly_averages
-  
-  df_input_norm <- t(df_input_norm)
-  rownames(df_input_norm)<- NULL
-  
-  df_import_norm <- cbind(df_input_info,df_input_norm)
 
-  return(df_input_norm)
-}
-
-#### 
-
-df_norm <- df_original_norm
+df_norm <- do.call(rbind,list_df_norm)
+#df_norm <- df_original_norm
 #dim(df_norm)
 
 #remove "ALL" country category (when using full dataset)
