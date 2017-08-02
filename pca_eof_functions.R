@@ -5,7 +5,7 @@
 #
 #AUTHOR: Benoit Parmentier                                                                #
 #DATE CREATED: 05/22/2017 
-#DATE MODIFIED: 05/24/2017
+#DATE MODIFIED: 08/02/2017
 #Version: 1
 #PROJECT: General script
 #   
@@ -72,7 +72,7 @@ run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loa
   
   
   if(is.null(matrix_val)){
-    matrix_val <- cor(A)
+    matrix_val <- cor(A,use="complete.obs")
   }
   
   ##Cross product PCA S modes
@@ -217,7 +217,7 @@ plot_pca_components_space_loadings <- function(pcs_selected,pca_mod,var_labels=N
   return(png_filename)
 }
 
-run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
+run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,dates_val=NULL,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
   ##General function to run PCA/EOF analyses. The function includes options for T and S mode or a matrix
   ##given by the user.
   #
@@ -248,6 +248,7 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   
   ########### Beging function ###########
   
+  #debug(run_pca_fun)
   principal_pca_obj <- run_pca_fun(A=data_df,mode=mode_val,rotation_opt="none",
                                    matrix_val=NULL,npc=npc,loadings=TRUE,scores_opt=TRUE)
   pca_mod <- principal_pca_obj$pca_principal
@@ -324,10 +325,15 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
          out_suffix=out_suffix)
   
   ### Plot loadings as sequence: if time series
-  if(time_series_loadings==FALSE){
+  if(time_series_loadings==TRUE){
     pcs_selected_unique <- unique(unlist(pcs_selected))
     #plot_pca_loadings_time_series(1,pca_mod=pca_mod,dates_val,out_dir=out_dir, out_suffix=out_suffix)
-    
+    if(is.null(dates_val)){ #use arbitrary numbers
+      n_obs <- ncol(data_df)
+      current_date <- Sys.Date()
+      past_date <- current_date - n_obs + 1
+      dates_val <- seq.Date(past_date,current_date,by=1)
+    }
     lapply(pcs_selected,FUN=plot_pca_loadings_time_series,pca_mod=pca_mod,dates_val,out_dir=out_dir,out_suffix=out_suffix)
     
     ## Also add function to plot scores.
@@ -349,4 +355,3 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
 
 
 ############### END OF SCRIPT ###################
-
