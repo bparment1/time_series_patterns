@@ -236,32 +236,35 @@ df_ts[,c("MEX_Ailuropoda_melanoleuca")]
 df_ts_selected <- df_ts[,c(selected_country_names)]
 plot(df_ts_selected)
 
-# ### 2) Run PCA on animals trade with screeing
-# 
-# 
-# ## By default we use the correlation matrix in T mode,
-# #this will be changed later on.
-# 
-# #Scale values to ease computation of eigenvalues
-# selected_var2 <- names(genes_ncis_df)[1:1006]
-# out_suffix_str <- paste0("ncis_analyses2_scaled_cor_",out_suffix)
-# npc <- 10
-# var_labels <- selected_var2
-# 
-# pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5))
-# 
-# #debug(run_pca_analysis)  
-# pca_obj2 <- run_pca_analysis(genes_ncis_rescaled_df,
-#                              matrix_val=NULL,
-#                              npc=npc,
-#                              pcs_selected=pcs_selected,
-#                              time_series_loadings=F,
-#                              var_labels=var_labels,
-#                              mode_val=T,
-#                              rotation_opt="none",
-#                              scores_opt=FALSE,
-#                              out_dir=".",
-#                              out_suffix=out_suffix_str )
+### 2) Run PCA on animals trade with screeing
+
+
+## By default we use the correlation matrix in T mode,
+#this will be changed later on.
+
+selected_var2 <- names(data_df)[1:163]
+out_suffix_str <- paste0("all_species_countries_analyses1_var_",out_suffix)
+
+npc <- 10
+var_labels <- selected_var2
+
+pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5))
+
+
+#debug(run_pca_analysis)
+matrix_var <- var(data_df)
+
+pca_obj2 <- run_pca_analysis(data_df,
+                             matrix_val=matrix_var,
+                             npc=npc,
+                             pcs_selected=pcs_selected,
+                             time_series_loadings=T,
+                             var_labels=var_labels,
+                             mode_val=T,
+                             rotation_opt="none",
+                             scores_opt=FALSE,
+                             out_dir=".",
+                             out_suffix=out_suffix_str )
 
 ####
 ### 3) Run PCA on genes ncis square matrix of data
@@ -281,7 +284,8 @@ plot(df_ts_selected)
 # 
 # #debug(run_pca_analysis)  
 # matrix_square <- t(as.matrix(genes_ncis_rescaled_df)) %*% as.matrix(genes_ncis_rescaled_df)
-#   
+## data_df %*% data_df
+  
 # pca_obj3 <- run_pca_analysis(genes_ncis_rescaled_df,
 #                              matrix_val=matrix_square,
 #                              npc=npc,
