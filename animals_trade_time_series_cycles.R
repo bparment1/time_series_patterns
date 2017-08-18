@@ -2,7 +2,7 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/17/2017
+## DATE MODIFIED: 08/18/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -62,7 +62,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08172017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08182017.R" #PARAM 1
 
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
@@ -180,6 +180,12 @@ View(data_df)
 names(data_df)
 dim(data_df)
 data_df <- data_df[,1:230]
+
+#?na.omit
+data_df <- na.omit(data_df)
+dim(data_df)
+
+
 df_ts <- (t(data_df))
 dim(df_ts)
 date_range <- c("2001.01.01","2010.12.31") #PARAM 15, NDVI Katrina
@@ -190,9 +196,11 @@ df_ts <- zoo(df_ts,range_dates)
 
 (df_ts[1:10,])
 
-plot(df_ts[1,])
+plot(df_ts[,1])
 dim(df_ts)
 
+
+plot(data_df[1,])
 xs <- seq(-2*pi,2*pi,pi/100)
 wave.1 <- sin(3*xs)
 wave.2 <- sin(10*xs)
