@@ -2,7 +2,7 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/18/2017
+## DATE MODIFIED: 08/20/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -62,13 +62,14 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08182017.R" #PARAM 1
-
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08202017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
+source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 function_pca_eof <- "pca_eof_functions_08022017.R" #PARAM 1
 source(file.path(script_path,function_pca_eof)) #source all functions used in this script 1.
@@ -200,7 +201,37 @@ plot(df_ts[,1])
 dim(df_ts)
 
 
-plot(data_df[1,])
+### 
+nt <- 230
+??fft
+vect_z <- df_ts[,1]
+test <- fft(vect_z)
+test2 <- fft(vect_z,inverse=T) #not normalized
+
+nt <- length(vect_z)
+
+class(test)
+
+test2
+
+FF = abs(fft(vect_z)/sqrt(nt))^2
+FF = abs(fft())
+P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
+P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
+
+P=(4/nt)*FF[(nt/2)+1]
+
+
+plot(FF)
+f = (0:64)/128 # this creates harmonic frequencies from 0 to .5 in steps of 1/128.
+nt_half <- nt/2
+f = (0:nt_half)/nt
+plot(f, P, type="l") # This plots the periodogram; type = “l” creates a line plot.  Note: l is lowercase L, not number 1.
+
+ifft <- function(x) { fft(x, inverse=TRUE ) / length(x) }
+tslm
+
+#plot(data_df[1,])
 xs <- seq(-2*pi,2*pi,pi/100)
 wave.1 <- sin(3*xs)
 wave.2 <- sin(10*xs)
@@ -213,14 +244,12 @@ plot(xs,wave.2,type="l",ylim=c(-1,1)); abline(h=0,lty=3)
 
 findfrequency
 
-find.freq <- function(x)
 ?spec.ar
 
-
-
-{
+find.freq_test <- function(x){
   n <- length(x)
   spec <- spec.ar(c(x),plot=FALSE)
+  
   if(max(spec$spec)>10) # Arbitrary threshold chosen by trial and error.
   {
     period <- round(1/spec$freq[which.max(spec$spec)])
@@ -242,5 +271,36 @@ find.freq <- function(x)
 }
 
 
+#https://anomaly.io/detect-seasonality-using-fourier-transform-r/
+
+# Install and import TSA package
+install.packages("TSA")
+library(TSA)
+
+# read the Google Analaytics PageView report
+raw = read.csv("20131120-20151110-google-analytics.csv")
+
+# compute the Fourier Transform
+
+harmonic_analysis_fft_run <- function(x){
+  
+  p <- periodogram(x)
+  spectrum_val <- spectrum(as.numeric(x))
+  
+  freq_df = data.frame(freq=p$freq, spec=p$spec)
+  data_freq_ordered = freq_df[order(-dd$spec),]
+  top2 = head(order, 2)
+}
+
+# display the 2 highest "power" frequencies
+top2
+
+# convert frequency to time periods
+time = 1/top2$f
+time
+test <- spectrum(vect_z) #does not work on zoo
+
+#https://anomaly.io/seasonal-trend-decomposition-in-r/
+  
 ############################## END OF SCRIPT #############################################
 
