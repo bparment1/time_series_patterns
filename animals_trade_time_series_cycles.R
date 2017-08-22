@@ -283,22 +283,73 @@ raw = read.csv("20131120-20151110-google-analytics.csv")
 # compute the Fourier Transform
 
 harmonic_analysis_fft_run <- function(x){
+  #
+  #Function to compute 
   
   p <- periodogram(x)
-  spectrum_val <- spectrum(as.numeric(x))
   
-  freq_df = data.frame(freq=p$freq, spec=p$spec)
-  data_freq_ordered = freq_df[order(-dd$spec),]
-  top2 = head(order, 2)
+  spectrum_val <- spectrum(as.numeric(x))
+  n_orig <- length(x)
+  freq_df <- data.frame(freq=p$freq, spec=p$spec)
+  total_variance <- sum(freq_df$spec)
+  freq_df$index <- as.numeric(row.names(freq_df))
+  freq_df$period <- 1/freq_df$freq
+  freq_df$period_orig <- n_used/freq_df$index
+  freq_df$variance <- freq_df$freq/total_variance*100
+  ranked_freq_df <- freq_df[order(-freq_df$spec),]
+  
+  #barplot(freq_df$variance)
+  #p$orig.n* as.numeric(rownames(top2)
+  n_used <- p$n.used
+  
+  ## Prepare return object:
+  
+  harmonic_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
+  names(harmonic_fft_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
+  
+  return(harmonic_fft_obj)
 }
+
+#compute harmonic
+#get nth harmonic to remove the period
 
 # display the 2 highest "power" frequencies
 top2
+str(p)
+
+extract_harmonic_fft_run <- function(x){
+  
+  x_trans <- fft(x) # transformed fft
+  
+  amp_val <- as.numeric(Mod(x_trans))
+  
+  amp <- amp_val
+  amp[1] <- 0
+  
+  n <- length(x)
+  
+  n_half <- n/2
+  plot(1:n_half,amp[1:n_half],"h")
+  
+  phase <- Arg(x_trans)  
+}
 
 # convert frequency to time periods
-time = 1/top2$f
-time
-test <- spectrum(vect_z) #does not work on zoo
+X <- fft(x)
+fq <- 2 * pi /n
+frq <- 0
+FL <- 0
+Fl[1] <- X[1]^2 / n*2
+
+for( j in 2:(n/2)){
+  FL[j] <- 2 * (X[j] )
+  d
+  
+}
+test[1]
+test[1]^2 / n*2
+
+
 
 #https://anomaly.io/seasonal-trend-decomposition-in-r/
   
