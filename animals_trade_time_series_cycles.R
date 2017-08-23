@@ -281,35 +281,7 @@ library(TSA)
 # read the Google Analaytics PageView report
 raw = read.csv("20131120-20151110-google-analytics.csv")
 
-# compute the Fourier Transform
 
-harmonic_analysis_fft_run <- function(x){
-  #
-  #Function to compute 
-  
-  p <- periodogram(x)
-  
-  spectrum_val <- spectrum(as.numeric(x))
-  n_orig <- length(x)
-  freq_df <- data.frame(freq=p$freq, spec=p$spec)
-  total_variance <- sum(freq_df$spec)
-  freq_df$index <- as.numeric(row.names(freq_df))
-  freq_df$period <- 1/freq_df$freq
-  freq_df$period_orig <- n_used/freq_df$index
-  freq_df$variance <- freq_df$freq/total_variance*100
-  ranked_freq_df <- freq_df[order(-freq_df$spec),]
-  
-  #barplot(freq_df$variance)
-  #p$orig.n* as.numeric(rownames(top2)
-  n_used <- p$n.used
-  
-  ## Prepare return object:
-  
-  harmonic_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
-  names(harmonic_fft_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
-  
-  return(harmonic_fft_obj)
-}
 
 #compute harmonic
 #get nth harmonic to remove the period
@@ -320,9 +292,11 @@ str(p)
 
 extract_harmonic_fft_run <- function(x){
   
-  x_trans <- fft(x) # transformed fft
+  x_trans <- fft(x,inverse=T) # transformed fft
   
-  amp_val <- as.numeric(Mod(x_trans))
+  #sqrt(a^2+b^2)
+  mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
+  amp_val <- as.numeric(Mod(x_trans))/2
   
   amp <- amp_val
   amp[1] <- 0
@@ -332,9 +306,13 @@ extract_harmonic_fft_run <- function(x){
   n_half <- n/2
   plot(1:n_half,amp[1:n_half],"h")
   
-  phase <- Arg(x_trans)  
-  phase[10]
-  barplot(phase)
+  phase <- as.numeric(Arg(x_trans))
+  #phase[11]
+  #barplot(phase)
+  
+  coef_fft_df <- data.frame(amp_val[1:n_half],phase[1:n_half])
+  names(coef_fft_df) <- c("amp","phase")
+  
   
   x_in <- 1:230
   amp[10]*sin(+ phase[10])
@@ -342,21 +320,37 @@ extract_harmonic_fft_run <- function(x){
   
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
-  a <- amp[10] #amplitude in this case
-  b<- 0 # this should be the average!!
-  T <- 230
-  T <- 10
-  phase <- 0
-  x_input<-1:230
   
-  ux <- sine_structure_fun(x_input,T,phase,a,b)
-  plot(ux)
+  generate_harmonic <- function(i,coef_ff_df,a0){
+    
+    a <- coef_fft_df$amp[i] #amplitude in this case
+    b <- a0 # this should be the average!!
+    #T <- 230
+    #T <- 10
+    
+    T <- coef_fft_df$T[i]
+    #T <- 23
+    
+    phase_val <-coef_fft_df$phase[i]
+    
+    n_val <- nrow(coef_fft_df)
+    #x_input <- 1:230 #index sequence corresponding to timesetps for time series
+    x_input <- 1:n_val
+    
+    ux <- sine_structure_fun(x_input,T,phase_val,a,b)
+    plot(ux,type="b")
+    return(ux) #harmonics for frequency 
+    
+  }
   
 }
 
 
 #The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
 #Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
+
+
+
 
 #sunspots=scan("sunspots.dat")
 #plot(sunspots,type="b")
@@ -366,7 +360,7 @@ extract_harmonic_fft_run <- function(x){
 #freq = (0:229)/458
 #plot(freq,P,type="l") 
 
-sine_structure_fun <-function(x,T,phase,a,b){
+sine_structure_fun <-function(x,T,phase_val,a,b){
   #Create sine for a one dimensional series
   #Note that sine function uses radian unit.
   #a=amplitude
@@ -374,18 +368,20 @@ sine_structure_fun <-function(x,T,phase,a,b){
   #T= stands for period definition
   #phase=phase angle (in radian!!)
   
-  y <- a*sin((x*pi/T)+ phase) + b
+  y <- a*sin((x*2*pi/T)+ phase_val) + b
 }
 
 ### Generate a sequence from sine
 #type_spatialstructure[5] <- "periodic_x1"
-a<- 2 #amplitude in this case
+a<- 1 #amplitude in this case
 b<- 0
-T<- 230
-phase <- 0
-x_input<-1:230
+T<- 12
+phase_val <- 0
+x_input<-0:24
 
-ux <- sine_structure_fun(x_input,T,phase,a,b)
+y <- a*sin((x_input*2*pi/T)+ phase_val) + b
+plot(y)
+ux <- sine_structure_fun(x_input,T,phase_val,a,b)
 plot(ux)
 
 
