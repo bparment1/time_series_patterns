@@ -114,4 +114,27 @@ harmonic_analysis_fft_run <- function(x){
   return(harmonic_fft_obj)
 }
 
+
+generate_harmonic <- function(i,coef_ff_df,a0){
+  
+  a <- coef_fft_df$amp[i] #amplitude in this case
+  b <- a0 # this should be the average!!
+  #T <- 230
+  #T <- 10
+  
+  T <- coef_fft_df$T[i]
+  #T <- 23
+  
+  phase_val <-coef_fft_df$phase[i]
+  
+  n_val <- nrow(coef_fft_df)
+  #x_input <- 1:230 #index sequence corresponding to timesetps for time series
+  x_input <- 1:n_val
+  
+  ux <- sine_structure_fun(x_input,T,phase_val,a,b)
+  plot(ux,type="b")
+  return(ux) #harmonics for frequency 
+  
+}
+
 ################### End of script ################
