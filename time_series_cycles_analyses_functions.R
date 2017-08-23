@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/20/2017
+## DATE MODIFIED: 08/23/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -10,7 +10,7 @@
 ## TO DO: - Fourier
 ##        - windowed Fourier
 ##
-## COMMIT: initial commit setting up Fourier analysis
+## COMMIT: adding functions from main script
 ##
 
 ###################################################
@@ -83,5 +83,35 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
   return(dates_obj)
 }
 
+
+# compute the Fourier Transform
+
+harmonic_analysis_fft_run <- function(x){
+  #
+  #Function to compute 
+  
+  p <- periodogram(x)
+  
+  spectrum_val <- spectrum(as.numeric(x))
+  n_orig <- length(x)
+  freq_df <- data.frame(freq=p$freq, spec=p$spec)
+  total_variance <- sum(freq_df$spec)
+  freq_df$index <- as.numeric(row.names(freq_df))
+  freq_df$period <- 1/freq_df$freq
+  freq_df$period_orig <- n_used/freq_df$index
+  freq_df$variance <- freq_df$freq/total_variance*100
+  ranked_freq_df <- freq_df[order(-freq_df$spec),]
+  
+  #barplot(freq_df$variance)
+  #p$orig.n* as.numeric(rownames(top2)
+  n_used <- p$n.used
+  
+  ## Prepare return object:
+  
+  harmonic_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
+  names(harmonic_fft_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
+  
+  return(harmonic_fft_obj)
+}
 
 ################### End of script ################
