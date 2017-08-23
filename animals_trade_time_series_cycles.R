@@ -271,6 +271,7 @@ find.freq_test <- function(x){
 }
 
 
+
 #https://anomaly.io/detect-seasonality-using-fourier-transform-r/
 
 # Install and import TSA package
@@ -332,7 +333,61 @@ extract_harmonic_fft_run <- function(x){
   plot(1:n_half,amp[1:n_half],"h")
   
   phase <- Arg(x_trans)  
+  phase[10]
+  barplot(phase)
+  
+  x_in <- 1:230
+  amp[10]*sin(+ phase[10])
+  
+  
+  ### Generate a sequence from sine
+  #type_spatialstructure[5] <- "periodic_x1"
+  a <- amp[10] #amplitude in this case
+  b<- 0 # this should be the average!!
+  T <- 230
+  T <- 10
+  phase <- 0
+  x_input<-1:230
+  
+  ux <- sine_structure_fun(x_input,T,phase,a,b)
+  plot(ux)
+  
 }
+
+
+#The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
+#Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
+
+#sunspots=scan("sunspots.dat")
+#plot(sunspots,type="b")
+#x = diff(sunspots)
+#I = abs(fft(x)/sqrt(458))^2
+#P = (4/458)*I[1:230]
+#freq = (0:229)/458
+#plot(freq,P,type="l") 
+
+sine_structure_fun <-function(x,T,phase,a,b){
+  #Create sine for a one dimensional series
+  #Note that sine function uses radian unit.
+  #a=amplitude
+  #b=mean or amplitude 0 of the series
+  #T= stands for period definition
+  #phase=phase angle (in radian!!)
+  
+  y <- a*sin((x*pi/T)+ phase) + b
+}
+
+### Generate a sequence from sine
+#type_spatialstructure[5] <- "periodic_x1"
+a<- 2 #amplitude in this case
+b<- 0
+T<- 230
+phase <- 0
+x_input<-1:230
+
+ux <- sine_structure_fun(x_input,T,phase,a,b)
+plot(ux)
+
 
 # convert frequency to time periods
 X <- fft(x)
