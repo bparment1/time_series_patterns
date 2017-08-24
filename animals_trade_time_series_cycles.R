@@ -290,60 +290,6 @@ raw = read.csv("20131120-20151110-google-analytics.csv")
 top2
 str(p)
 
-extract_harmonic_fft_run <- function(x){
-  
-  x_trans <- fft(x,inverse=T) # transformed fft
-  
-  #sqrt(a^2+b^2)
-  mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
-  amp_val <- as.numeric(Mod(x_trans))/2
-  
-  amp <- amp_val
-  amp[1] <- 0
-  
-  n <- length(x)
-  
-  n_half <- n/2
-  plot(1:n_half,amp[1:n_half],"h")
-  
-  phase <- as.numeric(Arg(x_trans))
-  #phase[11]
-  #barplot(phase)
-  
-  coef_fft_df <- data.frame(amp_val[1:n_half],phase[1:n_half])
-  names(coef_fft_df) <- c("amp","phase")
-  
-  
-  x_in <- 1:230
-  amp[10]*sin(+ phase[10])
-  
-  
-  ### Generate a sequence from sine
-  #type_spatialstructure[5] <- "periodic_x1"
-  
-  generate_harmonic <- function(i,coef_ff_df,a0){
-    
-    a <- coef_fft_df$amp[i] #amplitude in this case
-    b <- a0 # this should be the average!!
-    #T <- 230
-    #T <- 10
-    
-    T <- coef_fft_df$T[i]
-    #T <- 23
-    
-    phase_val <-coef_fft_df$phase[i]
-    
-    n_val <- nrow(coef_fft_df)
-    #x_input <- 1:230 #index sequence corresponding to timesetps for time series
-    x_input <- 1:n_val
-    
-    ux <- sine_structure_fun(x_input,T,phase_val,a,b)
-    plot(ux,type="b")
-    return(ux) #harmonics for frequency 
-    
-  }
-  
-}
 
 
 #The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
