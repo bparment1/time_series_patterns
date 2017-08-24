@@ -137,4 +137,44 @@ generate_harmonic <- function(i,coef_ff_df,a0){
   
 }
 
+
+extract_harmonic_fft_run <- function(x){
+  ## get harmonics using fft 
+  ##
+  
+  x_trans <- fft(x,inverse=T) # transformed fft
+  
+  #sqrt(a^2+b^2)
+  mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
+  amp_val <- as.numeric(Mod(x_trans))/2
+  
+  amp <- amp_val
+  amp[1] <- 0
+  
+  n <- length(x)
+  
+  n_half <- n/2
+  plot(1:n_half,amp[1:n_half],"h")
+  
+  phase <- as.numeric(Arg(x_trans))
+  #phase[11]
+  #barplot(phase)
+  
+  coef_fft_df <- data.frame(amp_val[1:n_half],phase[1:n_half])
+  names(coef_fft_df) <- c("amp","phase")
+  
+  
+  #x_in <- 1:230
+  #amp[10]*sin(+ phase[10])
+  
+  
+  ### Generate a sequence from sine
+  #type_spatialstructure[5] <- "periodic_x1"
+  selected_coef_fft_df <- coef_fft_df[selected_frequencies,]
+  i<-1
+  
+  generate_harmonic(i,coef_ff_df=selected_coef_fft_df,a0
+    
+}
+
 ################### End of script ################
