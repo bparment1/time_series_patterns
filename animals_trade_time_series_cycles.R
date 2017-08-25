@@ -2,7 +2,7 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/20/2017
+## DATE MODIFIED: 08/24/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -62,7 +62,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08202017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08242017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -199,6 +199,8 @@ df_ts <- zoo(df_ts,range_dates)
 
 plot(df_ts[,1])
 dim(df_ts)
+
+
 
 
 ### 
