@@ -2,12 +2,14 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/23/2017
+## DATE MODIFIED: 08/24/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO: - Fourier
+##        - windowing function
+##        - generate artificial dataset
 ##        - windowed Fourier
 ##
 ## COMMIT: adding functions from main script
@@ -89,6 +91,7 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 harmonic_analysis_fft_run <- function(x){
   #
   #Function to compute 
+  #
   
   p <- periodogram(x)
   
@@ -115,7 +118,7 @@ harmonic_analysis_fft_run <- function(x){
 }
 
 
-generate_harmonic <- function(i,coef_ff_df,a0){
+generate_harmonic <- function(i,coef_fft_df,a0){
   
   a <- coef_fft_df$amp[i] #amplitude in this case
   b <- a0 # this should be the average!!
@@ -132,15 +135,23 @@ generate_harmonic <- function(i,coef_ff_df,a0){
   x_input <- 1:n_val
   
   ux <- sine_structure_fun(x_input,T,phase_val,a,b)
-  plot(ux,type="b")
+  #plot(ux,type="b")
   return(ux) #harmonics for frequency 
   
 }
 
 
-extract_harmonic_fft_run <- function(x){
-  ## get harmonics using fft 
-  ##
+extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
+  ## This functions generate harmonics using fft from x (time) series.
+  #INPUTS
+  #1)x: series to process with fft
+  #2)a0: average of series or reference point
+  #2)selected_f: number of harmonics to retain, if NULL generate to 5 or 10 (depending on the inputs)
+  #OUTPUTS
+  #1) 
+  #
+  
+  ########## BEGIN ############
   
   x_trans <- fft(x,inverse=T) # transformed fft
   
@@ -149,7 +160,7 @@ extract_harmonic_fft_run <- function(x){
   amp_val <- as.numeric(Mod(x_trans))/2
   
   amp <- amp_val
-  amp[1] <- 0
+  amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
   
   n <- length(x)
   
@@ -167,14 +178,37 @@ extract_harmonic_fft_run <- function(x){
   #x_in <- 1:230
   #amp[10]*sin(+ phase[10])
   
-  
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
-  selected_coef_fft_df <- coef_fft_df[selected_frequencies,]
-  i<-1
   
-  generate_harmonic(i,coef_ff_df=selected_coef_fft_df,a0
+  harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
+  
+  ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
+  
+  if(is.null(selected_f)){
     
+    selected_f <- ranked_freq_df$freq
+    
+  }
+  
+  ### Get ranked frequencies
+  
+  selected_coef_fft_df <- coef_fft_df[selected_frequencies,]
+  #i<-1
+  #generate_harmonic(i,coef_fft_df=selected_coef_fft_df,a0)
+  a0 <- mean(x)
+  #may want to use diff or detrend?
+  
+  n_selected <- nrow(coef_fft_df_selected)
+  
+  harmonics_fft_list <- lapply(1:n_selected,
+                          FUN= generate_harmonic,
+                          coef_fft_df=selected_coef_fft_df,
+                          a0=a0)
+  #Can add them all together?
+  return(harmonics_fft_list)
 }
+
+
 
 ################### End of script ################
