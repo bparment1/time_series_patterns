@@ -2,13 +2,13 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/24/2017
+## DATE MODIFIED: 08/27/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: initial pca run for animals trade data
+## COMMIT: debugging adding temporal profile
 ##
 ## Links to investigate:
 
@@ -62,7 +62,8 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08242017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08272017b.R" #PARAM 1
+
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -308,30 +309,53 @@ str(p)
 #freq = (0:229)/458
 #plot(freq,P,type="l") 
 
-sine_structure_fun <-function(x,T,phase_val,a,b){
-  #Create sine for a one dimensional series
-  #Note that sine function uses radian unit.
-  #a=amplitude
-  #b=mean or amplitude 0 of the series
-  #T= stands for period definition
-  #phase=phase angle (in radian!!)
-  
-  y <- a*sin((x*2*pi/T)+ phase_val) + b
-}
 
 ### Generate a sequence from sine
 #type_spatialstructure[5] <- "periodic_x1"
-a<- 1 #amplitude in this case
+amp<- 2 #amplitude in this case
 b<- 0
-T<- 12
+T<- 23
 phase_val <- 0
 x_input<-0:24
 
-y <- a*sin((x_input*2*pi/T)+ phase_val) + b
-plot(y)
-ux <- sine_structure_fun(x_input,T,phase_val,a,b)
-plot(ux)
+nt <- 230
+temp_periods <- c(T)
+temp_period_quadrature <- NULL
+random_component <- c(0,0.1)
 
+list_param <- list(nt,phase_val,temp_periods,amp,
+                   temp_period_quadrature,
+                   random_component)
+
+names(list_param) <- c("nt","phase","temp_periods",
+                       "amp","temp_period_quadrature",
+                       "random_component")
+
+#nt <- list_param$nt
+#phase <- list_param$phase
+#temp_periods <- list_param$temp_periods
+#amp <- list_param$amp
+#temp_period_quadrature <- list_param$temp_period_quadrature
+#random_component <- list_param$random_component #mean and sd used in rnorm
+
+source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
+
+#debug(adding_temporal_structure)
+test <- adding_temporal_structure(list_param)
+  
+#y <- a*sin((x_input*2*pi/T)+ phase_val) + b
+#plot(y)
+#ux <- sine_structure_fun(x_input,T,phase_val,a,b)
+#plot(ux)
+
+x_ts <- test$t_period_23 + test$trend + test$unif + test$norm
+
+plot(test$t_period_23,type="l")
+plot(test$trend,type="l")
+
+plot(x_ts,type="l")
+
+#### Now find out if you can see the cycles
 
 # convert frequency to time periods
 X <- fft(x)
