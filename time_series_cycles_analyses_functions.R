@@ -12,7 +12,7 @@
 ##        - generate artificial dataset
 ##        - windowed Fourier
 ##
-## COMMIT: adding functions from main script
+## COMMIT: adding multiple amplitudes for frequencies of artificial datasets
 ##
 
 ###################################################
@@ -112,7 +112,7 @@ harmonic_analysis_fft_run <- function(x){
   total_variance <- sum(freq_df$spec)
   freq_df$index <- as.numeric(row.names(freq_df))
   freq_df$period <- 1/freq_df$freq
-  freq_df$period_orig <- n_used/freq_df$index
+  freq_df$period_orig <- n_orig/freq_df$index
   freq_df$variance <- freq_df$freq/total_variance*100
   ranked_freq_df <- freq_df[order(-freq_df$spec),]
   
@@ -192,6 +192,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
   
+  debug(harmonic_analysis_fft_run)
   harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
   
   ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
@@ -242,8 +243,15 @@ adding_temporal_structure <- function(list_param){
   # can have multiple periods!!!
   
   y1_list<-vector("list",length=length(temp_periods))
+  
+  ### if only one amplitude, then all frequencies have the same strength
+  if(length(amp)==1){
+    amp <- rep(amp,length(temp_periods))
+  }
+  
   for (i in 1:length(temp_periods)){
     T<-temp_periods[i]
+    amp_val <- amp[i]
     
     #a<- 1 #amplitude in this case
     #b<- 0
@@ -251,7 +259,7 @@ adding_temporal_structure <- function(list_param){
     #phase_val <- 0
     x_input<- x
     
-    a <- amp
+    a <- amp_val
     b <- 0
     phase_val <- phase
     
