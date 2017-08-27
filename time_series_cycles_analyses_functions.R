@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/24/2017
+## DATE MODIFIED: 08/27/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -45,6 +45,17 @@ load_obj <- function(f){
   env <- new.env()
   nm <- load(f, env)[1]
   env[[nm]]
+}
+
+sine_structure_fun <-function(x,T,phase_val,a,b){
+  #Create sine for a one dimensional series
+  #Note that sine function uses radian unit.
+  #a=amplitude
+  #b=mean or amplitude 0 of the series
+  #T= stands for period definition
+  #phase=phase angle (in radian!!)
+  
+  y <- a*sin((x*2*pi/T)+ phase_val) + b
 }
 
 
@@ -209,6 +220,76 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   return(harmonics_fft_list)
 }
 
-
+adding_temporal_structure <- function(list_param){
+  #This functions generate different temporal components.
+  # 
+  
+  
+  ## Parse input arguments
+  
+  nt <- list_param$nt
+  phase <- list_param$phase
+  temp_periods <- list_param$temp_periods
+  amp <- list_param$amp
+  temp_period_quadrature <- list_param$temp_period_quadrature
+  random_component <- list_param$random_component #mean and sd used in rnorm
+    
+  ### Start #####
+  
+  #type_temporalstructure <- character (length=6)
+  x <- as.numeric(1:nt)
+  
+  # Generate temporal signal with periodic signal
+  # can have multiple periods!!!
+  
+  y1_list<-vector("list",length=length(temp_periods))
+  for (i in 1:length(temp_periods)){
+    T<-temp_periods[i]
+    
+    #a<- 1 #amplitude in this case
+    #b<- 0
+    #T<- 12
+    #phase_val <- 0
+    x_input<- x
+    
+    a <- amp
+    b <- 0
+    phase_val <- phase
+    
+    y1_list[[i]] <-  sine_structure_fun(x_input,T,phase_val,a,b)
+  }
+  names(y1_list) <- paste("t_period",temp_periods,sep="_")
+  # Generate periodic Quadrature:
+  
+  #T <- temp_period_quadrature
+  #y2_list<-vector("list",length=length(temp_periods))
+  #y2_list[[1]] <- temp_structure_fun(x,T,pi/2)
+  #y2_list[[2]] <- temp_structure_fun(x,T,0)
+  
+  #y2<-y2_list[[1]] + y2_list[[2]]
+  
+  # Generate temporal trends
+  a<- 0.1
+  b<- 0
+  y3 <-  a*x + b  
+  
+  # Generate temporal temporal randomness
+  y4 <- runif(nt) 
+  
+  y5<- rnorm(nt)
+  
+  #Prepare return object
+  dfrm1 <-do.call(cbind,y1_list)
+  #dfrm2 <- do.call(cbind,list(quadrature=y2,trend=y3,unif=y4,norm=y5))
+  dfrm2 <- do.call(cbind,list(trend=y3,unif=y4,norm=y5))
+  
+  temp_pattern_dfrm <- (cbind(dfrm1,dfrm2)) #data.frame containing temporal patterns...
+  temp_pattern_dfrm<-as.data.frame(temp_pattern_dfrm)
+  #head(temp_pattern_dfrm)
+  file_name<-paste("table_temporal_patterns","_",out_suffix,".txt",sep="")
+  write.table(temp_pattern_dfrm,file=file_name,sep=",")
+  
+  return(temp_pattern_dfrm)
+}
 
 ################### End of script ################
