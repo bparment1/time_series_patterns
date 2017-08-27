@@ -224,7 +224,6 @@ adding_temporal_structure <- function(list_param){
   #This functions generate different temporal components.
   # 
   
-  
   ## Parse input arguments
   
   nt <- list_param$nt
@@ -256,7 +255,11 @@ adding_temporal_structure <- function(list_param){
     b <- 0
     phase_val <- phase
     
-    y1_list[[i]] <-  sine_structure_fun(x_input,T,phase_val,a,b)
+    #undebug(sine_structure_fun)
+    y1 <- sine_structure_fun(x_input,T,phase_val,a,b)
+    #sine_structure_fun <-function(x,T,phase_val,a,b){
+      
+    y1_list[[i]] <-  y1
   }
   names(y1_list) <- paste("t_period",temp_periods,sep="_")
   # Generate periodic Quadrature:
@@ -269,14 +272,15 @@ adding_temporal_structure <- function(list_param){
   #y2<-y2_list[[1]] + y2_list[[2]]
   
   # Generate temporal trends
-  a<- 0.1
-  b<- 0
+  a <- 0.1
+  b <- 0
   y3 <-  a*x + b  
   
   # Generate temporal temporal randomness
   y4 <- runif(nt) 
   
-  y5<- rnorm(nt)
+  #y5<- rnorm(nt)
+  y5 <- rnorm(nt,random_component[1],random_component[2])
   
   #Prepare return object
   dfrm1 <-do.call(cbind,y1_list)
