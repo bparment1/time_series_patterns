@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/27/2017
+## DATE MODIFIED: 08/29/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -102,11 +102,19 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 harmonic_analysis_fft_run <- function(x){
   #
   #Function to compute 
-  #
+  #Tapering option: There will be usually jump between the end of one replicate
+  #time seris and the start of the next. These jumps can be avoided by reducing
+  #the magnitude of the values of the time series relative to its mean, at the
+  #beginning and towards the end. Default taper is set to 10% of data at the 
+  #beginning and end of the time series.
   
   p <- periodogram(x)
   
-  spectrum_val <- spectrum(as.numeric(x))
+  #spectrum_val <- spectrum(as.numeric(x))
+  p <- periodogram(x,fast=F)
+  #spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
+  length(spectrum_val$fre)
+  
   n_orig <- length(x)
   freq_df <- data.frame(freq=p$freq, spec=p$spec)
   total_variance <- sum(freq_df$spec)
@@ -165,6 +173,8 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   ########## BEGIN ############
   
   x_trans <- fft(x,inverse=T) # transformed fft
+  #x_trans <- fft(x,inverse=T,fast=F) # transformed fft, no padding to get to power of 2
+  
   
   #sqrt(a^2+b^2)
   mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
@@ -181,10 +191,13 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   phase <- as.numeric(Arg(x_trans))
   #phase[11]
   #barplot(phase)
-  
-  coef_fft_df <- data.frame(amp_val[1:n_half],phase[1:n_half])
-  names(coef_fft_df) <- c("amp","phase")
-  
+  amp_scaled <- 1/(amp_val/n)
+  amp_scaled[1] <- 0
+  #1/(113.070230382360506382611/230)
+  period_orig <- 230/(1:n_half)
+  coef_fft_df <- data.frame(amp_val[1:n_half],amp_scaled,phase[1:n_half],
+                            period_orig)
+  names(coef_fft_df) <- c("amp","amp_scaled","phase","period_orig")
   
   #x_in <- 1:230
   #amp[10]*sin(+ phase[10])
@@ -192,7 +205,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
   
-  debug(harmonic_analysis_fft_run)
+  #debug(harmonic_analysis_fft_run)
   harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
   
   ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
@@ -222,6 +235,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
 }
 
 adding_temporal_structure <- function(list_param){
+  #
   #This functions generate different temporal components.
   # 
   
