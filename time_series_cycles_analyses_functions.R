@@ -9,8 +9,9 @@
 ## ISSUE: 
 ## TO DO: - Fourier
 ##        - windowing function
-##        - generate artificial dataset
+##        - generate artificial dataset both in space and time
 ##        - windowed Fourier
+##        - multitaper method to estimae the power spectrum and harmonics
 ##
 ## COMMIT: adding multiple amplitudes for frequencies of artificial datasets
 ##
@@ -20,10 +21,30 @@
 
 ###### Library used
 
-library(xts) #extension for time series object and analyses
-library(zoo) # time series object and analysis
-library(mblm) #Theil Sen estimator
-library(lubridate) 
+library(gtools)                              # loading some useful tools 
+library(sp)                                  # Spatial pacakge with class definition by Bivand et al.
+library(spdep)                               # Spatial pacakge with methods and spatial stat. by Bivand et al.
+library(rgdal)                               # GDAL wrapper for R, spatial utilities
+library(gdata)                               # various tools with xls reading, cbindX
+library(rasterVis)                           # Raster plotting functions
+library(parallel)                            # Parallelization of processes with multiple cores
+library(maptools)                            # Tools and functions for sp and other spatial objects e.g. spCbind
+library(maps)                                # Tools and data for spatial/geographic objects
+library(plyr)                                # Various tools including rbind.fill
+library(spgwr)                               # GWR method
+library(rgeos)                               # Geometric, topologic library of functions
+library(gridExtra)                           # Combining lattice plots
+library(colorRamps)                          # Palette/color ramps for symbology
+library(ggplot2)                             # Plotting functionalities
+library(lubridate)                           # Dates manipulation functionalities
+library(dplyr)                               # Data wrangling
+library(forecast)                            # ARIMA and other time series methods
+library(multitaper)                          # Multitaper estimation of spectrum
+library(GeneCycle)                           # Fisher test for harmonics and Time series functionalities
+library(xts)                                 # Extension for time series object and analyses
+library(zoo)                                 # Time series object and analysis
+library(mblm)                                # Theil Sen estimator
+
 
 ###### Functions used in this script
 
@@ -99,7 +120,7 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 
 # compute the Fourier Transform
 
-harmonic_analysis_fft_run <- function(x){
+spectrum_analysis_fft_run <- function(x){
   #
   #Function to compute 
   #Tapering option: There will be usually jump between the end of one replicate
@@ -108,12 +129,15 @@ harmonic_analysis_fft_run <- function(x){
   #beginning and towards the end. Default taper is set to 10% of data at the 
   #beginning and end of the time series.
   
-  p <- periodogram(x)
+  #p <- periodogram(x)
   
   #spectrum_val <- spectrum(as.numeric(x))
   p <- periodogram(x,fast=F)
-  #spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
-  length(spectrum_val$fre)
+  spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
+  #spectrum_val <- spectrum(as.numeric(x)) #not padding of power 2
+  
+  length(spectrum_val$freq)
+  length(p$freq) #no option to remove padding
   
   n_orig <- length(x)
   freq_df <- data.frame(freq=p$freq, spec=p$spec)
@@ -130,8 +154,8 @@ harmonic_analysis_fft_run <- function(x){
   
   ## Prepare return object:
   
-  harmonic_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
-  names(harmonic_fft_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
+  periodogram_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
+  names(periodogram_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
   
   return(harmonic_fft_obj)
 }
@@ -195,6 +219,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   amp_scaled[1] <- 0
   #1/(113.070230382360506382611/230)
   period_orig <- 230/(1:n_half)
+  
   coef_fft_df <- data.frame(amp_val[1:n_half],amp_scaled,phase[1:n_half],
                             period_orig)
   names(coef_fft_df) <- c("amp","amp_scaled","phase","period_orig")
@@ -206,12 +231,10 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   #type_spatialstructure[5] <- "periodic_x1"
   
   #debug(harmonic_analysis_fft_run)
-  harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
-  
-  ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
   
   if(is.null(selected_f)){
-    
+    harmonic_fft_obj <- spectrum_analysis_fft_run(x) 
+    ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
     selected_f <- ranked_freq_df$freq
     
   }
@@ -230,11 +253,15 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
                           FUN= generate_harmonic,
                           coef_fft_df=selected_coef_fft_df,
                           a0=a0)
+  
   #Can add them all together?
-  return(harmonics_fft_list)
+  extract_harmonics_obj <- list(harmonics_fft_list,coef_fft_df)
+  names(extract_harmonics_obj) <- c("harmonics_fft_list","coef_fft_df")
+  
+  return(harmonics_fft_list,coef_fft_df)
 }
 
-adding_temporal_structure <- function(list_param){
+adding_temporal_structure <- function(extract_harmonics_obj){
   #
   #This functions generate different temporal components.
   # 
