@@ -62,8 +62,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08272017c.R" #PARAM 1
-
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08282017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -237,7 +236,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08282017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -248,10 +247,12 @@ test <- adding_temporal_structure(list_param)
 #ux <- sine_structure_fun(x_input,T,phase_val,a,b)
 #plot(ux)
 
-x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
+x_ts1 <- test$t_period_23 + test$trend + test$norm
+#x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
 plot(test$t_period_23,type="l")
 plot(test$trend,type="l")
+plot(test$unif)
 
 plot(x_ts,type="l")
 
@@ -264,12 +265,32 @@ plot(x_ts,type="l")
 periodogram(x_ts1)
 spectrum(x_ts1)
 
+test <- harmonic_analysis_fft_run(x_ts1)
+x_ts1_diff <- diff(x_ts1)
+plot(x_ts1,type="l")
+plot(x_ts1_diff,type="l") #loosing one data point
 
+nt <- 230
+time_steps <- 1:nt
+val_df <- data.frame(x_ts1,time_steps)
+mod <- lm(x_ts1 ~ time_steps,val_df)
+
+plot(mod$residuals,type="l")
+x_ts1_lm <- mod$residuals
+periodogram(x_ts1_lm)
+test2 <- harmonic_analysis_fft_run(x_ts1_diff)
+test3 <- harmonic_analysis_fft_run(x_ts1_lm)
+
+debug(extract_harmonic_fft_run)
+test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
+test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 
 
 #https://anomaly.io/seasonal-trend-decomposition-in-r/
   
 ############################## END OF SCRIPT #############################################
+
+
 
 # convert frequency to time periods
 X <- fft(x_ts1)
