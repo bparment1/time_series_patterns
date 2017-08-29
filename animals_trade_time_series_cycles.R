@@ -2,13 +2,13 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/27/2017
+## DATE MODIFIED: 08/28/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: testing multiple frequencies generation
+## COMMIT: clean up and spectrum/periodogram generation
 ##
 ## Links to investigate:
 
@@ -187,7 +187,6 @@ data_df <- data_df[,1:230]
 data_df <- na.omit(data_df)
 dim(data_df)
 
-
 df_ts <- (t(data_df))
 dim(df_ts)
 date_range <- c("2001.01.01","2010.12.31") #PARAM 15, NDVI Katrina
@@ -201,9 +200,6 @@ df_ts <- zoo(df_ts,range_dates)
 plot(df_ts[,1])
 dim(df_ts)
 
-
-
-
 ### 
 nt <- 230
 ??fft
@@ -214,6 +210,92 @@ test2 <- fft(vect_z,inverse=T) #not normalized
 nt <- length(vect_z)
 
 class(test)
+
+### Generate a sequence from sine
+#type_spatialstructure[5] <- "periodic_x1"
+amp<- c(2,1) #amplitude in this case
+b<- 0
+T<- c(23,46)
+phase_val <- 0
+x_input<-0:24
+
+nt <- 230
+temp_periods <- c(T)
+temp_period_quadrature <- NULL
+random_component <- c(0,0.1)
+
+list_param <- list(nt,phase_val,temp_periods,amp,
+                   temp_period_quadrature,
+                   random_component)
+
+names(list_param) <- c("nt","phase","temp_periods",
+                       "amp","temp_period_quadrature",
+                       "random_component")
+#nt <- list_param$nt
+#phase <- list_param$phase
+#temp_periods <- list_param$temp_periods
+#amp <- list_param$amp
+#temp_period_quadrature <- list_param$temp_period_quadrature
+#random_component <- list_param$random_component #mean and sd used in rnorm
+
+source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
+
+#debug(adding_temporal_structure)
+test <- adding_temporal_structure(list_param)
+  
+#y <- a*sin((x_input*2*pi/T)+ phase_val) + b
+#plot(y)
+#ux <- sine_structure_fun(x_input,T,phase_val,a,b)
+#plot(ux)
+
+x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
+
+plot(test$t_period_23,type="l")
+plot(test$trend,type="l")
+
+plot(x_ts,type="l")
+
+plot(test$t_period_46,type="l")
+
+x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
+plot(x_ts,type="l")
+
+#### Now find out if you can see the cycles
+periodogram(x_ts1)
+spectrum(x_ts1)
+
+
+
+
+#https://anomaly.io/seasonal-trend-decomposition-in-r/
+  
+############################## END OF SCRIPT #############################################
+
+# convert frequency to time periods
+X <- fft(x_ts1)
+fq <- 2 * pi /nt
+frq <- 0
+FL <- 0
+Fl[1] <- X[1]^2 / nt*2
+
+for( j in 2:(n/2)){
+  FL[j] <- 2 * (X[j] )
+  d
+  
+}
+test[1]
+test[1]^2 / n*2
+
+#The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
+#Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
+
+#sunspots=scan("sunspots.dat")
+#plot(sunspots,type="b")
+#x = diff(sunspots)
+#I = abs(fft(x)/sqrt(458))^2
+#P = (4/458)*I[1:230]
+#freq = (0:229)/458
+#plot(freq,P,type="l") 
 
 test2
 
@@ -289,89 +371,3 @@ raw = read.csv("20131120-20151110-google-analytics.csv")
 # display the 2 highest "power" frequencies
 top2
 str(p)
-
-#The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
-#Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
-
-#sunspots=scan("sunspots.dat")
-#plot(sunspots,type="b")
-#x = diff(sunspots)
-#I = abs(fft(x)/sqrt(458))^2
-#P = (4/458)*I[1:230]
-#freq = (0:229)/458
-#plot(freq,P,type="l") 
-
-### Generate a sequence from sine
-#type_spatialstructure[5] <- "periodic_x1"
-amp<- c(2,1) #amplitude in this case
-b<- 0
-T<- c(23,46)
-phase_val <- 0
-x_input<-0:24
-
-nt <- 230
-temp_periods <- c(T)
-temp_period_quadrature <- NULL
-random_component <- c(0,0.1)
-
-list_param <- list(nt,phase_val,temp_periods,amp,
-                   temp_period_quadrature,
-                   random_component)
-
-names(list_param) <- c("nt","phase","temp_periods",
-                       "amp","temp_period_quadrature",
-                       "random_component")
-#nt <- list_param$nt
-#phase <- list_param$phase
-#temp_periods <- list_param$temp_periods
-#amp <- list_param$amp
-#temp_period_quadrature <- list_param$temp_period_quadrature
-#random_component <- list_param$random_component #mean and sd used in rnorm
-
-source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
-
-#debug(adding_temporal_structure)
-test <- adding_temporal_structure(list_param)
-  
-#y <- a*sin((x_input*2*pi/T)+ phase_val) + b
-#plot(y)
-#ux <- sine_structure_fun(x_input,T,phase_val,a,b)
-#plot(ux)
-
-x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
-
-plot(test$t_period_23,type="l")
-plot(test$trend,type="l")
-
-plot(x_ts,type="l")
-
-plot(test$t_period_46,type="l")
-
-x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
-plot(x_ts,type="l")
-
-#### Now find out if you can see the cycles
-periodogram(x_ts1)
-spectrum(x_ts1)
-
-# convert frequency to time periods
-X <- fft(x_ts1)
-fq <- 2 * pi /nt
-frq <- 0
-FL <- 0
-Fl[1] <- X[1]^2 / nt*2
-
-for( j in 2:(n/2)){
-  FL[j] <- 2 * (X[j] )
-  d
-  
-}
-test[1]
-test[1]^2 / n*2
-
-
-
-#https://anomaly.io/seasonal-trend-decomposition-in-r/
-  
-############################## END OF SCRIPT #############################################
-
