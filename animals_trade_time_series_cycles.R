@@ -251,7 +251,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08292017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08302017c.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -263,13 +263,13 @@ test <- adding_temporal_structure(list_param)
 #plot(ux)
 
 x_ts1 <- test$t_period_23 + test$trend + test$norm
+x_ts1 <- test$t_period_23 + test$trend 
+
 #x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
 plot(test$t_period_23,type="l")
 plot(test$trend,type="l")
 plot(test$unif)
-
-plot(x_ts,type="l")
 
 #plot(test$t_period_46,type="l")
 
@@ -289,8 +289,11 @@ plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
 p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
 
-debug(harmonic_analysis_fft_run)
-test <- harmonic_analysis_fft_run(x_ts1)
+## Fix this
+debug(spectrum_analysis_fft_run)
+test <- spectrum_analysis_fft_run(x_ts1)
+
+
 x_ts1_diff <- diff(x_ts1)
 plot(x_ts1,type="l")
 plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected the amplitude too!!!
