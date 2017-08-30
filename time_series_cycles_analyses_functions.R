@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/29/2017
+## DATE MODIFIED: 08/30/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -11,6 +11,7 @@
 ##        - windowing function
 ##        - generate artificial dataset
 ##        - windowed Fourier
+##        - multitaper methods 
 ##
 ## COMMIT: adding multiple amplitudes for frequencies of artificial datasets
 ##
@@ -119,7 +120,7 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 
 # compute the Fourier Transform
 
-harmonic_analysis_fft_run <- function(x){
+spectrum_analysis_fft_run <- function(x){
   #
   #This functions examines a single time series and generate spectrum summary to detect harmonics 
   #INPUT:
@@ -158,8 +159,6 @@ harmonic_analysis_fft_run <- function(x){
   #p$orig.n* as.numeric(rownames(top2)
   n_used <- p$n.used
   
-  ## Prepare return object:
-  
   periodogram_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
   names(periodogram_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
 
@@ -186,7 +185,15 @@ harmonic_analysis_fft_run <- function(x){
   #p$orig.n* as.numeric(rownames(top2)
   n_used <- p$n.used
   
-  return(harmonic_fft_obj)
+  spectrum_obj <- list(spectrum_val,freq_df,ranked_freq_df,p$orig.n,p$n.used)
+  names(spectrum_obj) <- c("spectrum","freq_df","ranked_freq_df","n_orig","n_used")
+  
+  ## Prepare return object:
+  
+  spectrum_analyis_fft_obj <- list(periodogram_obj,spectrum_obj)
+  names(spectrum_analyis_fft_obj) <- c("periodogram_obj","spectrum_obj")
+  
+  return(spectrum_analyis_fft_obj)
 }
 
 
@@ -275,15 +282,16 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   #amp[10]*sin(+ phase[10])
   
   ### Generate a sequence from sine
-  #type_spatialstructure[5] <- "periodic_x1"
-  
-  #debug(harmonic_analysis_fft_run)
-  harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
-  
-  ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
+
   
   if(is.null(selected_f)){
     #then take the top 10
+    #type_spatialstructure[5] <- "periodic_x1"
+    
+    #debug(harmonic_analysis_fft_run)
+    harmonic_fft_obj <- spatial_analysis_fft_run(x) 
+    
+    ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
     selected_f <- ranked_freq_df$freq[1:10]
   }
   ##
