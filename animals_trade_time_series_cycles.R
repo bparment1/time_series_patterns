@@ -2,7 +2,7 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/28/2017
+## DATE MODIFIED: 08/29/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -31,10 +31,16 @@ library(spgwr)                               # GWR method
 library(rgeos)                               # Geometric, topologic library of functions
 library(gridExtra)                           # Combining lattice plots
 library(colorRamps)                          # Palette/color ramps for symbology
-library(ggplot2)
-library(lubridate)
-library(dplyr)
-library(forecast)
+library(ggplot2)                             # Plotting functionalities
+library(lubridate)                           # Dates manipulation functionalities
+library(dplyr)                               # Data wrangling
+library(forecast)                            # ARIMA and other time series methods
+library(multitaper)                          # Multitaper estimation of spectrum
+library(GeneCycle)                           # Fisher test for harmonics and Time series functionalities
+library(xts)                                 # Extension for time series object and analyses
+library(zoo)                                 # Time series object and analysis
+library(mblm)                                # Theil Sen estimator
+library(TSA)                                 # Time series analyses functionalities
 
 ###### Functions used in this script and sourced from other files
 
@@ -62,7 +68,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08282017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08292017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -236,7 +242,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08282017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08292017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -256,14 +262,15 @@ plot(test$unif)
 
 plot(x_ts,type="l")
 
-plot(test$t_period_46,type="l")
+#plot(test$t_period_46,type="l")
 
-x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
-plot(x_ts,type="l")
+#x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
+#plot(x_ts,type="l")
 
 #### Now find out if you can see the cycles
 periodogram(x_ts1)
-spectrum(x_ts1)
+
+spectrum(x_ts1,fast=F)
 
 test <- harmonic_analysis_fft_run(x_ts1)
 x_ts1_diff <- diff(x_ts1)
@@ -287,7 +294,37 @@ test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 
 
 #https://anomaly.io/seasonal-trend-decomposition-in-r/
-  
+
+### Generate function for formal test of presence of periodicity/frequency in 
+## the data.
+#https://en.wikipedia.org/wiki/Welch%27s_method
+#The periodogram is a biased estimate in most cases so we need
+#to estimate the spectrum with other methods or try to get
+#a better estimate. This often results in lower resolution identification
+#of the frequency but improved estimate.
+https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
+
+#require(multitaper);
+data(willamette);
+resSpec <- spec.mtm(willamette, k=10, nw=5.0, nFFT = "default",
+                    centreWithSlepians = TRUE, Ftest = TRUE,
+                    jackknife = FALSE, maxAdaptiveIterations = 100,
+                    plot = TRUE, na.action = na.fail) 
+
+resSpec <- spec.mtm(x_ts1, k=10, nw=5.0, nFFT = "default",
+                    centreWithSlepians = TRUE, Ftest = TRUE,
+                    jackknife = FALSE, maxAdaptiveIterations = 100,
+                    plot = TRUE, na.action = na.fail) 
+
+resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
+                    centreWithSlepians = TRUE, Ftest = TRUE,
+                    jackknife = FALSE, maxAdaptiveIterations = 100,
+                    plot = TRUE, na.action = na.fail) 
+
+#testing for significant harmonics
+#library(GeneCycle)
+?fisher.g.test
+
 ############################## END OF SCRIPT #############################################
 
 
