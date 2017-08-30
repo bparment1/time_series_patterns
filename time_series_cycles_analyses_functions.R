@@ -9,9 +9,8 @@
 ## ISSUE: 
 ## TO DO: - Fourier
 ##        - windowing function
-##        - generate artificial dataset both in space and time
+##        - generate artificial dataset
 ##        - windowed Fourier
-##        - multitaper method to estimae the power spectrum and harmonics
 ##
 ## COMMIT: adding multiple amplitudes for frequencies of artificial datasets
 ##
@@ -122,21 +121,28 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 
 spectrum_analysis_fft_run <- function(x){
   #
-  #Function to compute 
-  #Tapering option: There will be usually jump between the end of one replicate
-  #time seris and the start of the next. These jumps can be avoided by reducing
-  #the magnitude of the values of the time series relative to its mean, at the
-  #beginning and towards the end. Default taper is set to 10% of data at the 
-  #beginning and end of the time series.
+  #This functions examines a single time series and generate spectrum summary to detect harmonics 
+  #INPUT:
+  #x : a time series as a vector
+  #OUTPUT:
+  # 1) periodogram_obj:
+  # 2) spectrum_obj: list of the follwing element
+  # - "p"
+  # - "freq_df"
+  # - "ranked_freq_df",
+  # - "n_orig"
+  # - "n_used"
+  #
+  
+  #### Begin #####
+  
+  ### Part I: use periodogram, line spectrum to find harmonics contribution
   
   #p <- periodogram(x)
   
-  #spectrum_val <- spectrum(as.numeric(x))
   p <- periodogram(x,fast=F)
-  spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
   #spectrum_val <- spectrum(as.numeric(x)) #not padding of power 2
   
-  length(spectrum_val$freq)
   length(p$freq) #no option to remove padding
   
   n_orig <- length(x)
@@ -154,8 +160,31 @@ spectrum_analysis_fft_run <- function(x){
   
   ## Prepare return object:
   
-  periodogram_fft_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
+  periodogram_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
   names(periodogram_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
+
+  ### Part II: use spectrum, power density to find harmonics contribution
+
+  spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
+  #spectrum_val <- spectrum(as.numeric(x))
+  length(spectrum_val$freq)
+
+  spectrum_val$freq #no option to remove padding
+  
+  n_orig <- length(x)
+  
+  freq_df <- data.frame(freq=spectrum_val$freq, spec=spectrum_val$spec)
+  
+  total_variance <- sum(freq_df$spec)
+  freq_df$index <- as.numeric(row.names(freq_df))
+  freq_df$period <- 1/freq_df$freq
+  freq_df$period_orig <- n_orig/freq_df$index
+  freq_df$variance <- freq_df$freq/total_variance*100
+  ranked_freq_df <- freq_df[order(-freq_df$spec),]
+  
+  #barplot(freq_df$variance)
+  #p$orig.n* as.numeric(rownames(top2)
+  n_used <- p$n.used
   
   return(harmonic_fft_obj)
 }
@@ -196,13 +225,20 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   
   ########## BEGIN ############
   
+  options(scipen=999)  #remove scientific writing
+  
   x_trans <- fft(x,inverse=T) # transformed fft
   #x_trans <- fft(x,inverse=T,fast=F) # transformed fft, no padding to get to power of 2
   
+  #
+  #pgram[, i, j] <- xfft[, i] * Conj(xfft[, j])/(N0 * xfreq)
+  #N0 is the total number of steps
   
   #sqrt(a^2+b^2)
   mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
   amp_val <- as.numeric(Mod(x_trans))/2
+  
+  #amplitude <- Mod(x_trans[1:(length(x_trans)/2)])
   
   amp <- amp_val
   amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
@@ -215,14 +251,25 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   phase <- as.numeric(Arg(x_trans))
   #phase[11]
   #barplot(phase)
-  amp_scaled <- 1/(amp_val/n)
+  #amp_scaled <- 1/(amp_val/n)
+  amp_scaled <- n/amp_val
+  amp_scaled <- log(amp_val)
   amp_scaled[1] <- 0
   #1/(113.070230382360506382611/230)
-  period_orig <- 230/(1:n_half)
   
-  coef_fft_df <- data.frame(amp_val[1:n_half],amp_scaled,phase[1:n_half],
-                            period_orig)
-  names(coef_fft_df) <- c("amp","amp_scaled","phase","period_orig")
+  period_orig <- 230/(1:n_half)
+  harmonic_val <- 1:n_half
+  frequency_val <- 1/period_orig
+  freq_rad <- 2*pi*frequency_val
+  variance_freq <- (amp_scaled^2)/2
+  variance_freq_perc <- (variance_freq/sum(variance_freq))*100
+  
+  coef_fft_df <- data.frame(harmonic_val,period_orig,frequency_val,
+                            amp_val[1:n_half],
+                            amp_scaled,phase[1:n_half],
+                            variance)
+  names(coef_fft_df) <- c("harmonic","period_orig","frequency",
+                          "amp","amp_scaled","phase","variance","var_percent")
   
   #x_in <- 1:230
   #amp[10]*sin(+ phase[10])
@@ -230,12 +277,13 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
   
-  #debug(harmonic_analysis_fft_run)
   
   if(is.null(selected_f)){
-    harmonic_fft_obj <- spectrum_analysis_fft_run(x) 
-    ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
+    
     selected_f <- ranked_freq_df$freq
+    #debug(harmonic_analysis_fft_run)
+    spectrum_fft_obj <- spectrum_analysis_fft_run(x) 
+    ranked_freq_df <- specturm_fft_obj$spectrum_obj$ranked_freq_df
     
   }
   
@@ -253,15 +301,11 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
                           FUN= generate_harmonic,
                           coef_fft_df=selected_coef_fft_df,
                           a0=a0)
-  
   #Can add them all together?
-  extract_harmonics_obj <- list(harmonics_fft_list,coef_fft_df)
-  names(extract_harmonics_obj) <- c("harmonics_fft_list","coef_fft_df")
-  
-  return(harmonics_fft_list,coef_fft_df)
+  return(harmonics_fft_list)
 }
 
-adding_temporal_structure <- function(extract_harmonics_obj){
+adding_temporal_structure <- function(list_param){
   #
   #This functions generate different temporal components.
   # 
