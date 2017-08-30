@@ -1,17 +1,26 @@
-############### SESYNC Research Support: Spatial demography ########## 
-## Performing PCA on animals trade data at SESYNC.
+############### SESYNC Research Support: Animals Trade ############# 
+## 
+## Performing spectral analyses to uncover cycles on animals trade data at SESYNC.
+## Different methods are available. Use multiple methods for multiple lines of evidence:
+## Here is a quick lists of methods:
+## 1) Spectrum: Uses spectrum generation with some detrending, the spectrum is smoothed
+## 2) FFT periodogram: Uses raw outputs from FFT and plot squared of amplitude of frequencies
+## 3) multitaper: Uses taper to estimate spectrum
+## 
 ## 
 ## DATE CREATED: 06/15/2017
 ## DATE MODIFIED: 08/29/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
-## TO DO:
+## TO DO: - add windowed Fourier transform option
+##        - add wavelet option
+##        - lag analyis with PCA to remove seasonality?
 ##
-## COMMIT: clean up and spectrum/periodogram generation
+## COMMIT: exploring multitaper option without padding and with different window size
 ##
 ## Links to investigate:
-
+##
 ###################################################
 #
 
@@ -268,23 +277,25 @@ plot(x_ts,type="l")
 #plot(x_ts,type="l")
 
 #### Now find out if you can see the cycles
-periodogram(x_ts1)
+periodogram(x_ts1) #need to remove trends or will impact low frequencies
+#periodogram(x_ts1_lm)
 
 spectrum(x_ts1,fast=F)
-
-test <- harmonic_analysis_fft_run(x_ts1)
-x_ts1_diff <- diff(x_ts1)
-plot(x_ts1,type="l")
-plot(x_ts1_diff,type="l") #loosing one data point
-
 nt <- 230
 time_steps <- 1:nt
 val_df <- data.frame(x_ts1,time_steps)
 mod <- lm(x_ts1 ~ time_steps,val_df)
-
 plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
-periodogram(x_ts1_lm)
+p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
+
+debug(harmonic_analysis_fft_run)
+test <- harmonic_analysis_fft_run(x_ts1)
+x_ts1_diff <- diff(x_ts1)
+plot(x_ts1,type="l")
+plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected the amplitude too!!!
+
+undebug(harmonic_analysis_fft_run)
 test2 <- harmonic_analysis_fft_run(x_ts1_diff)
 test3 <- harmonic_analysis_fft_run(x_ts1_lm)
 
@@ -302,7 +313,7 @@ test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 #to estimate the spectrum with other methods or try to get
 #a better estimate. This often results in lower resolution identification
 #of the frequency but improved estimate.
-https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
+#https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
 
 #require(multitaper);
 data(willamette);
@@ -320,6 +331,47 @@ resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
                     centreWithSlepians = TRUE, Ftest = TRUE,
                     jackknife = FALSE, maxAdaptiveIterations = 100,
                     plot = TRUE, na.action = na.fail) 
+### control the padding, request none
+resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = 230,
+                    centreWithSlepians = TRUE, Ftest = TRUE,
+                    jackknife = FALSE, maxAdaptiveIterations = 100,
+                    plot = TRUE, na.action = na.fail) 
+which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+which.min(resSpec$mtm$Ftest)
+
+length(resSpec$spec)
+
+
+### control the padding, request none
+resSpec <- spec.mtm(x_ts1_lm, k=10, nw=9.0, nFFT = 230,
+                    centreWithSlepians = TRUE, Ftest = TRUE,
+                    jackknife = FALSE, maxAdaptiveIterations = 100,
+                    plot = TRUE, na.action = na.fail) 
+which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+which.min(resSpec$mtm$Ftest)
+length(resSpec$spec)
+
+y<- x_ts1_lm
+tappercent=.05
+N= length(y)
+fn = 1/(2*dt)
+tapy = spec.taper(y, p=tappercent)
+##tapy = tapy-mean(tapy)
+plot(tapy,type="l")
+Y = fft(tapy)
+Pyy = (Mod(Y)^2)/(N*N)
+## Pyy = Y * Conj(Y)
+n = floor(length(Pyy)/2)
+Syy = Pyy[1:n]
+
+fs = (0:(length(Syy)-1))/length(Syy)
+
+plot(fs, Syy, type='l', xlab="frequency",
+     ylab="Power Density", log='')
+
+fs = (0:(length(Syy)-1))*fn/length(Syy)
+plot(fs, Syy, type='l', xlab="frequency",
+       + ylab="Power Density", log='')
 
 #testing for significant harmonics
 #library(GeneCycle)
