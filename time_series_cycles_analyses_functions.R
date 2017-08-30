@@ -119,7 +119,7 @@ generate_dates_by_step <-function(start_date,end_date,step_date){
 
 # compute the Fourier Transform
 
-spectrum_analysis_fft_run <- function(x){
+harmonic_analysis_fft_run <- function(x){
   #
   #This functions examines a single time series and generate spectrum summary to detect harmonics 
   #INPUT:
@@ -214,6 +214,7 @@ generate_harmonic <- function(i,coef_fft_df,a0){
 
 
 extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
+  #
   ## This functions generate harmonics using fft from x (time) series.
   #INPUTS
   #1)x: series to process with fft
@@ -235,16 +236,15 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   #N0 is the total number of steps
   
   #sqrt(a^2+b^2)
-  mod_val <- sqrt((Im(x_trans[11])^2 + (Re(x_trans[11]))^2))
+  mod_val <- sqrt((Im(x_trans)^2 + (Re(x_trans))^2))
   amp_val <- as.numeric(Mod(x_trans))/2
   
-  #amplitude <- Mod(x_trans[1:(length(x_trans)/2)])
+  amplitude <- Mod(x_trans[1:(length(x_trans)/2)])
   
   amp <- amp_val
-  amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
+  #amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
   
   n <- length(x)
-  
   n_half <- n/2
   plot(1:n_half,amp[1:n_half],"h")
   
@@ -262,12 +262,12 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   frequency_val <- 1/period_orig
   freq_rad <- 2*pi*frequency_val
   variance_freq <- (amp_scaled^2)/2
-  variance_freq_perc <- (variance_freq/sum(variance_freq))*100
+  variance_perc <- (variance_freq/sum(variance_freq))*100
   
   coef_fft_df <- data.frame(harmonic_val,period_orig,frequency_val,
                             amp_val[1:n_half],
                             amp_scaled,phase[1:n_half],
-                            variance)
+                            variance_freq,variance_perc)
   names(coef_fft_df) <- c("harmonic","period_orig","frequency",
                           "amp","amp_scaled","phase","variance","var_percent")
   
@@ -277,15 +277,16 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   ### Generate a sequence from sine
   #type_spatialstructure[5] <- "periodic_x1"
   
+  #debug(harmonic_analysis_fft_run)
+  harmonic_fft_obj <- harmonic_analysis_fft_run(x) 
+  
+  ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
   
   if(is.null(selected_f)){
-    
-    selected_f <- ranked_freq_df$freq
-    #debug(harmonic_analysis_fft_run)
-    spectrum_fft_obj <- spectrum_analysis_fft_run(x) 
-    ranked_freq_df <- specturm_fft_obj$spectrum_obj$ranked_freq_df
-    
+    #then take the top 10
+    selected_f <- ranked_freq_df$freq[1:10]
   }
+  ##
   
   ### Get ranked frequencies
   
@@ -293,6 +294,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   #i<-1
   #generate_harmonic(i,coef_fft_df=selected_coef_fft_df,a0)
   a0 <- mean(x)
+  
   #may want to use diff or detrend?
   
   n_selected <- nrow(coef_fft_df_selected)
@@ -302,6 +304,8 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
                           coef_fft_df=selected_coef_fft_df,
                           a0=a0)
   #Can add them all together?
+  
+  harmonic_obj <- list(harmonics_fft_list,harmonic_fft_obj)
   return(harmonics_fft_list)
 }
 
