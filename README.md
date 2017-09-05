@@ -1,9 +1,9 @@
 # time_series_patterns
-This repository contains general code to analyze time series. This is as part of Research Support at SESYNC.
+This repository contains general code to analyze time series. This is generated as part of the Research Support at SESYNC.
 The goal is to provide a set of functions related analysis of time series, trends and variability and cycles.
 
 This includes:
-1) detection and removeal of trends:
+1) detection and removal of trends:
 - theil sen
 - ordinary least square
 - differencing
