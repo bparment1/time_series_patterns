@@ -9,7 +9,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/29/2017
+## DATE MODIFIED: 09/05/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -17,7 +17,7 @@
 ##        - add wavelet option
 ##        - lag analyis with PCA to remove seasonality?
 ##
-## COMMIT: exploring multitaper option without padding and with different window size
+## COMMIT: fixing spectrum_analysis_function
 ##
 ## Links to investigate:
 ##
@@ -77,7 +77,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08292017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -251,7 +251,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_08302017c.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -278,12 +278,14 @@ plot(test$unif)
 
 #### Now find out if you can see the cycles
 periodogram(x_ts1) #need to remove trends or will impact low frequencies
-#periodogram(x_ts1_lm)
+periodogram(x_ts1_lm)
 
-spectrum(x_ts1,fast=F)
+spec_obj <- spectrum(x_ts1,fast=F)
+findpeaks(spec_obj$spec)
 nt <- 230
 time_steps <- 1:nt
 val_df <- data.frame(x_ts1,time_steps)
+
 mod <- lm(x_ts1 ~ time_steps,val_df)
 plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
@@ -291,7 +293,7 @@ p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
 
 ## Fix this
 debug(spectrum_analysis_fft_run)
-test <- spectrum_analysis_fft_run(x_ts1)
+test <- spectrum_analysis_fft_run(x_ts1_lm)
 
 
 x_ts1_diff <- diff(x_ts1)
@@ -305,39 +307,6 @@ test3 <- harmonic_analysis_fft_run(x_ts1_lm)
 debug(extract_harmonic_fft_run)
 test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
 test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
-
-P=abs(2*fft(x_ts1)/230)^2
-P[10]
-#see TSA book p.179
-
-https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
-
-x <- seq(0, 1, len = 1024)
-pos <- c(0.1, 0.13, 0.15, 0.23, 0.25, 0.40, 0.44, 0.65, 0.76, 0.78, 0.81)
-hgt <- c(4, 5, 3, 4, 5, 4.2, 2.1, 4.3, 3.1, 5.1, 4.2)
-wdt <- c(0.005, 0.005, 0.006, 0.01, 0.01, 0.03, 0.01, 0.01, 0.005, 0.008, 0.005)
-
-pSignal <- numeric(length(x))
-
-for (i in seq(along=pos)) {
-  pSignal <- pSignal + hgt[i]/(1 + abs((x - pos[i])/wdt[i]))^4
-}
-plot(pSignal,type="l")
-
-install.packages("pracma")
-library(pracma)
-findpeaks(pSignal, npeaks=3, threshold=4, sortstr=TRUE)
-
-#https://anomaly.io/seasonal-trend-decomposition-in-r/
-
-### Generate function for formal test of presence of periodicity/frequency in 
-## the data.
-#https://en.wikipedia.org/wiki/Welch%27s_method
-#The periodogram is a biased estimate in most cases so we need
-#to estimate the spectrum with other methods or try to get
-#a better estimate. This often results in lower resolution identification
-#of the frequency but improved estimate.
-#https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
 
 #require(multitaper);
 data(willamette);
@@ -375,6 +344,12 @@ which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect t
 which.min(resSpec$mtm$Ftest)
 length(resSpec$spec)
 
+
+####
+P=abs(2*fft(x_ts1)/230)^2
+P[10]
+#see TSA book p.179
+
 y<- x_ts1_lm
 tappercent=.05
 N= length(y)
@@ -403,6 +378,35 @@ plot(fs, Syy, type='l', xlab="frequency",
 
 ############################## END OF SCRIPT #############################################
 
+https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
+
+x <- seq(0, 1, len = 1024)
+pos <- c(0.1, 0.13, 0.15, 0.23, 0.25, 0.40, 0.44, 0.65, 0.76, 0.78, 0.81)
+hgt <- c(4, 5, 3, 4, 5, 4.2, 2.1, 4.3, 3.1, 5.1, 4.2)
+wdt <- c(0.005, 0.005, 0.006, 0.01, 0.01, 0.03, 0.01, 0.01, 0.005, 0.008, 0.005)
+
+pSignal <- numeric(length(x))
+
+for (i in seq(along=pos)) {
+  pSignal <- pSignal + hgt[i]/(1 + abs((x - pos[i])/wdt[i]))^4
+}
+plot(pSignal,type="l")
+
+findpeaks(pSignal, npeaks=3, threshold=4, sortstr=TRUE)
+findpeaks(pSignal, sortstr=TRUE)
+
+pSignal[1:798] <- 0
+p
+#https://anomaly.io/seasonal-trend-decomposition-in-r/
+
+### Generate function for formal test of presence of periodicity/frequency in 
+## the data.
+#https://en.wikipedia.org/wiki/Welch%27s_method
+#The periodogram is a biased estimate in most cases so we need
+#to estimate the spectrum with other methods or try to get
+#a better estimate. This often results in lower resolution identification
+#of the frequency but improved estimate.
+#https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
 
 
 # convert frequency to time periods
