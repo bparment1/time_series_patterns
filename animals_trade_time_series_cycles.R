@@ -251,7 +251,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017b.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -292,21 +292,24 @@ x_ts1_lm <- mod$residuals
 p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
 
 ## Fix this
-debug(spectrum_analysis_fft_run)
+#debug(spectrum_analysis_fft_run)
 test <- spectrum_analysis_fft_run(x_ts1_lm)
-
 
 x_ts1_diff <- diff(x_ts1)
 plot(x_ts1,type="l")
 plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected the amplitude too!!!
 
-undebug(harmonic_analysis_fft_run)
-test2 <- harmonic_analysis_fft_run(x_ts1_diff)
-test3 <- harmonic_analysis_fft_run(x_ts1_lm)
+#undebug(harmonic_analysis_fft_run)
 
-debug(extract_harmonic_fft_run)
+### find harmonic cycles
+spectrum_analysis_fft_obj_diff <- harmonic_analysis_fft_run(x_ts1_diff)
+spectrum_analysis_fft_obj_lm <- harmonic_analysis_fft_run(x_ts1_lm)
+
 test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
+debug(extract_harmonic_fft_run)
 test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
+
+#https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
 
 #require(multitaper);
 data(willamette);
