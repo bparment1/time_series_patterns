@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 08/30/2017
+## DATE MODIFIED: 09/05/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -139,12 +139,8 @@ spectrum_analysis_fft_run <- function(x){
   
   ### Part I: use periodogram, line spectrum to find harmonics contribution
   
-  #p <- periodogram(x)
-  
   p <- periodogram(x,fast=F)
   #spectrum_val <- spectrum(as.numeric(x)) #not padding of power 2
-  
-  length(p$freq) #no option to remove padding
   
   n_orig <- length(x)
   freq_df <- data.frame(freq=p$freq, spec=p$spec)
@@ -159,8 +155,11 @@ spectrum_analysis_fft_run <- function(x){
   #p$orig.n* as.numeric(rownames(top2)
   n_used <- p$n.used
   
-  periodogram_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used)
-  names(periodogram_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used")
+  peaks_df <- as.data.frame(findpeaks(p$spec))
+  names(peaks_df) <- c("val","loc","start","end")
+  
+  periodogram_obj <- list(p,freq_df,ranked_freq_df,p$orig.n,p$n.used,peaks_df)
+  names(periodogram_obj) <- c("p","freq_df","ranked_freq_df","n_orig","n_used","peaks_df")
 
   ### Part II: use spectrum, power density to find harmonics contribution
 
@@ -168,7 +167,7 @@ spectrum_analysis_fft_run <- function(x){
   #spectrum_val <- spectrum(as.numeric(x))
   length(spectrum_val$freq)
 
-  spectrum_val$freq #no option to remove padding
+  #spectrum_val$freq #no option to remove padding
   
   n_orig <- length(x)
   
@@ -185,8 +184,11 @@ spectrum_analysis_fft_run <- function(x){
   #p$orig.n* as.numeric(rownames(top2)
   n_used <- p$n.used
   
-  spectrum_obj <- list(spectrum_val,freq_df,ranked_freq_df,p$orig.n,p$n.used)
-  names(spectrum_obj) <- c("spectrum","freq_df","ranked_freq_df","n_orig","n_used")
+  peaks_df <- as.data.frame(findpeaks(spectrum_val$spec))
+  names(peaks_df) <- c("val","loc","start","end")
+  
+  spectrum_obj <- list(spectrum_val,freq_df,ranked_freq_df,p$orig.n,p$n.used,peaks_df)
+  names(spectrum_obj) <- c("spectrum","freq_df","ranked_freq_df","n_orig","n_used","peaks_df")
   
   ## Prepare return object:
   
@@ -289,23 +291,23 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
     #type_spatialstructure[5] <- "periodic_x1"
     
     #debug(harmonic_analysis_fft_run)
-    harmonic_fft_obj <- spatial_analysis_fft_run(x) 
+    spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
     
-    ranked_freq_df <- harmonic_fft_obj$ranked_freq_df
-    selected_f <- ranked_freq_df$freq[1:10]
+    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+    selected_f <- ranked_freq_df$freq[1:10] 
   }
   ##
   
   ### Get ranked frequencies
   
-  selected_coef_fft_df <- coef_fft_df[selected_frequencies,]
+  selected_coef_fft_df <- coef_fft_df[selected_f,]
   #i<-1
   #generate_harmonic(i,coef_fft_df=selected_coef_fft_df,a0)
   a0 <- mean(x)
   
   #may want to use diff or detrend?
   
-  n_selected <- nrow(coef_fft_df_selected)
+  n_selected <- nrow(selected_coef_fft_df)
   
   harmonics_fft_list <- lapply(1:n_selected,
                           FUN= generate_harmonic,
