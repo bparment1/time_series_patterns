@@ -9,7 +9,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 09/05/2017
+## DATE MODIFIED: 09/06/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -77,7 +77,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09062017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -117,7 +117,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_08172017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_09062017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -251,7 +251,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09052017b.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09062017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -277,11 +277,7 @@ plot(test$unif)
 #plot(x_ts,type="l")
 
 #### Now find out if you can see the cycles
-periodogram(x_ts1) #need to remove trends or will impact low frequencies
-periodogram(x_ts1_lm)
 
-spec_obj <- spectrum(x_ts1,fast=F)
-findpeaks(spec_obj$spec)
 nt <- 230
 time_steps <- 1:nt
 val_df <- data.frame(x_ts1,time_steps)
@@ -289,6 +285,16 @@ val_df <- data.frame(x_ts1,time_steps)
 mod <- lm(x_ts1 ~ time_steps,val_df)
 plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
+
+
+periodogram(x_ts1) #need to remove trends or will impact low frequencies
+periodogram(x_ts1_lm)
+
+spec_obj <- spectrum(x_ts1,fast=F)
+spec_obj <- spectrum(x_ts1_lm,fast=F)
+
+findpeaks(spec_obj$spec)
+
 p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
 
 ## Fix this
@@ -302,8 +308,8 @@ plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected 
 #undebug(harmonic_analysis_fft_run)
 
 ### find harmonic cycles
-spectrum_analysis_fft_obj_diff <- harmonic_analysis_fft_run(x_ts1_diff)
-spectrum_analysis_fft_obj_lm <- harmonic_analysis_fft_run(x_ts1_lm)
+spectrum_analysis_fft_obj_diff <- spectrum_analysis_fft_run(x_ts1_diff)
+spectrum_analysis_fft_obj_lm <- spectrum_analysis_fft_run(x_ts1_lm)
 
 test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
 debug(extract_harmonic_fft_run)
