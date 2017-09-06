@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/05/2017
+## DATE MODIFIED: 09/06/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -209,7 +209,7 @@ generate_harmonic <- function(i,coef_fft_df,a0){
   T <- coef_fft_df$T[i]
   #T <- 23
   
-  phase_val <-coef_fft_df$phase[i]
+  phase_val <-coef_fft_df$phase[i] #get the phase from fft?
   
   n_val <- nrow(coef_fft_df)
   #x_input <- 1:230 #index sequence corresponding to timesetps for time series
@@ -237,55 +237,88 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   
   options(scipen=999)  #remove scientific writing
   
-  x_trans <- fft(x,inverse=T) # transformed fft
+  x_fft <- fft(x,inverse=T) # transformed fft
+  #Let j be the frequency
+  # aj*cos(wj*t) + bj*sin(wjt)
+  #
   #x_trans <- fft(x,inverse=T,fast=F) # transformed fft, no padding to get to power of 2
   
   #
   #pgram[, i, j] <- xfft[, i] * Conj(xfft[, j])/(N0 * xfreq)
   #N0 is the total number of steps
   
-  #sqrt(a^2+b^2)
-  mod_val <- sqrt((Im(x_trans)^2 + (Re(x_trans))^2))
-  amp_val <- as.numeric(Mod(x_trans))/2
+  ## To get the amplitude, you need to normalize by the number of element
+  ## You multiply by two because it is symmetrical and the power is spread
+  ## in both negative and positive
+  #sqrt(a^2+b^2): this gets the magnitude of the imaginary vector
+  mod_val <- sqrt((Im(x_fft)^2 + (Re(x_fft))^2)) #module of the imaginery number
+  ## power spectrum:
+  mod_val <- (mod_val/length(x_fft))*2 #normalized by length and multiply by 2
+  amp_val <- (as.numeric(Mod(x_fft))/length(x_fft))*2
+  amplitude <- abs(x_fft)/length(x_fft)*2 #
   
-  amplitude <- Mod(x_trans[1:(length(x_trans)/2)])
+  phase <- Arg(x_fft) # atan(Im(x_fft)/Re(x_fft))
   
-  amp <- amp_val
+  #phase[11]
+  #1.296784 
+  #> (phase[11]/pi)*180
+  #11 
+  #74.30026 
+  #> 360/23
+  #[1] 15.65217
+  #> 90-360/23
+  #[1] 74.34783
+  #> 
+  
+  #amp <- amp_val
   #amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
+  #https://www.mathworks.com/matlabcentral/answers/162846-amplitude-of-signal-after-fft-operation
   
   n <- length(x)
-  n_half <- n/2
+  n_half <- n/2 
+  plot(amplitude,type="h")
   plot(1:n_half,amp[1:n_half],"h")
+  
+  #http://www.mathworks.com/help/matlab/ref/fft.html
+  P2 = abs(x_trans/n)
+  P1 = P2[(1:n)/2+1]
+  P1(2:end-1) = 2*P1(2:end-1);
   
   phase <- as.numeric(Arg(x_trans))
   #phase[11]
   #barplot(phase)
   #amp_scaled <- 1/(amp_val/n)
-  amp_scaled <- n/amp_val
-  amp_scaled <- log(amp_val)
-  amp_scaled[1] <- 0
+  #amp_scaled <- n/amp_val
+  #amp_scaled <- log(amp_val)
+  #amp_scaled[1] <- 0
   #1/(113.070230382360506382611/230)
   
-  period_orig <- 230/(1:n_half)
+  n_selected <- n_half -1
+  period_orig <- 230/(1:n_half-1)
+  #period_orig <- 230/(1:n_half)
   harmonic_val <- 1:n_half
   frequency_val <- 1/period_orig
   freq_rad <- 2*pi*frequency_val
-  variance_freq <- (amp_scaled^2)/2
+  phase_deg <- phase*180/pi
+  variance_freq <- (amplitude^2)/2
   variance_perc <- (variance_freq/sum(variance_freq))*100
   
-  coef_fft_df <- data.frame(harmonic_val,period_orig,frequency_val,
-                            amp_val[1:n_half],
-                            amp_scaled,phase[1:n_half],
-                            variance_freq,variance_perc)
+  coef_fft_df <- data.frame(harmonic_val,
+                            period_orig,
+                            frequency_val,
+                            amplitude[1:n_half],
+                            phase[1:n_half],
+                            phase_deg[1:n_half],
+                            variance_freq[1:n_half],
+                            variance_perc[1:n_half])
   names(coef_fft_df) <- c("harmonic","period_orig","frequency",
-                          "amp","amp_scaled","phase","variance","var_percent")
+                          "amplitude","phase","phase_deg","variance","var_percent")
   
   #x_in <- 1:230
   #amp[10]*sin(+ phase[10])
   
   ### Generate a sequence from sine
 
-  
   if(is.null(selected_f)){
     #then take the top 10
     #type_spatialstructure[5] <- "periodic_x1"
@@ -294,7 +327,7 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
     spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
     
     ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-    selected_f <- ranked_freq_df$freq[1:10] 
+    selected_f <- ranked_freq_df$freq[1:10]
   }
   ##
   
