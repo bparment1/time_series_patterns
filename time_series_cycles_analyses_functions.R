@@ -222,7 +222,7 @@ generate_harmonic <- function(i,coef_fft_df,a0){
 }
 
 
-extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
+extract_harmonic_fft_parameters_run <- function(x){
   #
   ## This functions generate harmonics using fft from x (time) series.
   #INPUTS
@@ -317,40 +317,50 @@ extract_harmonic_fft_run <- function(x,a0,selected_f=NULL){
   #x_in <- 1:230
   #amp[10]*sin(+ phase[10])
   
-  ### Generate a sequence from sine
 
+  return(coef_fft_df)
+}
+
+
+filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL){
+  
+  ### Generate a sequence from sine
+  
   if(is.null(selected_f)){
-    #then take the top 10
-    #type_spatialstructure[5] <- "periodic_x1"
-    
-    #debug(harmonic_analysis_fft_run)
-    spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
-    
-    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-    selected_f <- ranked_freq_df$freq[1:10]
+  #then take the top 10
+  #type_spatialstructure[5] <- "periodic_x1"
+  
+  #debug(harmonic_analysis_fft_run)
+  spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
+  
+  ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+  selected_f <- ranked_freq_df$freq[1:10]
   }
   ##
-  
+
   ### Get ranked frequencies
-  
+
   selected_coef_fft_df <- coef_fft_df[selected_f,]
   #i<-1
   #generate_harmonic(i,coef_fft_df=selected_coef_fft_df,a0)
   a0 <- mean(x)
-  
+
   #may want to use diff or detrend?
-  
+
   n_selected <- nrow(selected_coef_fft_df)
-  
+
   harmonics_fft_list <- lapply(1:n_selected,
-                          FUN= generate_harmonic,
-                          coef_fft_df=selected_coef_fft_df,
-                          a0=a0)
+                             FUN= generate_harmonic,
+                             coef_fft_df=selected_coef_fft_df,
+                             a0=a0)
   #Can add them all together?
-  
+
   harmonic_obj <- list(harmonics_fft_list,harmonic_fft_obj)
-  return(harmonics_fft_list)
+  
+  return()
+
 }
+
 
 adding_temporal_structure <- function(list_param){
   #
@@ -365,7 +375,7 @@ adding_temporal_structure <- function(list_param){
   amp <- list_param$amp
   temp_period_quadrature <- list_param$temp_period_quadrature
   random_component <- list_param$random_component #mean and sd used in rnorm
-    
+  
   ### Start #####
   
   #type_temporalstructure <- character (length=6)
@@ -398,7 +408,7 @@ adding_temporal_structure <- function(list_param){
     #undebug(sine_structure_fun)
     y1 <- sine_structure_fun(x_input,T,phase_val,a,b)
     #sine_structure_fun <-function(x,T,phase_val,a,b){
-      
+    
     y1_list[[i]] <-  y1
   }
   names(y1_list) <- paste("t_period",temp_periods,sep="_")
