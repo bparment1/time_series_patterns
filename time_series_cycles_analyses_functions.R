@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/06/2017
+## DATE MODIFIED: 09/07/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -13,7 +13,7 @@
 ##        - windowed Fourier
 ##        - multitaper methods 
 ##
-## COMMIT: adding multiple amplitudes for frequencies of artificial datasets
+## COMMIT: adding multitaper methods for spectrum analyses
 ##
 
 ###################################################
@@ -444,6 +444,53 @@ adding_temporal_structure <- function(list_param){
   write.table(temp_pattern_dfrm,file=file_name,sep=",")
   
   return(temp_pattern_dfrm)
+}
+
+
+mtm_spectrum_analysis_fun <- function(){
+  #This functions using the multitaper methods to find harmonics in signal.
+  #
+  #Functions needs to be update
+  
+  ##### Start ####
+  
+  #require(multitaper);
+  data(willamette);
+  resSpec <- spec.mtm(willamette, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  
+  resSpec <- spec.mtm(x_ts1, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  ### control the padding, request none
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = 230,
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+  which.min(resSpec$mtm$Ftest)
+  
+  length(resSpec$spec)
+  
+  ### control the padding, request none
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=9.0, nFFT = 230,
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+  which.min(resSpec$mtm$Ftest)
+  length(resSpec$spec)
+  
+  return()
+  
 }
 
 ################### End of script ################
