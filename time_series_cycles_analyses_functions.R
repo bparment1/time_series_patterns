@@ -222,13 +222,13 @@ generate_harmonic <- function(i,coef_fft_df,a0){
 }
 
 
-extract_harmonic_fft_parameters_run <- function(x){
+extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_dir=".",out_suffix=""){
   #
   ## This functions generate harmonics using fft from x (time) series.
   #INPUTS
   #1)x: series to process with fft
-  #2)a0: average of series or reference point
-  #2)selected_f: number of harmonics to retain, if NULL generate to 5 or 10 (depending on the inputs)
+  #2)save_fig: save figure containing FFT line spectrum
+  #2)save_table: 
   #OUTPUTS
   #1) 
   #
@@ -256,7 +256,7 @@ extract_harmonic_fft_parameters_run <- function(x){
   mod_val <- (mod_val/length(x_fft))*2 #normalized by length and multiply by 2
   amp_val <- (as.numeric(Mod(x_fft))/length(x_fft))*2
   amplitude <- abs(x_fft)/length(x_fft)*2 #
-  
+   
   phase <- Arg(x_fft) # atan(Im(x_fft)/Re(x_fft))
   
   #phase[11]
@@ -276,26 +276,29 @@ extract_harmonic_fft_parameters_run <- function(x){
   
   n <- length(x)
   n_half <- n/2 
-  plot(amplitude,type="h")
-  plot(1:n_half,amp[1:n_half],"h")
+  #plot(amplitude,type="h") #line spectrum both side
+  #plot(1:n_half,amplitude[1:n_half],"h",ylim=c(0,ymax)) #one sided line spectrum
+  
+  #findpeaks(amplitude)
+  #Note: A plot of Amplitude squared against its frequencies is called a Fourier Line spectrtum. 
+  #A raw periodogram is obtained by joining tips of lines to display a continuous plot and 
+  #scaling it so that the are equals the variance.
+  #"The periodogram distributes the variance over frequency, but it has two drawbacks. The first is
+  # that the precise set of frequencies is arbitrary inasmuch as it depends on the record length. 
+  # The second is that the periodogram does not become smoother as the lenght of time series
+  # increases but just includes more spikes packed closer together. The remedy is to smooth
+  # the periodogram by taking moving averages of spikes before joing the tips.The smoothed
+  # periodogram is also known as the (sample) spectrum."
   
   #http://www.mathworks.com/help/matlab/ref/fft.html
-  P2 = abs(x_trans/n)
+  P2 = abs(x_fft/n)
   P1 = P2[(1:n)/2+1]
-  P1(2:end-1) = 2*P1(2:end-1);
+  #P1(2:n-1) = 2*P1(2:n-1);
   
-  phase <- as.numeric(Arg(x_trans))
-  #phase[11]
-  #barplot(phase)
-  #amp_scaled <- 1/(amp_val/n)
-  #amp_scaled <- n/amp_val
-  #amp_scaled <- log(amp_val)
-  #amp_scaled[1] <- 0
-  #1/(113.070230382360506382611/230)
-  
+  phase <- as.numeric(Arg(x_fft))
+
   n_selected <- n_half -1
-  period_orig <- 230/(1:n_half-1)
-  #period_orig <- 230/(1:n_half)
+  period_orig <- n/(1:n_half-1)
   harmonic_val <- 1:n_half
   frequency_val <- 1/period_orig
   freq_rad <- 2*pi*frequency_val
@@ -313,11 +316,45 @@ extract_harmonic_fft_parameters_run <- function(x){
                             variance_perc[1:n_half])
   names(coef_fft_df) <- c("harmonic","period_orig","frequency",
                           "amplitude","phase","phase_deg","variance","var_percent")
-  
-  #x_in <- 1:230
-  #amp[10]*sin(+ phase[10])
-  
 
+  
+  if(save_table==T){
+    
+    df_file_name<- paste("coef_fft_df_", 
+                          out_suffix,".txt", sep="")
+    write.table(coef_fft_df,
+                file.path(out_dir,df_file_name),sep=",")
+    
+  }
+  
+  ymax <- max(amplitude)
+  
+  #browser()
+  ### Save figure?
+  if(save_fig==TRUE){
+    
+    res_pix<-480 #set as function argument...
+    col_mfrow<-1
+    #row_mfrow<-2
+    row_mfrow<-1
+    
+    png_file_name<- paste("Figure_fft_line_spectrum_", 
+                          out_suffix,".png", sep="")
+    
+    png(filename=file.path(out_dir,png_file_name),
+        width=col_mfrow*res_pix,height=row_mfrow*res_pix)
+    par(mfrow=c(row_mfrow,col_mfrow))
+    
+    #plot(1:n_half,amplitude[1:n_half],"h",ylim=c(0,ymax)) #one sided line spectrum
+    plot(1:n_half,
+         amplitude[1:n_half],
+         type="h",
+         ylab="Amplitude",
+         ylim=c(0,ymax)) #one sided line spectrum
+    dev.off()
+    
+  }
+  
   return(coef_fft_df)
 }
 
@@ -338,7 +375,7 @@ filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL){
   }
   ##
 
-  ### Get ranked frequencies
+  ### Get ranked frequencies 
 
   selected_coef_fft_df <- coef_fft_df[selected_f,]
   #i<-1
@@ -493,4 +530,4 @@ mtm_spectrum_analysis_fun <- function(){
   
 }
 
-################### End of script ################
+######################### End of script ########################
