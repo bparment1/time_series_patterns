@@ -6,6 +6,10 @@
 ## 1) Spectrum: Uses spectrum generation with some detrending, the spectrum is smoothed
 ## 2) FFT periodogram: Uses raw outputs from FFT and plot squared of amplitude of frequencies
 ## 3) multitaper: Uses taper to estimate spectrum
+## 4) harmonic regression (not implemented yet)
+## 5) lag PCA/EOF (not implemented yet)
+## 6) windowed Fourier T. (not implemented yet)
+## 7) wavelet (not implemented yet)
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
@@ -318,51 +322,6 @@ test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 #https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
 
 
-mtm_spectrum_analysis_fun <- function(){
-  #This functions using the multitaper methods to find harmonics in signal.
-  #
-  #Functions needs to be update
-  
-  ##### Start ####
-  
-  #require(multitaper);
-  data(willamette);
-  resSpec <- spec.mtm(willamette, k=10, nw=5.0, nFFT = "default",
-                      centreWithSlepians = TRUE, Ftest = TRUE,
-                      jackknife = FALSE, maxAdaptiveIterations = 100,
-                      plot = TRUE, na.action = na.fail) 
-  
-  resSpec <- spec.mtm(x_ts1, k=10, nw=5.0, nFFT = "default",
-                      centreWithSlepians = TRUE, Ftest = TRUE,
-                      jackknife = FALSE, maxAdaptiveIterations = 100,
-                      plot = TRUE, na.action = na.fail) 
-  
-  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
-                      centreWithSlepians = TRUE, Ftest = TRUE,
-                      jackknife = FALSE, maxAdaptiveIterations = 100,
-                      plot = TRUE, na.action = na.fail) 
-  ### control the padding, request none
-  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = 230,
-                      centreWithSlepians = TRUE, Ftest = TRUE,
-                      jackknife = FALSE, maxAdaptiveIterations = 100,
-                      plot = TRUE, na.action = na.fail) 
-  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
-  which.min(resSpec$mtm$Ftest)
-  
-  length(resSpec$spec)
-  
-  ### control the padding, request none
-  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=9.0, nFFT = 230,
-                      centreWithSlepians = TRUE, Ftest = TRUE,
-                      jackknife = FALSE, maxAdaptiveIterations = 100,
-                      plot = TRUE, na.action = na.fail) 
-  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
-  which.min(resSpec$mtm$Ftest)
-  length(resSpec$spec)
-  
-  return()
-  
-}
 
 
 
