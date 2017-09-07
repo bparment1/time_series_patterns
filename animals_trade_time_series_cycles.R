@@ -20,6 +20,7 @@
 ## TO DO: - add windowed Fourier transform option
 ##        - add wavelet option
 ##        - lag analyis with PCA to remove seasonality?
+##        - PCA on spectral density matrix to identify and remove important harmonics
 ##
 ## COMMIT: fixing spectrum_analysis_function
 ##
@@ -81,7 +82,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017c.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -255,25 +256,26 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09062017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017c.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
-test <- adding_temporal_structure(list_param)
+ts_synthetic <- adding_temporal_structure(list_param)
   
 #y <- a*sin((x_input*2*pi/T)+ phase_val) + b
 #plot(y)
 #ux <- sine_structure_fun(x_input,T,phase_val,a,b)
 #plot(ux)
 
-x_ts1 <- test$t_period_23 + test$trend + test$norm
-x_ts1 <- test$t_period_23 + test$trend 
+x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
+x_ts2 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 
+x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
 
 #x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
-plot(test$t_period_23,type="l")
-plot(test$trend,type="l")
-plot(test$unif)
+plot(ts_synthetic$t_period_23,type="l")
+plot(ts_synthetic$trend,type="l")
+plot(ts_synthetic$unif)
 
 #plot(test$t_period_46,type="l")
 
@@ -290,12 +292,13 @@ mod <- lm(x_ts1 ~ time_steps,val_df)
 plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
 
-
 periodogram(x_ts1) #need to remove trends or will impact low frequencies
 periodogram(x_ts1_lm)
+periodogram(x_ts2)
 
 spec_obj <- spectrum(x_ts1,fast=F)
 spec_obj <- spectrum(x_ts1_lm,fast=F)
+spec_obj <- spectrum(x_ts2,fast=F)
 
 findpeaks(spec_obj$spec)
 
@@ -315,18 +318,21 @@ plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected 
 spectrum_analysis_fft_obj_diff <- spectrum_analysis_fft_run(x_ts1_diff)
 spectrum_analysis_fft_obj_lm <- spectrum_analysis_fft_run(x_ts1_lm)
 
-test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
-debug(extract_harmonic_fft_run)
-test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
+spectrum_analysis_fft_obj_ts2 <- spectrum_analysis_fft_run(x_ts2)
 
-#https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
+### Get fft coef for harmonics:
+#undebug(extract_harmonic_fft_parameters_run)
+coef_fft_obj_ts2 <- extract_harmonic_fft_parameters_run(x_ts2)
+coef_fft_obj_ts3 <- extract_harmonic_fft_parameters_run(x_ts3)
 
-
-
-
+View(coef_fft_obj_ts3)
+  
+### Now let's remove the the most important components
 
 
 ############################## END OF SCRIPT #############################################
+
+#https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
 
 # https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
 # 
