@@ -9,7 +9,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 09/06/2017
+## DATE MODIFIED: 09/07/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -77,7 +77,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09062017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -317,204 +317,217 @@ test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 
 #https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
 
-#require(multitaper);
-data(willamette);
-resSpec <- spec.mtm(willamette, k=10, nw=5.0, nFFT = "default",
-                    centreWithSlepians = TRUE, Ftest = TRUE,
-                    jackknife = FALSE, maxAdaptiveIterations = 100,
-                    plot = TRUE, na.action = na.fail) 
 
-resSpec <- spec.mtm(x_ts1, k=10, nw=5.0, nFFT = "default",
-                    centreWithSlepians = TRUE, Ftest = TRUE,
-                    jackknife = FALSE, maxAdaptiveIterations = 100,
-                    plot = TRUE, na.action = na.fail) 
+mtm_spectrum_analysis_fun <- function(){
+  #This functions using the multitaper methods to find harmonics in signal.
+  #
+  #Functions needs to be update
+  
+  ##### Start ####
+  
+  #require(multitaper);
+  data(willamette);
+  resSpec <- spec.mtm(willamette, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  
+  resSpec <- spec.mtm(x_ts1, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  ### control the padding, request none
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = 230,
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+  which.min(resSpec$mtm$Ftest)
+  
+  length(resSpec$spec)
+  
+  ### control the padding, request none
+  resSpec <- spec.mtm(x_ts1_lm, k=10, nw=9.0, nFFT = 230,
+                      centreWithSlepians = TRUE, Ftest = TRUE,
+                      jackknife = FALSE, maxAdaptiveIterations = 100,
+                      plot = TRUE, na.action = na.fail) 
+  which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
+  which.min(resSpec$mtm$Ftest)
+  length(resSpec$spec)
+  
+  return()
+  
+}
 
-resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = "default",
-                    centreWithSlepians = TRUE, Ftest = TRUE,
-                    jackknife = FALSE, maxAdaptiveIterations = 100,
-                    plot = TRUE, na.action = na.fail) 
-### control the padding, request none
-resSpec <- spec.mtm(x_ts1_lm, k=10, nw=5.0, nFFT = 230,
-                    centreWithSlepians = TRUE, Ftest = TRUE,
-                    jackknife = FALSE, maxAdaptiveIterations = 100,
-                    plot = TRUE, na.action = na.fail) 
-which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
-which.min(resSpec$mtm$Ftest)
-
-length(resSpec$spec)
 
 
-### control the padding, request none
-resSpec <- spec.mtm(x_ts1_lm, k=10, nw=9.0, nFFT = 230,
-                    centreWithSlepians = TRUE, Ftest = TRUE,
-                    jackknife = FALSE, maxAdaptiveIterations = 100,
-                    plot = TRUE, na.action = na.fail) 
-which.max(resSpec$spec)#harmonic 9 instead of harmonic 10, the tapering affect the peak
-which.min(resSpec$mtm$Ftest)
-length(resSpec$spec)
-
-
-####
-P=abs(2*fft(x_ts1)/230)^2
-P[10]
-#see TSA book p.179
-
-y<- x_ts1_lm
-tappercent=.05
-N= length(y)
-fn = 1/(2*dt)
-tapy = spec.taper(y, p=tappercent)
-##tapy = tapy-mean(tapy)
-plot(tapy,type="l")
-Y = fft(tapy)
-Pyy = (Mod(Y)^2)/(N*N)
-## Pyy = Y * Conj(Y)
-n = floor(length(Pyy)/2)
-Syy = Pyy[1:n]
-
-fs = (0:(length(Syy)-1))/length(Syy)
-
-plot(fs, Syy, type='l', xlab="frequency",
-     ylab="Power Density", log='')
-
-fs = (0:(length(Syy)-1))*fn/length(Syy)
-plot(fs, Syy, type='l', xlab="frequency",
-       + ylab="Power Density", log='')
-
-#testing for significant harmonics
-#library(GeneCycle)
-?fisher.g.test
 
 ############################## END OF SCRIPT #############################################
 
-https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
-
-x <- seq(0, 1, len = 1024)
-pos <- c(0.1, 0.13, 0.15, 0.23, 0.25, 0.40, 0.44, 0.65, 0.76, 0.78, 0.81)
-hgt <- c(4, 5, 3, 4, 5, 4.2, 2.1, 4.3, 3.1, 5.1, 4.2)
-wdt <- c(0.005, 0.005, 0.006, 0.01, 0.01, 0.03, 0.01, 0.01, 0.005, 0.008, 0.005)
-
-pSignal <- numeric(length(x))
-
-for (i in seq(along=pos)) {
-  pSignal <- pSignal + hgt[i]/(1 + abs((x - pos[i])/wdt[i]))^4
-}
-plot(pSignal,type="l")
-
-findpeaks(pSignal, npeaks=3, threshold=4, sortstr=TRUE)
-findpeaks(pSignal, sortstr=TRUE)
-
-pSignal[1:798] <- 0
-p
-#https://anomaly.io/seasonal-trend-decomposition-in-r/
-
-### Generate function for formal test of presence of periodicity/frequency in 
-## the data.
-#https://en.wikipedia.org/wiki/Welch%27s_method
-#The periodogram is a biased estimate in most cases so we need
-#to estimate the spectrum with other methods or try to get
-#a better estimate. This often results in lower resolution identification
-#of the frequency but improved estimate.
-#https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
-
-
-# convert frequency to time periods
-X <- fft(x_ts1)
-fq <- 2 * pi /nt
-frq <- 0
-FL <- 0
-Fl[1] <- X[1]^2 / nt*2
-
-for( j in 2:(n/2)){
-  FL[j] <- 2 * (X[j] )
-  d
-  
-}
-test[1]
-test[1]^2 / n*2
-
-#The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
-#Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
-
-#sunspots=scan("sunspots.dat")
-#plot(sunspots,type="b")
-#x = diff(sunspots)
-#I = abs(fft(x)/sqrt(458))^2
-#P = (4/458)*I[1:230]
-#freq = (0:229)/458
-#plot(freq,P,type="l") 
-
-test2
-
-FF = abs(fft(vect_z)/sqrt(nt))^2
-FF = abs(fft())
-P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
-P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
-
-P=(4/nt)*FF[(nt/2)+1]
-
-
-plot(FF)
-f = (0:64)/128 # this creates harmonic frequencies from 0 to .5 in steps of 1/128.
-nt_half <- nt/2
-f = (0:nt_half)/nt
-plot(f, P, type="l") # This plots the periodogram; type = “l” creates a line plot.  Note: l is lowercase L, not number 1.
-
-ifft <- function(x) { fft(x, inverse=TRUE ) / length(x) }
-tslm
-
-#plot(data_df[1,])
-xs <- seq(-2*pi,2*pi,pi/100)
-wave.1 <- sin(3*xs)
-wave.2 <- sin(10*xs)
-par(mfrow = c(1, 2))
-plot(xs,wave.1,type="l",ylim=c(-1,1)); abline(h=0,lty=3)
-plot(xs,wave.2,type="l",ylim=c(-1,1)); abline(h=0,lty=3)
-
-#https://www.r-bloggers.com/smoothing-techniques-using-basis-functions-fourier-basis/
-#https://stats.stackexchange.com/questions/1207/period-detection-of-a-generic-time-series/1214#1214
-
-findfrequency
-
-?spec.ar
-
-find.freq_test <- function(x){
-  n <- length(x)
-  spec <- spec.ar(c(x),plot=FALSE)
-  
-  if(max(spec$spec)>10) # Arbitrary threshold chosen by trial and error.
-  {
-    period <- round(1/spec$freq[which.max(spec$spec)])
-    if(period==Inf) # Find next local maximum
-    {
-      j <- which(diff(spec$spec)>0)
-      if(length(j)>0)
-      {
-        nextmax <- j[1] + which.max(spec$spec[j[1]:500])
-        period <- round(1/spec$freq[nextmax])
-      }
-      else
-        period <- 1
-    }
-  }
-  else
-    period <- 1
-  return(period)
-}
-
-
-#https://anomaly.io/detect-seasonality-using-fourier-transform-r/
-
-# Install and import TSA package
-install.packages("TSA")
-library(TSA)
-
-# read the Google Analaytics PageView report
-raw = read.csv("20131120-20151110-google-analytics.csv")
-
-#compute harmonic
-#get nth harmonic to remove the period
-
-# display the 2 highest "power" frequencies
-top2
-str(p)
+# https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
+# 
+# x <- seq(0, 1, len = 1024)
+# pos <- c(0.1, 0.13, 0.15, 0.23, 0.25, 0.40, 0.44, 0.65, 0.76, 0.78, 0.81)
+# hgt <- c(4, 5, 3, 4, 5, 4.2, 2.1, 4.3, 3.1, 5.1, 4.2)
+# wdt <- c(0.005, 0.005, 0.006, 0.01, 0.01, 0.03, 0.01, 0.01, 0.005, 0.008, 0.005)
+# 
+# pSignal <- numeric(length(x))
+# 
+# for (i in seq(along=pos)) {
+#   pSignal <- pSignal + hgt[i]/(1 + abs((x - pos[i])/wdt[i]))^4
+# }
+# plot(pSignal,type="l")
+# 
+# findpeaks(pSignal, npeaks=3, threshold=4, sortstr=TRUE)
+# findpeaks(pSignal, sortstr=TRUE)
+# 
+# pSignal[1:798] <- 0
+# p
+# #https://anomaly.io/seasonal-trend-decomposition-in-r/
+# 
+# ### Generate function for formal test of presence of periodicity/frequency in 
+# ## the data.
+# #https://en.wikipedia.org/wiki/Welch%27s_method
+# #The periodogram is a biased estimate in most cases so we need
+# #to estimate the spectrum with other methods or try to get
+# #a better estimate. This often results in lower resolution identification
+# #of the frequency but improved estimate.
+# #https://stats.stackexchange.com/questions/12164/testing-significance-of-peaks-in-spectral-density
+# 
+# 
+# # convert frequency to time periods
+# X <- fft(x_ts1)
+# fq <- 2 * pi /nt
+# frq <- 0
+# FL <- 0
+# Fl[1] <- X[1]^2 / nt*2
+# 
+# for( j in 2:(n/2)){
+#   FL[j] <- 2 * (X[j] )
+#   d
+#   
+# }
+# test[1]
+# test[1]^2 / n*2
+# 
+# #The dominant peak area occurs somewhere around a frequency of 0.05.  Investigation of the periodogram values indicates that the peak occurs at nearly exactly this frequency.  This corresponds to a period of about 1/.05 = 20 time periods.  That’s 10 years, since this is semi-annual data.  
+# #Thus there appears to be a dominant periodicity of about 10 years in sunspot activity.
+# 
+# #sunspots=scan("sunspots.dat")
+# #plot(sunspots,type="b")
+# #x = diff(sunspots)
+# #I = abs(fft(x)/sqrt(458))^2
+# #P = (4/458)*I[1:230]
+# #freq = (0:229)/458
+# #plot(freq,P,type="l") 
+# 
+# test2
+# 
+# FF = abs(fft(vect_z)/sqrt(nt))^2
+# FF = abs(fft())
+# P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
+# P = (4/128)*FF[1:65] # Only need the first (n/2)+1 values of the FFT result.
+# 
+# P=(4/nt)*FF[(nt/2)+1]
+# 
+# 
+# plot(FF)
+# f = (0:64)/128 # this creates harmonic frequencies from 0 to .5 in steps of 1/128.
+# nt_half <- nt/2
+# f = (0:nt_half)/nt
+# plot(f, P, type="l") # This plots the periodogram; type = “l” creates a line plot.  Note: l is lowercase L, not number 1.
+# 
+# ifft <- function(x) { fft(x, inverse=TRUE ) / length(x) }
+# tslm
+# 
+# #plot(data_df[1,])
+# xs <- seq(-2*pi,2*pi,pi/100)
+# wave.1 <- sin(3*xs)
+# wave.2 <- sin(10*xs)
+# par(mfrow = c(1, 2))
+# plot(xs,wave.1,type="l",ylim=c(-1,1)); abline(h=0,lty=3)
+# plot(xs,wave.2,type="l",ylim=c(-1,1)); abline(h=0,lty=3)
+# 
+# #https://www.r-bloggers.com/smoothing-techniques-using-basis-functions-fourier-basis/
+# #https://stats.stackexchange.com/questions/1207/period-detection-of-a-generic-time-series/1214#1214
+# 
+# findfrequency
+# 
+# ?spec.ar
+# 
+# find.freq_test <- function(x){
+#   n <- length(x)
+#   spec <- spec.ar(c(x),plot=FALSE)
+#   
+#   if(max(spec$spec)>10) # Arbitrary threshold chosen by trial and error.
+#   {
+#     period <- round(1/spec$freq[which.max(spec$spec)])
+#     if(period==Inf) # Find next local maximum
+#     {
+#       j <- which(diff(spec$spec)>0)
+#       if(length(j)>0)
+#       {
+#         nextmax <- j[1] + which.max(spec$spec[j[1]:500])
+#         period <- round(1/spec$freq[nextmax])
+#       }
+#       else
+#         period <- 1
+#     }
+#   }
+#   else
+#     period <- 1
+#   return(period)
+# }
+# 
+# 
+# #https://anomaly.io/detect-seasonality-using-fourier-transform-r/
+# 
+# # Install and import TSA package
+# install.packages("TSA")
+# library(TSA)
+# 
+# # read the Google Analaytics PageView report
+# raw = read.csv("20131120-20151110-google-analytics.csv")
+# 
+# #compute harmonic
+# #get nth harmonic to remove the period
+# 
+# # display the 2 highest "power" frequencies
+# top2
+# str(p)
+# 
+# ####
+# P=abs(2*fft(x_ts1)/230)^2
+# P[10]
+# #see TSA book p.179
+# 
+# y<- x_ts1_lm
+# tappercent=.05
+# N= length(y)
+# fn = 1/(2*dt)
+# tapy = spec.taper(y, p=tappercent)
+# ##tapy = tapy-mean(tapy)
+# plot(tapy,type="l")
+# Y = fft(tapy)
+# Pyy = (Mod(Y)^2)/(N*N)
+# ## Pyy = Y * Conj(Y)
+# n = floor(length(Pyy)/2)
+# Syy = Pyy[1:n]
+# 
+# fs = (0:(length(Syy)-1))/length(Syy)
+# 
+# plot(fs, Syy, type='l', xlab="frequency",
+#      ylab="Power Density", log='')
+# 
+# fs = (0:(length(Syy)-1))*fn/length(Syy)
+# plot(fs, Syy, type='l', xlab="frequency",
+#      + ylab="Power Density", log='')
+# 
+# #testing for significant harmonics
+# #library(GeneCycle)
+# ?fisher.g.test
