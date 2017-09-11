@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 09/07/2017
+## DATE MODIFIED: 09/11/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -82,7 +82,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017c.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09112017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -256,7 +256,7 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09072017c.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09112017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
@@ -276,6 +276,9 @@ x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
 plot(ts_synthetic$t_period_23,type="l")
 plot(ts_synthetic$trend,type="l")
 plot(ts_synthetic$unif)
+
+plot(x_ts3,type="l")
+lines(x_ts2,type="l",col="red")
 
 #plot(test$t_period_46,type="l")
 
@@ -308,6 +311,13 @@ p <-periodogram(x_ts1_lm,fast=F) #spectral leakage!!
 #debug(spectrum_analysis_fft_run)
 test <- spectrum_analysis_fft_run(x_ts1_lm)
 
+### Confidence interval 
+#The simplest is to compare to the null model of whtie noise. White noise has a horizontal spectrum line because
+#variance is not concentrated in particular frequencies.
+#However positive autocorrelation can skew amplitdues towards low frequencies so a null test against white noise
+#can be problematic.
+#other option can be to use another null model comparing to an autoregressive process.
+
 x_ts1_diff <- diff(x_ts1)
 plot(x_ts1,type="l")
 plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected the amplitude too!!!
@@ -329,6 +339,7 @@ View(coef_fft_obj_ts3)
   
 ### Now let's remove the the most important components
 
+filter_frequency_and_generate_harmonics
 
 ############################## END OF SCRIPT #############################################
 
