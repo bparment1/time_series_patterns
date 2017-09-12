@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/11/2017
+## DATE MODIFIED: 09/12/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -13,7 +13,7 @@
 ##        - windowed Fourier
 ##        - multitaper methods 
 ##
-## COMMIT: adding multitaper methods for spectrum analyses
+## COMMIT: experimenting with wavelet method, adding function
 ##
 
 ###################################################
@@ -558,6 +558,49 @@ mtm_spectrum_analysis_fun <- function(){
   length(resSpec$spec)
   
   return()
+  
+}
+
+#function from:https://ms.mcmaster.ca/~bolker/eeid/2010/Ecology/mk.cwt.R
+mk.cwt <- function(thisz, noctave, nvoice, moments=30, smooth=T, smoothsd=1, filtradius=3, do.center=F) {
+  
+  ret = cwtTh(thisz, noctave=noctave, 
+              nvoice=nvoice, moments=moments, plot=F)
+  if (do.center) {
+    ret = ret/sum(ret)
+  }
+  return(list(cwt=ret, noctave=noctave, nvoice=nvoice, moments=moments))
+}
+#function from:https://ms.mcmaster.ca/~bolker/eeid/2010/Ecology/mk.cwt.R
+
+plot.cwt = function(tmp, mod=T, ylab='period', xlab='', main='', cex=1.2, center=T) {
+  if (mod) {
+    tmp$cwt = Mod(tmp$cwt)
+  }
+  if (center) {
+    tmp$cwt = tmp$cwt/sum(tmp$cwt)
+  }
+  breaks.at = pretty( range(tmp$cwt), n=100)
+  my.pal = rev(rainbow(length(breaks.at) , start=0, end=4/6))
+  myplot = levelplot(tmp$cwt, pretty=F,
+                     scales=list(
+                       y=list(tick.number=tmp$noctave, labels=format(2^(1+seq(from=0,by=tmp$nvoice, 
+                                                                              to=tmp$noctave*tmp$nvoice)/tmp$nvoice))), 
+                       cex=cex
+                     ), 
+                     ylab=list(label=ylab, cex=cex),
+                     xlab=list(label=xlab, cex=cex),
+                     colorkey=list(labels=list(cex=cex)),
+                     aspect='fill', 
+                     main=main,
+                     col.regions=my.pal, 
+                     cuts=length(my.pal)-1)
+  return(myplot)
+}
+
+wavelet_run <- function(x){
+  tmp<-mk.cwt(x,noctave = floor(log2(length(x)))-1,nvoice=10)
+  print(plot.cwt(tmp,xlab="time (units of sampling interval)"))
   
 }
 
