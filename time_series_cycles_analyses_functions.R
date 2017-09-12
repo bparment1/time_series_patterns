@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/07/2017
+## DATE MODIFIED: 09/11/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -164,6 +164,14 @@ spectrum_analysis_fft_run <- function(x){
   ### Part II: use spectrum, power density to find harmonics contribution
 
   spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
+  x.spec <- spectrum(x,log="no",plot=FALSE) # don't use log scale/transform for the power density
+  spx <- 1/x.spec$freq
+  #/length(x)
+  spy <- 2*x.spec$spec/length(x)
+  plot(spy~spx,xlab="period",ylab="spectral density",type="l")
+  plot(spy~spx,xlab="period",ylab="spectral density",type="h")
+  
+  
   #spectrum_val <- spectrum(as.numeric(x))
   length(spectrum_val$freq)
 
@@ -228,7 +236,10 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #INPUTS
   #1)x: series to process with fft
   #2)save_fig: save figure containing FFT line spectrum
-  #2)save_table: 
+  #3)save_table:
+  #4)out_dir:
+  #5)out_suffix:
+  #
   #OUTPUTS
   #1) 
   #
@@ -359,11 +370,11 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
 }
 
 
-filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL){
+filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL,variance_treshold){
   
   ### Generate a sequence from sine
   
-  if(is.null(selected_f)){
+  if(is.null(selected_f) & is.null(variance_treshold)){
   #then take the top 10
   #type_spatialstructure[5] <- "periodic_x1"
   
@@ -371,9 +382,29 @@ filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL){
   spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
   
   ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-  selected_f <- ranked_freq_df$freq[1:10]
+  selected_f <- ranked_freq_df$freq[1:10] #takes top 10
   }
-  ##
+  
+  if(is.null(selected_f) & !is.null(variance_threshold)){
+    #ru ff
+    coef_fft_obj_ts <- extract_harmonic_fft_parameters_run(x)
+    #rank it based on variance and select above the threshold
+    
+    #
+  }
+  
+  if(!is.null(selected_f) & is.null(variance_threshold)){
+    #use top 10
+  }
+    
+  if(!is.null(selected_f) & !is.null(variance_threshold)){
+    #use top 10 if above threshold level?
+  }
+  
+  
+  ## option find peaks???
+  
+  
 
   ### Get ranked frequencies 
 
