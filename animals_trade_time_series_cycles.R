@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 09/11/2017
+## DATE MODIFIED: 09/12/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -22,7 +22,7 @@
 ##        - lag analyis with PCA to remove seasonality?
 ##        - PCA on spectral density matrix to identify and remove important harmonics
 ##
-## COMMIT: fixing spectrum_analysis_function
+## COMMIT: experimenting with wavelet option using Rwave
 ##
 ## Links to investigate:
 ##
@@ -55,6 +55,7 @@ library(xts)                                 # Extension for time series object 
 library(zoo)                                 # Time series object and analysis
 library(mblm)                                # Theil Sen estimator
 library(TSA)                                 # Time series analyses functionalities
+library(Rwave)                               # Wavelet package R
 
 ###### Functions used in this script and sourced from other files
 
@@ -82,7 +83,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09112017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -256,8 +257,8 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09112017.R" #PARAM 1
-source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
+#functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017.R" #PARAM 1
+#source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
 ts_synthetic <- adding_temporal_structure(list_param)
@@ -270,6 +271,7 @@ ts_synthetic <- adding_temporal_structure(list_param)
 x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
 x_ts2 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 
 x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
+x_ts4 <- ts_synthetic$t_period_23/2 + ts_synthetic$t_period_46
 
 #x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
@@ -279,6 +281,7 @@ plot(ts_synthetic$unif)
 
 plot(x_ts3,type="l")
 lines(x_ts2,type="l",col="red")
+lines(x_ts4,type="l",col="green")
 
 #plot(test$t_period_46,type="l")
 
@@ -336,7 +339,18 @@ coef_fft_obj_ts2 <- extract_harmonic_fft_parameters_run(x_ts2)
 coef_fft_obj_ts3 <- extract_harmonic_fft_parameters_run(x_ts3)
 
 View(coef_fft_obj_ts3)
-  
+
+
+### Wavelet can detect frequencies that are localized in time.
+#Wavelet can then detect changes in dominant frequencies across a time series.
+#It can be used for non stationary time series
+wavelet_run(x_ts3)
+wavelet_run(x_ts1_lm)
+wavelet_run(x_ts4) #same power for period 23 and 46
+
+#Check other wavelets options!!
+#http://jaysthesisblog.com/R/wavelets_intro.html
+
 ### Now let's remove the the most important components
 
 filter_frequency_and_generate_harmonics
