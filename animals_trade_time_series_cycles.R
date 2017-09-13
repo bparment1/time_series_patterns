@@ -257,8 +257,6 @@ names(list_param) <- c("nt","phase","temp_periods",
 #amp <- list_param$amp
 #temp_period_quadrature <- list_param$temp_period_quadrature
 #random_component <- list_param$random_component #mean and sd used in rnorm
-#functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017.R" #PARAM 1
-#source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #debug(adding_temporal_structure)
 ts_synthetic <- adding_temporal_structure(list_param)
@@ -272,6 +270,9 @@ x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
 x_ts2 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 
 x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
 x_ts4 <- ts_synthetic$t_period_23/2 + ts_synthetic$t_period_46
+
+plot(x_ts4,type="l")
+plot(x_ts4-ts_synthetic$t_period_23/2,type="l")
 
 #x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
@@ -353,7 +354,11 @@ wavelet_run(x_ts4) #same power for period 23 and 46
 
 ### Now let's remove the the most important components
 
-filter_frequency_and_generate_harmonics
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017b.R" #PARAM 1
+source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
+
+debug(filter_frequency_and_generate_harmonics)
+test <- filter_frequency_and_generate_harmonics(x)
 
 ############################## END OF SCRIPT #############################################
 

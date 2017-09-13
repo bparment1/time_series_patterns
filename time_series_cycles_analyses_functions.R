@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/12/2017
+## DATE MODIFIED: 09/13/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
