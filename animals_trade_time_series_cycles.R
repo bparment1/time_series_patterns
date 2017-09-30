@@ -306,6 +306,27 @@ debug(extract_harmonic_fft_run)
 test3 <- extract_harmonic_fft_run(x_ts1_diff,a0=0,selected_f=NULL)
 test3 <- extract_harmonic_fft_run(x_ts1_lm,a0=0,selected_f=NULL)
 
+P=abs(2*fft(x_ts1)/230)^2
+P[10]
+#see TSA book p.179
+
+https://www.rdocumentation.org/packages/pracma/versions/1.9.9/topics/findpeaks
+
+x <- seq(0, 1, len = 1024)
+pos <- c(0.1, 0.13, 0.15, 0.23, 0.25, 0.40, 0.44, 0.65, 0.76, 0.78, 0.81)
+hgt <- c(4, 5, 3, 4, 5, 4.2, 2.1, 4.3, 3.1, 5.1, 4.2)
+wdt <- c(0.005, 0.005, 0.006, 0.01, 0.01, 0.03, 0.01, 0.01, 0.005, 0.008, 0.005)
+
+pSignal <- numeric(length(x))
+
+for (i in seq(along=pos)) {
+  pSignal <- pSignal + hgt[i]/(1 + abs((x - pos[i])/wdt[i]))^4
+}
+plot(pSignal,type="l")
+
+install.packages("pracma")
+library(pracma)
+findpeaks(pSignal, npeaks=3, threshold=4, sortstr=TRUE)
 
 #https://anomaly.io/seasonal-trend-decomposition-in-r/
 
