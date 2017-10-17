@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 09/12/2017
+## DATE MODIFIED: 09/13/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -361,6 +361,10 @@ debug(filter_frequency_and_generate_harmonics)
 test <- filter_frequency_and_generate_harmonics(x)
 
 ############################## END OF SCRIPT #############################################
+
+#https://www.r-bloggers.com/fir-filter-design-and-digital-signal-processing-in-r/
+  
+#https://dsp.stackexchange.com/questions/22637/implementing-a-bandpass-filter-in-r-this-codes-logic-confuses-me
 
 #https://math.stackexchange.com/questions/1002/fourier-transform-for-dummies
 
