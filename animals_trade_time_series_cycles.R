@@ -82,7 +82,7 @@ load_obj <- function(f){
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_09132017.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
 functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017.R" #PARAM 1
 
@@ -234,6 +234,36 @@ nt <- length(vect_z)
 
 class(test)
 
+
+
+###
+### Generate a sequence from sine with 8000
+#type_spatialstructure[5] <- "periodic_x1"
+amp<- c(2,1) #amplitude in this case
+b<- 0
+T<- c(800,1600)
+
+phase_val <- 0
+x_input<-0:24
+
+#nt <- 230
+nt <- 8000  #change lenght for test with seewave ffilter
+temp_periods <- c(T)
+temp_period_quadrature <- NULL
+random_component <- c(0,0.1)
+
+list_param <- list(nt,phase_val,temp_periods,amp,
+                   temp_period_quadrature,
+                   random_component)
+
+names(list_param) <- c("nt","phase","temp_periods",
+                       "amp","temp_period_quadrature",
+                       "random_component")
+
+ts_synthetic_8000 <- adding_temporal_structure(list_param)
+
+x_ts1_8000 <- 
+
 ### Generate a sequence from sine
 #type_spatialstructure[5] <- "periodic_x1"
 amp<- c(2,1) #amplitude in this case
@@ -289,7 +319,6 @@ plot(x_ts3,type="l")
 lines(x_ts2,type="l",col="red")
 lines(x_ts4,type="l",col="green")
 
-
 ######### 
 ## For the test use 8000
 x_ts2 <- ts_synthetic$t_period_800 + ts_synthetic$t_period_1600 
@@ -305,11 +334,15 @@ periodogram(x_ts2)
 ## Test to filter out periods/frequencies
 ## Use default filter window: Hanning
 #ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
-test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
+test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=0.2)
+#test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
+
+
 plot(x_ts2,col="red")
 lines(test) #mostly filtered out!!!
 periodogram(test) #still peak but if with noise might not appear
-periodogram(x_ts2)
+periodogram(x_ts2,xlim=c(0,0.02)) #zoom in
+periodogram(test,xlim=c(0,0.02)) #still peak but if with noise might not appear
 
 #x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
 #plot(x_ts,type="l")
