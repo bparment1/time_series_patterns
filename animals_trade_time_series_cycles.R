@@ -135,6 +135,9 @@ num_cores <- 2
 
 ######### PART 0: Set up the output dir ################
 
+options(scipen=999)
+
+
 if(is.null(out_dir)){
   out_dir <- in_dir #output will be created in the input dir
   
@@ -235,8 +238,9 @@ nt <- length(vect_z)
 class(test)
 
 
+######### Test 1: using time step from 800
 
-###
+## For the test use 8000
 ### Generate a sequence from sine with 8000
 #type_spatialstructure[5] <- "periodic_x1"
 amp<- c(2,1) #amplitude in this case
@@ -261,21 +265,54 @@ names(list_param) <- c("nt","phase","temp_periods",
                        "random_component")
 
 ts_synthetic_8000 <- adding_temporal_structure(list_param)
+names(ts_synthetic_8000)
 
-x_ts1_8000 <- 
+x_ts1_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$trend + ts_synthetic_8000$norm
+x_ts2_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 
+x_ts3_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 + ts_synthetic_8000$norm
+x_ts4_8000 <- ts_synthetic_8000$t_period_800/2 + ts_synthetic_8000$t_period_1600
 
-### Generate a sequence from sine
+a<-noisew(f=8000,d=1)
+# low-pass
+b<-ffilter(a,f=8000,to=1500)
+spectrum(a)
+spectrum(b)
+plot(x_ts2,type="l") #peaks for period 46 and 23
+spectrum(x_ts2)
+periodogram(x_ts2)
+## Test to filter out periods/frequencies
+## Use default filter window: Hanning
+#ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
+x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=0.18,to=0.2)
+
+x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=100,to=2000)
+#test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
+
+plot(x_ts3_8000,col="red")
+lines(x_ts_filtered) #mostly filtered out!!!
+periodogram(x_ts_filtered) #still peak but if with noise might not appear
+periodogram(x_ts3_8000,xlim=c(0,0.02)) #zoom in
+periodogram(x_ts_filtered,xlim=c(0,0.02)) #still peak but if with noise might not appear
+spectrum(x_ts_filtered)
+spectrum(x_ts3_8000)
+spectrum(x_ts3_8000,xlim=c(0,0.2))
+spectrum(x_ts_filtered,xlim=c(0,0.2))
+
+spectrum(x_ts3_8000,xlim=c(0,0.2))
+spectrum(x_ts_filtered,xlim=c(0,0.2))
+
+################# Test 2 with artificial data #######
+### Generate a sequence from sine: 230 steps
+
 #type_spatialstructure[5] <- "periodic_x1"
 amp<- c(2,1) #amplitude in this case
 b<- 0
-T<- c(23,46)
-T<- c(800,1600)
+T<- c(23,46) #annual cycle of 23
 
 phase_val <- 0
 x_input<-0:24
 
-#nt <- 230
-nt <- 8000  #change lenght for test with seewave ffilter
+nt <- 230  #change lenght for test with seewave ffilter
 temp_periods <- c(T)
 temp_period_quadrature <- NULL
 random_component <- c(0,0.1)
@@ -296,18 +333,34 @@ names(list_param) <- c("nt","phase","temp_periods",
 
 #debug(adding_temporal_structure)
 ts_synthetic <- adding_temporal_structure(list_param)
-  
+names(ts_synthetic)  
+
 #y <- a*sin((x_input*2*pi/T)+ phase_val) + b
 #plot(y)
 #ux <- sine_structure_fun(x_input,T,phase_val,a,b)
 #plot(ux)
 
-#x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
-#x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
-#x_ts4 <- ts_synthetic$t_period_23/2 + ts_synthetic$t_period_46
+x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
+x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
+x_ts4 <- ts_synthetic$t_period_23/2 + ts_synthetic$t_period_46
+x_ts5 <- ts_synthetic$t_period_23
 
-plot(x_ts4,type="l")
-plot(x_ts4-ts_synthetic$t_period_23/2,type="l")
+plot(x_ts1,type="l")
+plot(x_ts5,type="l")
+x_fft <- fft(x_ts5)
+plot(Real(x_fft), type="l")
+plot(Im(x_fft), type="l")
+plot(Real(x_fft), type="h")
+plot(Im(x_fft), type="h")
+
+test <- Im(x_fft)
+test <- Real(x_fft)
+plot(Real(x_fft), type="h")
+
+test2<- fft(test)
+plot(test2,type="l")
+plot(Real(test2),type="l")
+plot(Im(test2),type="l")
 
 #x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
@@ -315,37 +368,76 @@ plot(ts_synthetic$t_period_23,type="l")
 plot(ts_synthetic$trend,type="l")
 plot(ts_synthetic$unif)
 
+#Error in seq.default(1, n - wl, wl - (ovlp * wl/100)) : 
+#  wrong sign in 'by' argument
+
 plot(x_ts3,type="l")
 lines(x_ts2,type="l",col="red")
 lines(x_ts4,type="l",col="green")
 
-######### 
-## For the test use 8000
-x_ts2 <- ts_synthetic$t_period_800 + ts_synthetic$t_period_1600 
+### Length of the window must be set otherwise it is set to 1024
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=23) #this works
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=46) #this works
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=w_length) #this works
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=230) #this does not work
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=115) #this works but note that data is cut off!!!!
 
-a<-noisew(f=8000,d=1)
-# low-pass
-b<-ffilter(a,f=8000,to=1500)
-spectrum(a)
-spectrum(b)
-plot(x_ts2,type="l") #peaks for period 46 and 23
-spectrum(x_ts2)
-periodogram(x_ts2)
-## Test to filter out periods/frequencies
-## Use default filter window: Hanning
-#ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
-test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=0.2)
+0.128*8000 # use this ratio?
+w_length<- 0.128*230
+w-length
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=w_length,ovlp=90) #this works
+x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=w_length,ovlp=0) #this works
+
+length(x_ts_filtered)
+
+#?ffilter
+plot(x_ts3,type="l")
+lines(x_ts_filtered)
+#> x_ts3 - x_ts_filtered
+#Error: dims [product 228] do not match the length of object [230]
+#In addition: Warning message:
+# In x_ts3 - x_ts_filtered :
+# longer object length is not a multiple of shorter object length
+x_ts_obj <- ts(x_ts3,start=c(2001,1),end=c(2010,23),frequency = 23)
+plot(x_ts_obj)
+
+plot(x_ts3,type="l")
+test_decomp <- decompose(x_ts_obj,filter=23)
+plot(test_decomp$seasonal)
+test <- x_ts_obj -test_decomp$seasonal
+plot(test)
+
+### Maybe test fftfilt from signal package?
+### Also filter
+
+hanning_filt<- hanning.w(23)
+hanning_filt<- hanning.w(230)
+
+plot(hanning_filt,type="l")
+periodogram(hanning_filt)
+spectrum(hanning_filt)
+fft_x<-fft(hanning_filt,type="l")
+plot(fft_x)
+plot(Real(fft_x),type="l")
+plot(Im(fft_x),type="l")
+
+#undebug(ffilter)
+#x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=20,to=50,wl=23) #this does not work
+
+#debug(ffilter)
 #test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
 
+plot(x_ts3,col="red",type="l")
+lines(x_ts_filtered) #mostly filtered out!!!
+periodogram(x_ts_filtered) #still peak but if with noise might not appear
+periodogram(x_ts3)
+periodogram(x_ts3,xlim=c(0,0.02)) #zoom in
+periodogram(x_ts_filtered,xlim=c(0,0.02)) #still peak but if with noise might not appear
+spectrum(x_ts_filtered)
+spectrum(x_ts3)
+spectrum(x_ts3,xlim=c(0,0.2))
+spectrum(x_ts_filtered,xlim=c(0,0.2))
 
-plot(x_ts2,col="red")
-lines(test) #mostly filtered out!!!
-periodogram(test) #still peak but if with noise might not appear
-periodogram(x_ts2,xlim=c(0,0.02)) #zoom in
-periodogram(test,xlim=c(0,0.02)) #still peak but if with noise might not appear
-
-#x_ts2 <- test$t_period_23 + test$t_period_46 + test$trend + test$unif + test$norm
-#plot(x_ts,type="l")
 
 #### Now find out if you can see the cycles
 
