@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 10/20/2017
+## DATE MODIFIED: 10/24/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -22,7 +22,7 @@
 ##        - lag analyis with PCA to remove seasonality?
 ##        - PCA on spectral density matrix to identify and remove important harmonics
 ##
-## COMMIT: examining frequency filtering options with seewave
+## COMMIT: testing filtering on real and synthetic data with known cycles
 ##
 ## Links to investigate:
 ##
@@ -50,7 +50,7 @@ library(lubridate)                           # Dates manipulation functionalitie
 library(dplyr)                               # Data wrangling
 library(forecast)                            # ARIMA and other time series methods
 library(multitaper)                          # Multitaper estimation of spectrum
-#library(GeneCycle)                           # Fisher test for harmonics and Time series functionalities
+#library(GeneCycle)                          # Fisher test for harmonics and Time series functionalities
 library(xts)                                 # Extension for time series object and analyses
 library(zoo)                                 # Time series object and analysis
 library(mblm)                                # Theil Sen estimator
@@ -58,6 +58,7 @@ library(TSA)                                 # Time series analyses functionalit
 library(Rwave)                               # Wavelet package R
 library(pracma)                              # pracma
 library(seewave)
+
 ###### Functions used in this script and sourced from other files
 
 create_dir_fun <- function(outDir,out_suffix=NULL){
@@ -107,7 +108,7 @@ in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
 #infile_name <- "vert_sp_gst_original_08162017.csv"
 #infile_name_gst_totals <- "total_monthly_gst_averages.csv"
 #use test data:
-infile_name <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt"
+infile_name <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
 
 ## Use data with known cycles:
 
@@ -124,7 +125,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_10132017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_10232017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -152,57 +153,13 @@ if(create_out_dir_param==TRUE){
   setwd(out_dir) #use previoulsy defined directory
 }
 
+#######################################
 ### PART I READ AND PREPARE DATA #######
 #set up the working directory
 #Create output directory
 
-#data_df <- read.table(file.path(in_dir,infile_names),sep=",",header=T)
-
-############### PART 1: Imported and time series transformation #####
-## Step 1: read in the data and generate time stamps
-
-#infile_name <- "vert_sp_gst_original_08162017.csv"
-#data_ts_filename <- import_data_ts(infile_name = infile_name,
-#                                   in_dir = in_dir,
-#                                   scaling = scaling,
-#                                   n_col_start_date=4,
-#                                   start_date = start_date,
-#                                   end_date=NULL,
-#                                   out_dir = out_dir,
-#                                   out_suffix = out_suffix)
-
-#df_original <- read.table(data_ts_filename,sep=",",fill=T,header=T,check.names = F)
-
-#Set up dates as column names  ###############  
-#IS THIS NEEDED b/c ALREADY IN PROCESSING??? ###############
-
-# range_dates <- names(df_original)[n_col_start_date:ncol(df_original)]
-# range_dates_str <- as.character(range_dates)
-# range_dates<- ymd(range_dates_str)
-# 
-# #Transform and scale data
-# df_subset <- df_original
-# df_ts <- t(df_original[n_col_start_date:ncol(df_subset)])
-# df_ts <- as.data.frame(df_ts)
-# #dim(df_ts)
-# df_ts_scaled <- df_ts[,]*scaling_factor  
-# 
-# #create ts zoo object
-# df_ts <- zoo(df_ts_scaled,range_dates)
-# #class(df_ts)
-# #combine country-species as column names
-# names_countries <- as.character(df_subset$country)
-# names_species <- as.character(df_subset$sci_name)
-# names_species <- sub(" ","_",names_species)
-# names_col <- paste(names_countries,names_species,sep="_")
-# names(df_ts) <- names_col
-# #View(df_ts)
-
-#http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html
-
 infile_name <- file.path(in_dir,infile_name)
 data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
-View(data_df)
 names(data_df)
 dim(data_df)
 data_df <- data_df[,1:230]
@@ -226,34 +183,36 @@ dim(df_ts)
 
 ### 
 nt <- 230
-nt <- 8000
 
 #??fft
 vect_z <- df_ts[,1]
 test <- fft(vect_z)
-test2 <- fft(vect_z,inverse=T) #not normalized
+plot(as.complex(test),type="p")
+plot(Real(test))
 
-nt <- length(vect_z)
+class(test) # zoo object
+### See part 3 for more in depth analyses and removal of frequencies for 
 
-class(test)
-
-
+######################################################################
+################ PART 2: Generate Synthetic Data Time Series and Run tests ##########
 ######### Test 1: using time step from 800
 
 ## For the test use 8000
-### Generate a sequence from sine with 8000
-#type_spatialstructure[5] <- "periodic_x1"
+### Generate a sequence from sine with 8000 steps with:
+##  - periods of 800  and Amplitude 2
+##  - periods of 1600 and Amplitude 1
+##  - mean average of 0
+##  - no phase delay i.e. 0
+##  - random noise 0 0.01
+
 amp<- c(2,1) #amplitude in this case
 b<- 0
 T<- c(800,1600)
-
 phase_val <- 0
-x_input<-0:24
 
-#nt <- 230
-nt <- 8000  #change lenght for test with seewave ffilter
+nt <- 8000  #change length for test with seewave ffilter
 temp_periods <- c(T)
-temp_period_quadrature <- NULL
+temp_period_quadrature <- NULL #no quadrature
 random_component <- c(0,0.1)
 
 list_param <- list(nt,phase_val,temp_periods,amp,
@@ -267,19 +226,16 @@ names(list_param) <- c("nt","phase","temp_periods",
 ts_synthetic_8000 <- adding_temporal_structure(list_param)
 names(ts_synthetic_8000)
 
+### Using patterns, generate synthetic time series
 x_ts1_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$trend + ts_synthetic_8000$norm
 x_ts2_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 
 x_ts3_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 + ts_synthetic_8000$norm
 x_ts4_8000 <- ts_synthetic_8000$t_period_800/2 + ts_synthetic_8000$t_period_1600
 
-a<-noisew(f=8000,d=1)
-# low-pass
-b<-ffilter(a,f=8000,to=1500)
-spectrum(a)
-spectrum(b)
-plot(x_ts2,type="l") #peaks for period 46 and 23
+plot(x_ts2_8000,type="l") #peaks for period 1600 and 800
 spectrum(x_ts2)
 periodogram(x_ts2)
+
 ## Test to filter out periods/frequencies
 ## Use default filter window: Hanning
 #ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
