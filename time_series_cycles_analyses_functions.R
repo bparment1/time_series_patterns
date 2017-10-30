@@ -2,9 +2,9 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 09/12/2017
+## DATE MODIFIED: 10/30/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
-## Version: 1
+## Version: 2
 ## PROJECT: Animals trade
 ## ISSUE: 
 ## TO DO: - Fourier
@@ -40,7 +40,7 @@ library(lubridate)                           # Dates manipulation functionalitie
 library(dplyr)                               # Data wrangling
 library(forecast)                            # ARIMA and other time series methods
 library(multitaper)                          # Multitaper estimation of spectrum
-#library(GeneCycle)                           # Fisher test for harmonics and Time series functionalities
+#library(GeneCycle)                           # Fisher test for harmonics and Time series functionalities: conflicts with other packages removed
 library(xts)                                 # Extension for time series object and analyses
 library(zoo)                                 # Time series object and analysis
 library(mblm)                                # Theil Sen estimator
@@ -76,7 +76,9 @@ sine_structure_fun <-function(x,T,phase_val,a,b){
   #T= stands for period definition
   #phase=phase angle (in radian!!)
   
-  y <- a*sin((x*2*pi/T)+ phase_val) + b
+  #y <- a*sin((x*2*pi/T)+ phase_val) + b
+  y <- a*sin((x*2*pi/T)- phase_val) + b
+  
 }
 
 
@@ -207,19 +209,20 @@ spectrum_analysis_fft_run <- function(x){
 }
 
 
-generate_harmonic <- function(i,coef_fft_df,a0){
+generate_harmonic <- function(i,coef_fft_df,a0,nt){
   
-  a <- coef_fft_df$amp[i] #amplitude in this case
+  a <- coef_fft_df$amplitude[i] #amplitude in this case
   b <- a0 # this should be the average!!
   #T <- 230
   #T <- 10
   
-  T <- coef_fft_df$T[i]
+  T <- coef_fft_df$period_orig[i]
   #T <- 23
   
   phase_val <-coef_fft_df$phase[i] #get the phase from fft?
   
   n_val <- nrow(coef_fft_df)
+  n_val <- nt
   #x_input <- 1:230 #index sequence corresponding to timesetps for time series
   x_input <- 1:n_val
   
@@ -369,32 +372,81 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   return(coef_fft_df)
 }
 
+filter_freq <- function(x_ts,freq_range,w_length=NULL,overlap_w=NULL){
+  ##This function remove specific frequencies from a time series or signal.
+  ##INPUTS:
+  ##1) x_ts: time series as numeric values
+  ##2) freq_range: periods to remove
+  ##3) w_length: length of the window used by the short-term Fourier Transform (STFT)
+  ##4) overlap_w: overlapping % for the windows
+  ##OUTPUTS:
+  ##
+  
+  
 
-filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL,variance_treshold){
+  ### Length of the window must be set otherwise it is set to 1024
+  nt <- length(x_ts)
+  if(is.null(w_length)){
+    w_length<- 0.128*nt
+  }
+  if(is.null(overlap_w)){
+    overlap_w <- 80
+  }
+  x_ts_filtered <- ffilter(as.matrix(x_ts),f=nt,from=freq_range[1],to=freq_range[2],wl=w_length,ovlp=overlap_w) #this works
+  
+  plot(x_ts,type="l")
+  lines(x_ts_filtered,col="red")
+  
+  return(x_ts_filtered)
+}
+
+filter_frequency_and_generate_harmonics <- function(x,selected_period=NULL,freq_range,variance_treshold=NULL,peak_opt=NULL){
+  #
+  # This function removes/filters specific frequencies out of the original time series.
+  # The curren method implemented is to generate a sinusoidal signal 
+  #  (with specific phase and amplitude) and substracting the signal.
+  # Later implementation may include doing a regression, or filter by setting frequencies to zero
+  # and doing inverse fourier?
+  #
   
   ### Generate a sequence from sine
   
-  if(is.null(selected_f) & is.null(variance_treshold)){
-  #then take the top 10
-  #type_spatialstructure[5] <- "periodic_x1"
+  if(is.null(selected_period) & is.null(variance_treshold)){
+    #then take the top 10
+    #type_spatialstructure[5] <- "periodic_x1"
   
-  #debug(harmonic_analysis_fft_run)
-  spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
+    #debug(harmonic_analysis_fft_run)
+    #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
   
-  ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-  selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+    selected_f <- ranked_freq_df$freq[1:10] #takes top 10
   }
   
   if(is.null(selected_f) & !is.null(variance_threshold)){
     #ru ff
-    coef_fft_obj_ts <- extract_harmonic_fft_parameters_run(x)
+    coef_fft_df <- extract_harmonic_fft_parameters_run(x)
+    
+    coef_fft_df_selected <- subset(coef_fft_df,coef_fft_df$var_percent > variance_threshold)
+    #class(coef_fft_obj_ts)
+    #period_selected <- coef_fft_df_selected$period_orig
+    
+    mean_ts <- mean(x)
+    list_harmonics <- lapply(1:nrow(coef_fft_df_selected),
+                             FUN=generate_harmonic,
+                             coef_fft_df=coef_fft_df_selected,
+                             a0=mean_ts,
+                             nt=length(x))
+    #debug(generate_harmonic)
+    #list_harmonics <- generate_harmonic(1,coef_fft_df=coef_fft_df_selected,a0=mean_ts)
+      
+    #lapply(period_selected,)
     #rank it based on variance and select above the threshold
     
     #
   }
   
   if(!is.null(selected_f) & is.null(variance_threshold)){
-    #use top 10
+    #
   }
     
   if(!is.null(selected_f) & !is.null(variance_threshold)){
@@ -403,25 +455,20 @@ filter_frequency_and_generate_harmonics <- function(x,selected_f=NULL,variance_t
   
   
   ## option find peaks???
+  if(peak_opt==T){
+    spectrum(x)
+    
+  }
   
+  ###### Now remove specific harmonics
   
-
+  x_ts <- x
+  for(i in 1:length(list_harmonics)){
+    h_ts <- list_harmonics[[i]]
+    x_ts <- x_ts - h_ts
+  }
+  
   ### Get ranked frequencies 
-
-  selected_coef_fft_df <- coef_fft_df[selected_f,]
-  #i<-1
-  #generate_harmonic(i,coef_fft_df=selected_coef_fft_df,a0)
-  a0 <- mean(x)
-
-  #may want to use diff or detrend?
-
-  n_selected <- nrow(selected_coef_fft_df)
-
-  harmonics_fft_list <- lapply(1:n_selected,
-                             FUN= generate_harmonic,
-                             coef_fft_df=selected_coef_fft_df,
-                             a0=a0)
-  #Can add them all together?
 
   harmonic_obj <- list(harmonics_fft_list,harmonic_fft_obj)
   
