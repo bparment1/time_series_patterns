@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 10/24/2017
+## DATE MODIFIED: 10/30/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -57,7 +57,8 @@ library(mblm)                                # Theil Sen estimator
 library(TSA)                                 # Time series analyses functionalities
 library(Rwave)                               # Wavelet package R
 library(pracma)                              # pracma
-library(seewave)
+library(seewave)                             # time waves, time series functionalities
+library(stats)
 
 ###### Functions used in this script and sourced from other files
 
@@ -85,7 +86,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_10302017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -94,8 +95,8 @@ source(file.path(script_path,functions_processing_data_script)) #source all func
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
-function_pca_eof <- "pca_eof_functions_08022017.R" #PARAM 1
-source(file.path(script_path,function_pca_eof)) #source all functions used in this script 1.
+#function_pca_eof <- "pca_eof_functions_08022017.R" #PARAM 1
+#source(file.path(script_path,function_pca_eof)) #source all functions used in this script 1.
 
 ############################################################################
 #####  Parameters and argument set up ###########
@@ -125,7 +126,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_10232017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_10302017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -175,7 +176,7 @@ range_dates <- generate_dates_by_step(date_range[1],date_range[2],16)$dates #NDV
 class(range_dates)
 
 df_ts <- zoo(df_ts,range_dates)
-
+#
 (df_ts[1:10,])
 
 plot(df_ts[,1])
@@ -189,6 +190,7 @@ vect_z <- df_ts[,1]
 test <- fft(vect_z)
 plot(as.complex(test),type="p")
 plot(Real(test))
+plot(Im(test))
 
 class(test) # zoo object
 ### See part 3 for more in depth analyses and removal of frequencies for 
@@ -233,13 +235,16 @@ x_ts3_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 +
 x_ts4_8000 <- ts_synthetic_8000$t_period_800/2 + ts_synthetic_8000$t_period_1600
 
 plot(x_ts2_8000,type="l") #peaks for period 1600 and 800
-spectrum(x_ts2)
-periodogram(x_ts2)
+stats::spectrum(x_ts2_8000,log=F)
+
+periodogram(x_ts2_8000)
 
 ## Test to filter out periods/frequencies
 ## Use default filter window: Hanning
 #ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
 x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=0.18,to=0.2)
+plot(x_ts3_8000,col="red")
+lines(x_ts_filtered) #mostly filtered out!!!
 
 x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=100,to=2000)
 #test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
@@ -249,16 +254,25 @@ lines(x_ts_filtered) #mostly filtered out!!!
 periodogram(x_ts_filtered) #still peak but if with noise might not appear
 periodogram(x_ts3_8000,xlim=c(0,0.02)) #zoom in
 periodogram(x_ts_filtered,xlim=c(0,0.02)) #still peak but if with noise might not appear
-spectrum(x_ts_filtered)
-spectrum(x_ts3_8000)
-spectrum(x_ts3_8000,xlim=c(0,0.2))
-spectrum(x_ts_filtered,xlim=c(0,0.2))
+stats::spectrum(x_ts_filtered)
+stats::spectrum(x_ts3_8000)
+stats::spectrum(x_ts3_8000,xlim=c(0,0.2))
+stats::spectrum(x_ts_filtered,xlim=c(0,0.2))
 
-spectrum(x_ts3_8000,xlim=c(0,0.2))
-spectrum(x_ts_filtered,xlim=c(0,0.2))
+stats::spectrum(x_ts3_8000,xlim=c(0,0.2))
+stats::spectrum(x_ts_filtered,xlim=c(0,0.2))
 
 ################# Test 2 with artificial data #######
 ### Generate a sequence from sine: 230 steps
+
+## For the test use 230
+### Generate a sequence from sine with 8000 steps with:
+##  - periods of 23  and Amplitude 2
+##  - periods of 46 and Amplitude 1
+##  - mean average of 0
+##  - no phase delay i.e. 0
+##  - random noise 0 0.01
+
 
 #type_spatialstructure[5] <- "periodic_x1"
 amp<- c(2,1) #amplitude in this case
@@ -266,7 +280,6 @@ b<- 0
 T<- c(23,46) #annual cycle of 23
 
 phase_val <- 0
-x_input<-0:24
 
 nt <- 230  #change lenght for test with seewave ffilter
 temp_periods <- c(T)
@@ -297,6 +310,7 @@ names(ts_synthetic)
 #plot(ux)
 
 x_ts1 <- ts_synthetic$t_period_23 + ts_synthetic$trend + ts_synthetic$norm
+x_ts2 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46
 x_ts3 <- ts_synthetic$t_period_23 + ts_synthetic$t_period_46 + ts_synthetic$norm
 x_ts4 <- ts_synthetic$t_period_23/2 + ts_synthetic$t_period_46
 x_ts5 <- ts_synthetic$t_period_23
@@ -305,7 +319,11 @@ plot(x_ts1,type="l")
 plot(x_ts5,type="l")
 x_fft <- fft(x_ts5)
 plot(Real(x_fft), type="l")
+mid_val<- length(Real(x_fft))/2
+abline(v=mid_val)
 plot(Im(x_fft), type="l")
+abline(v=mid_val)
+
 plot(Real(x_fft), type="h")
 plot(Im(x_fft), type="h")
 
@@ -315,6 +333,8 @@ plot(Real(x_fft), type="h")
 
 test2<- fft(test)
 plot(test2,type="l")
+mesh_val<- meshgrid(Real(test2),Im(test2))
+
 plot(Real(test2),type="l")
 plot(Im(test2),type="l")
 
@@ -371,8 +391,8 @@ hanning_filt<- hanning.w(230)
 
 plot(hanning_filt,type="l")
 periodogram(hanning_filt)
-spectrum(hanning_filt)
-fft_x<-fft(hanning_filt,type="l")
+stats::spectrum(hanning_filt)
+fft_x<-fft(hanning_filt)
 plot(fft_x)
 plot(Real(fft_x),type="l")
 plot(Im(fft_x),type="l")
@@ -461,11 +481,27 @@ wavelet_run(x_ts4) #same power for period 23 and 46
 
 ### Now let's remove the the most important components
 
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_09122017b.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11022017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 debug(filter_frequency_and_generate_harmonics)
-test <- filter_frequency_and_generate_harmonics(x)
+
+test <- filter_frequency_and_generate_harmonics(x_ts3)
+
+plot(x_ts3,type="l")
+freq_range <- c(20,50)
+### Use the new function
+test <- filter_freq(x_ts=x_ts3,
+                    freq_range=freq_range,
+                    w_length=NULL,
+                    overlap_w=NULL)
+  
+test <- filter_freq(x_ts=x_ts3,
+                    freq_range=freq_range,
+                    w_length=NULL,
+                    overlap_w=90)
+
+
 
 ############################## END OF SCRIPT #############################################
 
@@ -640,22 +676,5 @@ test <- filter_frequency_and_generate_harmonics(x)
 
 #Examples
 
-a<-noisew(f=8000,d=1)
-# low-pass
-b<-ffilter(a,f=8000,to=1500)
-spectro(b,f=8000,wl=512)
-# high-pass
-c<-ffilter(a,f=8000,from=2500)
-spectro(c,f=8000,wl=512)
-# band-pass
-d<-ffilter(a,f=8000,from=1000,to=2000)
-spectro(d,f=8000,wl=512)
-# band-stop
-e<-ffilter(a,f=8000,from=1500,to=2500,bandpass=FALSE)
-spectro(e,f=8000,wl=512)
-# custom
-myfilter1<-rep(c(rep(0,64),rep(1,64)),4)
-g<-ffilter(a,f=8000,custom=myfilter1)
-spectro(g,f=8000)
 
-https://dsp.stackexchange.com/questions/6220/why-is-it-a-bad-idea-to-filter-by-zeroing-out-fft-bins
+#https://dsp.stackexchange.com/questions/6220/why-is-it-a-bad-idea-to-filter-by-zeroing-out-fft-bins
