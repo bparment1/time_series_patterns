@@ -400,16 +400,37 @@ filter_freq <- function(x_ts,freq_range,w_length=NULL,overlap_w=NULL){
   return(x_ts_filtered)
 }
 
-filter_frequency_and_generate_harmonics <- function(x,selected_period=NULL,freq_range,variance_treshold=NULL,peak_opt=NULL){
+filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selected_period=NULL,variance_treshold=NULL,peak_opt=NULL){
   #
   # This function removes/filters specific frequencies out of the original time series.
-  # The curren method implemented is to generate a sinusoidal signal 
+  # There are several methods implemented:
+  #
+  # 1) freq_range: remove specific harmonics within period range using ffilter
+  # 2) selected_period: remove specific period using a list
+  # 3) variance threshold: will remove frequencies above specific variance (in %)
+  # 4) peak option: not implemented yet
+  #
+  # The current method implemented is to generate a sinusoidal signal 
   #  (with specific phase and amplitude) and substracting the signal.
   # Later implementation may include doing a regression, or filter by setting frequencies to zero
   # and doing inverse fourier?
   #
   
   ### Generate a sequence from sine
+  if(!is.null(freq_range)){
+    x_ts_filtered <- filter_freq(x_ts=x_ts,
+                        freq_range=freq_range,
+                        w_length=NULL,
+                        overlap_w=90)
+    
+  }
+  
+  if(!is.null(variance_threshold)){
+    debug(spectrum_analysis_fft_run)
+    spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
+    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+    selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+  }
   
   if(is.null(selected_period) & is.null(variance_treshold)){
     #then take the top 10
@@ -470,9 +491,9 @@ filter_frequency_and_generate_harmonics <- function(x,selected_period=NULL,freq_
   
   ### Get ranked frequencies 
 
-  harmonic_obj <- list(harmonics_fft_list,harmonic_fft_obj)
+  #harmonic_obj <- list(harmonics_fft_list,harmonic_fft_obj)
   
-  return()
+  return(x_ts_filtered)
 
 }
 
