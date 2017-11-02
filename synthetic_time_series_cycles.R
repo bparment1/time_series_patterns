@@ -50,7 +50,7 @@ library(lubridate)                           # Dates manipulation functionalitie
 library(dplyr)                               # Data wrangling
 library(forecast)                            # ARIMA and other time series methods
 library(multitaper)                          # Multitaper estimation of spectrum
-#library(GeneCycle)                          # Fisher test for harmonics and Time series functionalities
+#library(GeneCycle)                          # Fisher test for harmonics and Time series functionalities: conflicts with periodogram function
 library(xts)                                 # Extension for time series object and analyses
 library(zoo)                                 # Time series object and analysis
 library(mblm)                                # Theil Sen estimator
@@ -59,6 +59,7 @@ library(Rwave)                               # Wavelet package R
 library(pracma)                              # pracma
 library(seewave)                             # time waves, time series functionalities
 library(stats)
+#detach(package:igraph) #conflict spectrum from this package with the general R stat psecturm
 
 ###### Functions used in this script and sourced from other files
 
@@ -84,15 +85,15 @@ load_obj <- function(f){
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
-functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_10302017.R" #PARAM 1
+#functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
+#functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11022017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
 
-source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
-source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
+#source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
+#source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 #function_pca_eof <- "pca_eof_functions_08022017.R" #PARAM 1
@@ -235,7 +236,7 @@ x_ts3_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 +
 x_ts4_8000 <- ts_synthetic_8000$t_period_800/2 + ts_synthetic_8000$t_period_1600
 
 plot(x_ts2_8000,type="l") #peaks for period 1600 and 800
-stats::spectrum(x_ts2_8000,log=F)
+spectrum(x_ts2_8000)
 
 periodogram(x_ts2_8000)
 
@@ -484,9 +485,6 @@ wavelet_run(x_ts4) #same power for period 23 and 46
 functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11022017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
-debug(filter_frequency_and_generate_harmonics)
-
-test <- filter_frequency_and_generate_harmonics(x_ts3)
 
 plot(x_ts3,type="l")
 freq_range <- c(20,50)
@@ -501,6 +499,10 @@ test <- filter_freq(x_ts=x_ts3,
                     w_length=NULL,
                     overlap_w=90)
 
+
+debug(filter_frequency_and_generate_harmonics)
+
+test <- filter_frequency_and_generate_harmonics(x_ts=x_ts3,freq_range=freq_range)
 
 
 ############################## END OF SCRIPT #############################################
