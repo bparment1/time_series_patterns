@@ -255,13 +255,15 @@ lines(x_ts_filtered) #mostly filtered out!!!
 periodogram(x_ts_filtered) #still peak but if with noise might not appear
 periodogram(x_ts3_8000,xlim=c(0,0.02)) #zoom in
 periodogram(x_ts_filtered,xlim=c(0,0.02)) #still peak but if with noise might not appear
-stats::spectrum(x_ts_filtered)
-stats::spectrum(x_ts3_8000)
-stats::spectrum(x_ts3_8000,xlim=c(0,0.2))
-stats::spectrum(x_ts_filtered,xlim=c(0,0.2))
 
-stats::spectrum(x_ts3_8000,xlim=c(0,0.2))
-stats::spectrum(x_ts_filtered,xlim=c(0,0.2))
+## dealt with the conflicts in namespace
+spectrum(x_ts_filtered)
+spectrum(x_ts3_8000)
+spectrum(x_ts3_8000,xlim=c(0,0.2))
+spectrum(x_ts_filtered,xlim=c(0,0.2))
+
+spectrum(x_ts3_8000,xlim=c(0,0.2))
+spectrum(x_ts_filtered,xlim=c(0,0.2))
 
 ################# Test 2 with artificial data #######
 ### Generate a sequence from sine: 230 steps
@@ -456,7 +458,7 @@ plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected 
 #undebug(harmonic_analysis_fft_run)
 
 ### find harmonic cycles
-debug(spectrum_analysis_fft_run)
+undebug(spectrum_analysis_fft_run)
 spectrum_analysis_fft_obj_diff <- spectrum_analysis_fft_run(x_ts1_diff)
 spectrum_analysis_fft_obj_lm <- spectrum_analysis_fft_run(x_ts1_lm)
 
