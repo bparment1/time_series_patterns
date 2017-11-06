@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 10/30/2017
+## DATE MODIFIED: 11/06/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -127,7 +127,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_10302017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_11062017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -363,7 +363,7 @@ x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=115) #this w
 
 0.128*8000 # use this ratio?
 w_length<- 0.128*230
-w-lengthe
+w_length
 x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=w_length,ovlp=90) #this works
 x_ts_filtered <- ffilter(as.matrix(x_ts3),f=230,from=0.18,to=0.2,wl=w_length,ovlp=0) #this works
 
@@ -394,7 +394,7 @@ hanning_filt<- hanning.w(230)
 
 plot(hanning_filt,type="l")
 periodogram(hanning_filt)
-stats::spectrum(hanning_filt)
+spectrum(hanning_filt)
 fft_x<-fft(hanning_filt)
 plot(fft_x)
 plot(Real(fft_x),type="l")
@@ -417,6 +417,7 @@ spectrum(x_ts3)
 spectrum(x_ts3,xlim=c(0,0.2))
 spectrum(x_ts_filtered,xlim=c(0,0.2))
 
+periodogram(x_ts2)
 
 #### Now find out if you can see the cycles
 
@@ -484,7 +485,7 @@ wavelet_run(x_ts4) #same power for period 23 and 46
 
 ### Now let's remove the the most important components
 
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11022017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11062017.R" #PARAM 1
 source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 
@@ -506,7 +507,8 @@ debug(filter_frequency_and_generate_harmonics)
 
 test <- filter_frequency_and_generate_harmonics(x_ts=x_ts3,freq_range=freq_range)
 
-
+  
+  
 ############################## END OF SCRIPT #############################################
 
 #https://www.r-bloggers.com/fir-filter-design-and-digital-signal-processing-in-r/
