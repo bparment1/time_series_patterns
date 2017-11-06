@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 10/30/2017
+## DATE MODIFIED: 11/06/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 2
 ## PROJECT: Animals trade
@@ -165,7 +165,10 @@ spectrum_analysis_fft_run <- function(x){
 
   ### Part II: use spectrum, power density to find harmonics contribution
 
-  spectrum_val <- spectrum(as.numeric(x),fast=F) #not padding of power 2
+  #spectrum defined with 1/frequency(x)
+  
+  spectrum_val <- spectrum(as.numeric(x),fast=F,
+                          method="pgram") #not padding of power 2
   x.spec <- spectrum(x,log="no",plot=FALSE) # don't use log scale/transform for the power density
   spx <- 1/x.spec$freq
   #/length(x)
@@ -247,20 +250,25 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #1) 
   #
   
+  
+  #Note: A plot of Amplitude squared against its frequencies is called a Fourier Line spectrum. 
+  #A raw periodogram is obtained by joining tips of lines to display a continuous plot and 
+  #scaling it so that the are equals the variance.
+  #"The periodogram distributes the variance over frequency, but it has two drawbacks. The first is
+  # that the precise set of frequencies is arbitrary inasmuch as it depends on the record length. 
+  # The second is that the periodogram does not become smoother as the lenght of time series
+  # increases but just includes more spikes packed closer together. The remedy is to smooth
+  # the periodogram by taking moving averages of spikes before joing the tips.The smoothed
+  # periodogram is also known as the (sample) spectrum."
+  
+  #http://www.mathworks.com/help/matlab/ref/fft.html
+  
   ########## BEGIN ############
   
   options(scipen=999)  #remove scientific writing
   
   x_fft <- fft(x,inverse=T) # transformed fft
-  #Let j be the frequency
-  # aj*cos(wj*t) + bj*sin(wjt)
-  #
-  #x_trans <- fft(x,inverse=T,fast=F) # transformed fft, no padding to get to power of 2
-  
-  #
-  #pgram[, i, j] <- xfft[, i] * Conj(xfft[, j])/(N0 * xfreq)
-  #N0 is the total number of steps
-  
+
   ## To get the amplitude, you need to normalize by the number of element
   ## You multiply by two because it is symmetrical and the power is spread
   ## in both negative and positive
@@ -283,31 +291,16 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #> 90-360/23
   #[1] 74.34783
   #> 
-  
-  #amp <- amp_val
-  #amp[1] <- 0 #Set the amplitude to zero for the harmonic zero
-  #https://www.mathworks.com/matlabcentral/answers/162846-amplitude-of-signal-after-fft-operation
+  #(phase[221]*180/pi) - 360/23
   
   n <- length(x)
   n_half <- n/2 
   #plot(amplitude,type="h") #line spectrum both side
   #plot(1:n_half,amplitude[1:n_half],"h",ylim=c(0,ymax)) #one sided line spectrum
-  
-  #findpeaks(amplitude)
-  #Note: A plot of Amplitude squared against its frequencies is called a Fourier Line spectrtum. 
-  #A raw periodogram is obtained by joining tips of lines to display a continuous plot and 
-  #scaling it so that the are equals the variance.
-  #"The periodogram distributes the variance over frequency, but it has two drawbacks. The first is
-  # that the precise set of frequencies is arbitrary inasmuch as it depends on the record length. 
-  # The second is that the periodogram does not become smoother as the lenght of time series
-  # increases but just includes more spikes packed closer together. The remedy is to smooth
-  # the periodogram by taking moving averages of spikes before joing the tips.The smoothed
-  # periodogram is also known as the (sample) spectrum."
-  
-  #http://www.mathworks.com/help/matlab/ref/fft.html
-  P2 = abs(x_fft/n)
-  P1 = P2[(1:n)/2+1]
-  #P1(2:n-1) = 2*P1(2:n-1);
+  plot(mod_val,type="h",
+       xaxt="n")
+  abline(v=n_x,lty=2)
+  #-n_half:n_half
   
   phase <- as.numeric(Arg(x_fft))
 
@@ -317,7 +310,9 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   frequency_val <- 1/period_orig
   freq_rad <- 2*pi*frequency_val
   phase_deg <- phase*180/pi
-  variance_freq <- (amplitude^2)/2
+  #variance_freq <- (amplitude^2)/2 #should it be divided by 2?
+  variance_freq <- (amplitude^2)/2 #should it be divided by 2?
+  sum(variance_freq)
   variance_perc <- (variance_freq/sum(variance_freq))*100
   
   coef_fft_df <- data.frame(harmonic_val,
@@ -326,8 +321,8 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
                             amplitude[1:n_half],
                             phase[1:n_half],
                             phase_deg[1:n_half],
-                            variance_freq[1:n_half],
-                            variance_perc[1:n_half])
+                            variance_freq[1:n_half]*2,
+                            variance_perc[1:n_half]*2)
   names(coef_fft_df) <- c("harmonic","period_orig","frequency",
                           "amplitude","phase","phase_deg","variance","var_percent")
 
@@ -363,8 +358,20 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
     plot(1:n_half,
          amplitude[1:n_half],
          type="h",
+         xaxt="n",
          ylab="Amplitude",
-         ylim=c(0,ymax)) #one sided line spectrum
+         ylim=c(0,ymax),
+         xlab="period") #one sided line spectrum,
+
+    labels_val <-coef_fft_df$period_orig
+    labels_val[1] <- 0
+    labels_val <- pretty(labels_val,n=10)
+    axis(side=1,
+         at=labels_val,
+         labels=labels_val,
+         las=3,
+         cex=0.7) 
+    # reverse labels
     dev.off()
     
   }
@@ -426,7 +433,10 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
   }
   
   if(!is.null(variance_threshold)){
-    debug(spectrum_analysis_fft_run)
+    #Use e.g. > 10% would remove anything that corresponds to more than 10% variance from the time series
+    
+    #debug(spectrum_analysis_fft_run)
+    
     spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
     ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
     selected_f <- ranked_freq_df$freq[1:10] #takes top 10
@@ -441,6 +451,10 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
   
     ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
     selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+    
+    debug(extract_harmonic_fft_parameters_run)
+    extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
+    
   }
   
   if(is.null(selected_f) & !is.null(variance_threshold)){
