@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 11/06/2017
+## DATE MODIFIED: 11/07/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -87,7 +87,7 @@ load_obj <- function(f){
 
 #functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 #functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11022017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11072017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -192,7 +192,7 @@ test <- fft(vect_z)
 plot(as.complex(test),type="p")
 plot(Real(test))
 plot(Im(test))
-
+plot(vect_z)
 class(test) # zoo object
 ### See part 3 for more in depth analyses and removal of frequencies for 
 
@@ -485,8 +485,8 @@ wavelet_run(x_ts4) #same power for period 23 and 46
 
 ### Now let's remove the the most important components
 
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11062017.R" #PARAM 1
-source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
+#functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11072017b.R" #PARAM 1
+#source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
 
 
 plot(x_ts3,type="l")
@@ -498,17 +498,65 @@ test <- filter_freq(x_ts=x_ts3,
                     overlap_w=NULL)
   
 test <- filter_freq(x_ts=x_ts3,
-                    freq_range=freq_range,
+                    freq_range=c(22.999,23.001),
                     w_length=NULL,
                     overlap_w=90)
 
 
-debug(filter_frequency_and_generate_harmonics)
 
-test <- filter_frequency_and_generate_harmonics(x_ts=x_ts3,freq_range=freq_range)
+freq_range <- c(20,50)
 
-  
-  
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts3,freq_range=freq_range)
+
+
+selected_period <- 23 
+
+undebug(filter_frequency_and_generate_harmonics)
+
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts3,
+                                        freq_range=NULL,
+                                        selected_period=selected_period,
+                                        variance_threshold=NULL,
+                                        peak_opt=NULL)
+
+plot(x_ts3,type="l")
+lines(x_ts_filtered,col="red")
+
+## variance threshold:
+variance_threshold <- 10
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts3,
+                                                         freq_range=NULL,
+                                                         selected_period=NULL,
+                                                         variance_threshold=variance_threshold,
+                                                         peak_opt=NULL)
+
+
+###### NOW use real data:
+
+plot(vect_z)
+freq_range <- c(20,50)
+
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=as.numeric(vect_z),freq_range=freq_range)
+freq_range <- c(23,24)
+
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=as.numeric(vect_z),freq_range=freq_range)
+
+plot(vect_z)
+
+coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
+View(coef_fft_df)
+
+plot(coef_fft_df$amplitude,type="h") #highest amplitude is 23
+
+plot(coef_fft_df$amplitude[-1],type="h") #highest amplitude is 23
+
+### Specific real time series of NDVI with stronger signal
+vect_z <- df_ts[,29]
+plot(vect_z)
+coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
+View(coef_fft_df)
+plot(coef_fft_df$amplitude[-1],type="h") #highest amplitude is 23
+
 ############################## END OF SCRIPT #############################################
 
 #https://www.r-bloggers.com/fir-filter-design-and-digital-signal-processing-in-r/
