@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 11/06/2017
+## DATE MODIFIED: 11/07/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 2
 ## PROJECT: Animals trade
@@ -240,7 +240,7 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #
   ## This functions generate harmonics using fft from x (time) series.
   #INPUTS
-  #1)x: series to process with fft
+  #1)x: series to process with fft, oten a time series
   #2)save_fig: save figure containing FFT line spectrum
   #3)save_table:
   #4)out_dir:
@@ -251,7 +251,7 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #
   
   
-  #Note: A plot of Amplitude squared against its frequencies is called a Fourier Line spectrum. 
+  #Note 1: A plot of Amplitude squared against its frequencies is called a Fourier Line spectrum. 
   #A raw periodogram is obtained by joining tips of lines to display a continuous plot and 
   #scaling it so that the are equals the variance.
   #"The periodogram distributes the variance over frequency, but it has two drawbacks. The first is
@@ -262,6 +262,10 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   # periodogram is also known as the (sample) spectrum."
   
   #http://www.mathworks.com/help/matlab/ref/fft.html
+  #
+  # Note 2: Trend within a time series and seasonality will impact the periodogram and spectrum. 
+  # A trend results in a peak in the zero frequency while a seasonal signal produces peak at
+  # the period of hte signal and its integer multiples.
   
   ########## BEGIN ############
   
@@ -298,8 +302,9 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   #plot(amplitude,type="h") #line spectrum both side
   #plot(1:n_half,amplitude[1:n_half],"h",ylim=c(0,ymax)) #one sided line spectrum
   plot(mod_val,type="h",
-       xaxt="n")
-  abline(v=n_x,lty=2)
+       xaxt="n",
+       main="line spectrum for x")
+  abline(v=n_half,lty=2)
   #-n_half:n_half
   
   phase <- as.numeric(Arg(x_fft))
@@ -326,7 +331,6 @@ extract_harmonic_fft_parameters_run <- function(x,save_fig=F,save_table=F,out_di
   names(coef_fft_df) <- c("harmonic","period_orig","frequency",
                           "amplitude","phase","phase_deg","variance","var_percent")
 
-  
   if(save_table==T){
     
     df_file_name<- paste("coef_fft_df_", 
@@ -423,7 +427,8 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
   # and doing inverse fourier?
   #
   
-  ### Generate a sequence from sine
+  ### Option 1: given frequency range
+  
   if(!is.null(freq_range)){
     x_ts_filtered <- filter_freq(x_ts=x_ts,
                         freq_range=freq_range,
@@ -432,76 +437,110 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     
   }
   
+  ### Option 2: variance threshold
+  
   if(!is.null(variance_threshold)){
     #Use e.g. > 10% would remove anything that corresponds to more than 10% variance from the time series
     
+    #debug(extract_harmonic_fft_parameters_run)
+    coef_fft_df <- extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
+    index_val <- which(coef_fft_df$var_perc > threshold)
+    
+    selected_df <- coef_fft_df$period_orig[index_val]
+    #selected_df <- index_val
     #debug(spectrum_analysis_fft_run)
+    #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
+    #ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
     
-    spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
-    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-    selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+    x_ts_filtered <- x_ts
+    for(i in 1:length(selected_df)){
+      
+      freq_range <- c(selected_df[i]-0.5,selected_df[i]+0.5)
+      x_ts_filtered <- filter_freq(x_ts=x_ts_filtered,
+                                   freq_range=freq_range,
+                                   w_length=NULL,
+                                   overlap_w=90)
+      
+    }
+    
+    #selected_f <- ranked_freq_df$freq[1:10] #takes top 10
   }
   
-  if(is.null(selected_period) & is.null(variance_treshold)){
-    #then take the top 10
-    #type_spatialstructure[5] <- "periodic_x1"
+  ### Option 3: selected frequencies
   
-    #debug(harmonic_analysis_fft_run)
-    #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
-  
-    ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-    selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+  if(!is.null(selected_period)){
     
-    debug(extract_harmonic_fft_parameters_run)
-    extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
+    selected_df
+    #debug(spectrum_analysis_fft_run)
+    #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
+    #ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+    
+    #x_ts_filtered <- x_ts
+    for(i in 1:length(selected_df)){
+      
+      freq_range <- c(selected_df[i]-0.5,selected_df[i]+0.5)
+      undebug(filter_freq)
+      x_ts_filtered <- filter_freq(x_ts=x_ts_filtered,
+                                   freq_range=freq_range,
+                                   w_length=NULL,
+                                   overlap_w=90)
+    }
     
   }
   
-  if(is.null(selected_f) & !is.null(variance_threshold)){
-    #ru ff
-    coef_fft_df <- extract_harmonic_fft_parameters_run(x)
-    
-    coef_fft_df_selected <- subset(coef_fft_df,coef_fft_df$var_percent > variance_threshold)
-    #class(coef_fft_obj_ts)
-    #period_selected <- coef_fft_df_selected$period_orig
-    
-    mean_ts <- mean(x)
-    list_harmonics <- lapply(1:nrow(coef_fft_df_selected),
-                             FUN=generate_harmonic,
-                             coef_fft_df=coef_fft_df_selected,
-                             a0=mean_ts,
-                             nt=length(x))
-    #debug(generate_harmonic)
-    #list_harmonics <- generate_harmonic(1,coef_fft_df=coef_fft_df_selected,a0=mean_ts)
+  #plot(x_ts,type="b") 
+  #lines(x_ts_filtered,col="red")
+  #if(is.null(selected_period) & is.null(variance_treshold)){
+  #  #then take the top 10
+  #  #type_spatialstructure[5] <- "periodic_x1"
+  #  
+  #  #debug(harmonic_analysis_fft_run)
+  #  #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
+  #
+  #  ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
+  #  selected_f <- ranked_freq_df$freq[1:10] #takes top 10
+  #  
+  #  debug(extract_harmonic_fft_parameters_run)
+  #  extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
+  #  
+  #}
+  
+  #if(is.null(selected_f) & !is.null(variance_threshold)){
+  #  #ru ff
+  #  coef_fft_df <- extract_harmonic_fft_parameters_run(x)
+  #  
+  #  coef_fft_df_selected <- subset(coef_fft_df,coef_fft_df$var_percent > variance_threshold)
+  #  #class(coef_fft_obj_ts)
+  #  #period_selected <- coef_fft_df_selected$period_orig
+  #  
+  #  mean_ts <- mean(x)
+  #  list_harmonics <- lapply(1:nrow(coef_fft_df_selected),
+  #                           FUN=generate_harmonic,
+  #                           coef_fft_df=coef_fft_df_selected,
+  #                           a0=mean_ts,
+  #                           nt=length(x))
+  #  #debug(generate_harmonic)
+  #  #list_harmonics <- generate_harmonic(1,coef_fft_df=coef_fft_df_selected,a0=mean_ts)
       
     #lapply(period_selected,)
     #rank it based on variance and select above the threshold
     
     #
-  }
-  
-  if(!is.null(selected_f) & is.null(variance_threshold)){
-    #
-  }
-    
-  if(!is.null(selected_f) & !is.null(variance_threshold)){
-    #use top 10 if above threshold level?
-  }
-  
+  #}
   
   ## option find peaks???
-  if(peak_opt==T){
-    spectrum(x)
-    
-  }
+  #if(peak_opt==T){
+  #  spectrum(x)
+  #  
+  #}
   
   ###### Now remove specific harmonics
   
-  x_ts <- x
-  for(i in 1:length(list_harmonics)){
-    h_ts <- list_harmonics[[i]]
-    x_ts <- x_ts - h_ts
-  }
+ # x_ts <- x
+ #  for(i in 1:length(list_harmonics)){
+ #   h_ts <- list_harmonics[[i]]
+ #    x_ts <- x_ts - h_ts
+ #  }
   
   ### Get ranked frequencies 
 
