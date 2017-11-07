@@ -411,7 +411,7 @@ filter_freq <- function(x_ts,freq_range,w_length=NULL,overlap_w=NULL){
   return(x_ts_filtered)
 }
 
-filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selected_period=NULL,variance_treshold=NULL,peak_opt=NULL){
+filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selected_period=NULL,variance_threshold=NULL,peak_opt=NULL){
   #
   # This function removes/filters specific frequencies out of the original time series.
   # There are several methods implemented:
@@ -444,7 +444,7 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     
     #debug(extract_harmonic_fft_parameters_run)
     coef_fft_df <- extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
-    index_val <- which(coef_fft_df$var_perc > threshold)
+    index_val <- which(coef_fft_df$var_perc > variance_threshold)
     
     selected_df <- coef_fft_df$period_orig[index_val]
     #selected_df <- index_val
@@ -455,7 +455,7 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     x_ts_filtered <- x_ts
     for(i in 1:length(selected_df)){
       
-      freq_range <- c(selected_df[i]-0.5,selected_df[i]+0.5)
+      freq_range <- c(selected_df[i]-0.01,selected_df[i]+0.01)
       x_ts_filtered <- filter_freq(x_ts=x_ts_filtered,
                                    freq_range=freq_range,
                                    w_length=NULL,
@@ -470,7 +470,7 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
   
   if(!is.null(selected_period)){
     
-    selected_df
+    selected_df <- selected_period
     #debug(spectrum_analysis_fft_run)
     #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
     #ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
@@ -478,8 +478,8 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     #x_ts_filtered <- x_ts
     for(i in 1:length(selected_df)){
       
-      freq_range <- c(selected_df[i]-0.5,selected_df[i]+0.5)
-      undebug(filter_freq)
+      freq_range <- c(selected_df[i]-0.01,selected_df[i]+0.01)
+      #undebug(filter_freq)
       x_ts_filtered <- filter_freq(x_ts=x_ts_filtered,
                                    freq_range=freq_range,
                                    w_length=NULL,
