@@ -13,16 +13,17 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 11/07/2017
+## DATE MODIFIED: 11/08/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
-## TO DO: - add windowed Fourier transform option
+## TO DO: - add windowed/Short-Term Fourier transform option
 ##        - add wavelet option
 ##        - lag analyis with PCA to remove seasonality?
 ##        - PCA on spectral density matrix to identify and remove important harmonics
+##        - implement harmonic option
 ##
-## COMMIT: testing filtering on real and synthetic data with known cycles
+## COMMIT: testing window generate on time series
 ##
 ## Links to investigate:
 ##
@@ -87,7 +88,7 @@ load_obj <- function(f){
 
 #functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 #functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11072017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11082017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -556,6 +557,27 @@ plot(vect_z)
 coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
 View(coef_fft_df)
 plot(coef_fft_df$amplitude[-1],type="h") #highest amplitude is 23
+
+undebug(generate_window_fun)
+test_df <- generate_window_fun(vect_z,w_length=23)
+
+l_x_ts <- generate_time_series_windowed(vect_z,w_length=23)
+
+
+generate_time_series_windowed <- function(x_ts,w_length,w_ovlp=NULL){
+  
+  window_df <- generate_window_fun(x_ts,w_length=w_length,w_ovlp)
+  #make sure it is a time series object first:
+  
+  #i<-1
+  l_x_ts <- lapply(1:nrow(window_df),FUN=function(i){start_date <- date(x_ts[window_df$start[i]]);
+                                                     end_date <- date(x_ts[window_df$end[i]]);
+                                                     w_x_ts <- window(x_ts,start=start_date,end=end_date)})
+  
+  #w_x_ts_df <- do.call(cbind,l_x_ts)
+  return(l_x_ts) 
+}
+
 
 ############################## END OF SCRIPT #############################################
 
