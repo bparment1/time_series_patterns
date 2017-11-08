@@ -5,7 +5,7 @@
 #
 #AUTHOR: Benoit Parmentier                                                                #
 #DATE CREATED: 05/22/2017 
-#DATE MODIFIED: 08/02/2017
+#DATE MODIFIED: 11/08/2017
 #Version: 1
 #PROJECT: General script
 #   
@@ -17,12 +17,12 @@
 #################################################################################################
 
 ###Loading R library and packages                                                      
+#library(gstat)                           # Kriging and co-kriging by Pebesma et al.
 library(gtools)                          # loading some useful tools 
 library(mgcv)                            # GAM package by Simon Wood
 library(sp)                              # Spatial pacakge with class definition by Bivand et al.
 library(spdep)                           # Spatial pacakge with methods and spatial stat. by Bivand et al.
 library(rgdal)                           # GDAL wrapper for R, spatial utilities
-library(gstat)                           # Kriging and co-kriging by Pebesma et al.
 library(fields)                          # NCAR Spatial Interpolation methods such as kriging, splines
 library(raster)                          # Hijmans et al. package for raster processing
 library(foreign)                         # Library for format exchange (e.g. dbf,spss,sas etc.)
@@ -77,14 +77,14 @@ run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loa
   
   ##Cross product PCA S modes
   
-  pca_principal_obj <-principal(r=matrix_val, #
-                                nfactors = npc, 
-                                residuals = FALSE, 
-                                covar=TRUE, #use covar option...
-                                rotate = rotation_opt,
-                                scores=scores_opt,
-                                oblique.scores=TRUE,
-                                method="regression")
+  pca_principal_obj <- principal(r=matrix_val, #
+                                 nfactors = npc, 
+                                 residuals = FALSE, 
+                                 covar=TRUE, #use covar option...this should make sure that we are using raw matrix?
+                                 rotate = rotation_opt,
+                                 scores=scores_opt,
+                                 oblique.scores=TRUE,
+                                 method="regression")
   
   principal_loadings_df <- as.data.frame(unclass(pca_principal_obj$loadings)) # extract the matrix of ??
   #Add scores...
@@ -217,27 +217,28 @@ plot_pca_components_space_loadings <- function(pcs_selected,pca_mod,var_labels=N
   return(png_filename)
 }
 
-run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,dates_val=NULL,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
+run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,dates_val=NULL,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
   ##General function to run PCA/EOF analyses. The function includes options for T and S mode or a matrix
   ##given by the user.
   #
   #DATE CREATED: 05/23/2017
-  #DATE UPDATED: 05/24/2017
+  #DATE UPDATED: 11/09/2017
   #
   #INPUTS
   #
   #1) data_df: input data.frame 
-  #2) matrix_val: square matrix used in the PCA
-  #3) npc: number of PCA considered, default is 1
-  #4) pcs_selected: selected pca components to consider for plotting, NULL is default then match npc
-  #5) time_series_loadings=F
-  #6) save_opt=TRUE
-  #7) var_labels=NULL
-  #8) mode_val=T
-  #9) rotation_opt="none"
-  #10) scores_opt=FALSE
-  #11) out_dir="."
-  #12) out_suffix=""
+  #2) matrix_val: square matrix used in the eigen value decomposition
+  #3) eigen_method: FALSE
+  #4) npc: number of PCA considered, default is 1
+  #5) pcs_selected: selected pca components to consider for plotting, NULL is default then match npc
+  #6) time_series_loadings=F
+  #7) save_opt=TRUE
+  #8) var_labels=NULL
+  #9) mode_val=T
+  #10) rotation_opt="none"
+  #11) scores_opt=FALSE
+  #12) out_dir="."
+  #13) out_suffix=""
   #
   #OUTPUTS
   #  obj_run_pca_analysis object as list with the following items/objects:
@@ -249,9 +250,79 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   ########### Beging function ###########
   
   #debug(run_pca_fun)
-  principal_pca_obj <- run_pca_fun(A=data_df,mode=mode_val,rotation_opt="none",
-                                   matrix_val=NULL,npc=npc,loadings=TRUE,scores_opt=TRUE)
-  pca_mod <- principal_pca_obj$pca_principal
+  if(eigen_algorithm=FALSE){
+    
+    principal_pca_obj <- run_pca_fun(A=data_df,
+                                     mode=mode_val,
+                                     rotation_opt="none",
+                                     matrix_val=NULL,
+                                     npc=npc,
+                                     loadings=TRUE,
+                                     scores_opt=TRUE)
+  
+    pca_mod <- principal_pca_obj$pca_principal
+    
+    principal_pca_obj <- pca_obj3$principal_pca_obj
+    
+    names(pca_obj3)
+    
+    names(pca_obj3$principal_pca_obj)
+    
+    scores_df <- pca_obj3$principal_pca_obj$scores
+    
+    loadings_df <- pca_obj3$principal_pca_obj$loadings
+    
+    eigen_values <- pca_obj3$eigen_values
+    plot(eigen_values)
+    
+    dim(loadings_df)
+    
+    #create ts zoo object
+    loadings_df_ts <- zoo(loadings_df,range_dates)
+    plot(loadings_df_ts[,])
+    
+    dim(scores_df)
+    names(scores_df)
+    
+    
+    df_eigen <- data.frame(variable=names(data_df),eigenvalue=pca_mod$values)
+    
+  
+  }
+  
+  ### Use eigen algorithm:
+  if(eigen_algorithm==TRUE){
+    ## reorganize later!!!
+    #var_mat <- cor(data_df)
+    #var_mat <- matrix_square
+    #eigen_mat <- eigen(var_mat)
+    eigen_mat <- eigen(matrix_val)
+    eigen_mat$value + eigen_values
+    #(principal_pca_obj$pca_principal$values) - eigen_cor_mat$values
+    eigen_values - eigen_cor_mat$values #tthis is zero!
+    plot(eigen_mat$values)
+    eigen_cor_mat$vectors 
+    plot(eigen_cor_mat$vectors)
+    #E <- 
+    data_df_z <-scale(data_df) #this is just to standardize the original data, M = 0, SD =1
+    pca_scores<- data_df_z %*% eigen_cor_mat$vectors #scaled values x vectors
+    #colnames(pca.scores)<-c() #just quickly naming the columns
+    #head(pca.scores) #just to show some component scores
+    pca_scores_df <- as.data.frame(pca_scores)
+    names(pca_scores_df) <- paste0("pc_",1:ncol(pca_scores_df))
+    cor_loadings <- cor(data_df_z,pca_scores_df)
+    cor_loadings[,1] + as.numeric(principal_pca_obj$pca_principal$loadings[,1]) #note the sign is reverse!!!
+    cor_loadings[,4] + as.numeric(principal_pca_obj$pca_principal$loadings[,4])
+    
+    test <- principal_pca_obj3$matrix_val - cor_mat
+    dim(eigen_cor_mat$vectors )
+    test<- data_df*eigen_cor_mat$vectors
+    dim(test)
+    head(test)
+    
+    dim(test)
+    (principal_pca_obj$pca_principal$loadings)
+  }
   
   #Save eigenvalues
   
@@ -341,8 +412,8 @@ run_pca_analysis <- function(data_df,matrix_val=NULL,npc=1,pcs_selected=NULL,tim
   
   ## generate object
   #### Prepare object to return
-  obj_run_pca_analysis <- list(principal_pca_obj,mode_val,matrix_val)
-  names(obj_run_pca_analysis) <- c("principal_pca_obj","mode_val","matrix_val")
+  obj_run_pca_analysis <- list(principal_pca_obj,mode_val,matrix_val,pca_mod$values)
+  names(obj_run_pca_analysis) <- c("principal_pca_obj","mode_val","matrix_val","eigen_values")
   
   ##### save to disk
   if(save_opt==TRUE){
