@@ -488,23 +488,19 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     
   }
   
-  #plot(x_ts,type="b") 
-  #lines(x_ts_filtered,col="red")
-  #if(is.null(selected_period) & is.null(variance_treshold)){
-  #  #then take the top 10
-  #  #type_spatialstructure[5] <- "periodic_x1"
-  #  
-  #  #debug(harmonic_analysis_fft_run)
-  #  #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x) 
-  #
-  #  ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
-  #  selected_f <- ranked_freq_df$freq[1:10] #takes top 10
-  #  
-  #  debug(extract_harmonic_fft_parameters_run)
-  #  extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
-  #  
-  #}
+  ### Option 4: ranked frequencies threshold
   
+  #screeen for top 5?
+  
+  if(!is.null(rank_freq)){
+
+    #debug(extract_harmonic_fft_parameters_run)
+    coef_fft_df <- extract_harmonic_fft_parameters_run(x_ts,save_fig=F,save_table=F,out_dir=".",out_suffix="")
+    index_val <- which(coef_fft_df$var_perc > variance_threshold)
+  
+    selected_df <- coef_fft_df$period_orig[index_val]
+  }
+
   #if(is.null(selected_f) & !is.null(variance_threshold)){
   #  #ru ff
   #  coef_fft_df <- extract_harmonic_fft_parameters_run(x)
@@ -724,5 +720,56 @@ wavelet_run <- function(x){
   print(plot.cwt(tmp,xlab="time (units of sampling interval)"))
   
 }
+
+#stft {e1071}
+
+#### Generate windows from time series:
+generate_window_fun <- function(x_ts,w_length,w_ovlp=NULL){
+  # This functions generates windows/intervals given a vector/time series object.
+  # 
+  #
+  
+  #### without overlap
+  if(is.null(w_ovlp)){
+    nt <- length(x_ts)
+    start_w <- seq(from=1,to=nt,by=w_length)
+    end_w <- seq(from=0,to=nt,by=w_length)
+    window_no <- 1:length(start_w)
+    window_df <- data.frame(window_no,
+                            start=start_w,
+                            end=end_w[-1])
+  }
+  
+  #### with overlap
+  if(!is.null(w_ovlp)){
+    #nt <- length(x_ts)
+    #start_w <- seq(from=1,to=nt,by=w_length)
+    #end_w <- seq(from=0,to=nt,by=w_length)
+    #window_no <- 1:length(start_w)
+    #window_df <- data.frame(window_no,
+    #                       start=start_w,
+    #                        end=end_w)
+    #not implemented yet
+  }
+  
+  return(window_df)
+}
+
+
+generate_time_series_windowed <- function(x_ts,w_length,w_ovlp=NULL){
+  
+  window_df <- generate_window_fun(x_ts,w_length=w_length,w_ovlp)
+  #make sure it is a time series object first:
+  
+  #i<-1
+  l_x_ts <- lapply(1:nrow(window_df),FUN=function(i){start_date <- date(x_ts[window_df$start[i]]);
+  end_date <- date(x_ts[window_df$end[i]]);
+  w_x_ts <- window(x_ts,start=start_date,end=end_date)})
+  
+  #w_x_ts_df <- do.call(cbind,l_x_ts)
+  return(l_x_ts) 
+}
+
+
 
 ######################### End of script ########################
