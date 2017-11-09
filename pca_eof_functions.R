@@ -70,7 +70,7 @@ run_pca_fun <- function(A,mode="T",rotation_opt="none",matrix_val=NULL,npc=1,loa
   
   #######
   
-  
+  ### Compute correlation if matrix_val is NULL
   if(is.null(matrix_val)){
     matrix_val <- cor(A,use="complete.obs")
   }
@@ -217,7 +217,7 @@ plot_pca_components_space_loadings <- function(pcs_selected,pca_mod,var_labels=N
   return(png_filename)
 }
 
-run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_selected=NULL,time_series_loadings=F,dates_val=NULL,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
+run_pca_analysis <- function(data_df,matrix_val=NULL,method="principal",npc=1,pcs_selected=NULL,time_series_loadings=F,dates_val=NULL,save_opt=FALSE,var_labels=NULL,mode_val=T, rotation_opt="none",scores_opt=FALSE,out_dir=".",out_suffix=""){
   ##General function to run PCA/EOF analyses. The function includes options for T and S mode or a matrix
   ##given by the user.
   #
@@ -228,7 +228,7 @@ run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_se
   #
   #1) data_df: input data.frame 
   #2) matrix_val: square matrix used in the eigen value decomposition
-  #3) eigen_method: FALSE
+  #3) method: principal, eigen R
   #4) npc: number of PCA considered, default is 1
   #5) pcs_selected: selected pca components to consider for plotting, NULL is default then match npc
   #6) time_series_loadings=F
@@ -247,64 +247,50 @@ run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_se
   #3) matrix_val
   #
   
-  ########### Beging function ###########
+  ########### Begin function ###########
+  
+  
+  ###### Part 1: Compute eigenvalues, scoes and loadings using different algorithms/packages and/or methods
   
   #debug(run_pca_fun)
-  if(eigen_algorithm=FALSE){
+  if(method=="principal"){
     
     principal_pca_obj <- run_pca_fun(A=data_df,
                                      mode=mode_val,
                                      rotation_opt="none",
-                                     matrix_val=NULL,
+                                     matrix_val=matrix_val,
                                      npc=npc,
                                      loadings=TRUE,
                                      scores_opt=TRUE)
   
     pca_mod <- principal_pca_obj$pca_principal
-    
-    principal_pca_obj <- pca_obj3$principal_pca_obj
-    
-    names(pca_obj3)
-    
-    names(pca_obj3$principal_pca_obj)
-    
-    scores_df <- pca_obj3$principal_pca_obj$scores
-    
-    loadings_df <- pca_obj3$principal_pca_obj$loadings
-    
-    eigen_values <- pca_obj3$eigen_values
-    plot(eigen_values)
-    
-    dim(loadings_df)
-    
-    #create ts zoo object
-    loadings_df_ts <- zoo(loadings_df,range_dates)
-    plot(loadings_df_ts[,])
-    
-    dim(scores_df)
-    names(scores_df)
-    
-    
+    names(principal_pca_obj)
+    scores_df <- principal_pca_obj$scores
+    loadings_df <- principal_pca_obj$loadings
+    #eigen_values <- pca_mod$values
     df_eigen <- data.frame(variable=names(data_df),eigenvalue=pca_mod$values)
     
   
   }
   
   ### Use eigen algorithm:
-  if(eigen_algorithm==TRUE){
+  if(method=="eigen"){
+    #Using R method: eigen
+    
     ## reorganize later!!!
     #var_mat <- cor(data_df)
     #var_mat <- matrix_square
     #eigen_mat <- eigen(var_mat)
     eigen_mat <- eigen(matrix_val)
-    eigen_mat$value + eigen_values
+    #eigen_mat$value + eigen_values
     #(principal_pca_obj$pca_principal$values) - eigen_cor_mat$values
-    eigen_values - eigen_cor_mat$values #tthis is zero!
-    plot(eigen_mat$values)
-    eigen_cor_mat$vectors 
-    plot(eigen_cor_mat$vectors)
+    #eigen_values - eigen_cor_mat$values #tthis is zero!
+    #plot(eigen_mat$values)
+    #eigen_cor_mat$vectors 
+    #plot(eigen_cor_mat$vectors)
     #E <- 
     data_df_z <-scale(data_df) #this is just to standardize the original data, M = 0, SD =1
+    
     pca_scores<- data_df_z %*% eigen_cor_mat$vectors #scaled values x vectors
     #colnames(pca.scores)<-c() #just quickly naming the columns
     #head(pca.scores) #just to show some component scores
@@ -323,6 +309,9 @@ run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_se
     dim(test)
     (principal_pca_obj$pca_principal$loadings)
   }
+  
+  ###############################
+  ###### Part 2: Save outputs
   
   #Save eigenvalues
   
@@ -410,8 +399,9 @@ run_pca_analysis <- function(data_df,eigen_method=F,matrix_val=NULL,npc=1,pcs_se
     ## Also add function to plot scores.
   }
   
-  ## generate object
+  ##### Part 3: Generate object
   #### Prepare object to return
+  
   obj_run_pca_analysis <- list(principal_pca_obj,mode_val,matrix_val,pca_mod$values)
   names(obj_run_pca_analysis) <- c("principal_pca_obj","mode_val","matrix_val","eigen_values")
   
