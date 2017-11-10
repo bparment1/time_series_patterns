@@ -556,28 +556,25 @@ vect_z <- df_ts[,29]
 plot(vect_z)
 coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
 View(coef_fft_df)
-plot(coef_fft_df$amplitude[-1],type="h") #highest amplitude is 23
+plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
 
 undebug(generate_window_fun)
 test_df <- generate_window_fun(vect_z,w_length=23)
 
 l_x_ts <- generate_time_series_windowed(vect_z,w_length=23)
 
+w_coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(l_x_ts[[1]]))
+View(w_coef_fft_df)
+plot(w_coef_fft_df$amplitude[-1],type='h',xlab="harmonic") #plot for harmonics and amplitudes for window of 23
 
-generate_time_series_windowed <- function(x_ts,w_length,w_ovlp=NULL){
-  
-  window_df <- generate_window_fun(x_ts,w_length=w_length,w_ovlp)
-  #make sure it is a time series object first:
-  
-  #i<-1
-  l_x_ts <- lapply(1:nrow(window_df),FUN=function(i){start_date <- date(x_ts[window_df$start[i]]);
-                                                     end_date <- date(x_ts[window_df$end[i]]);
-                                                     w_x_ts <- window(x_ts,start=start_date,end=end_date)})
-  
-  #w_x_ts_df <- do.call(cbind,l_x_ts)
-  return(l_x_ts) 
-}
+### Do a sft later on
+list_coef_fft_df <- lapply(1:length(l_x_ts),
+                           FUN=function(i){extract_harmonic_fft_parameters_run(as.numeric(l_x_ts[[i]]))$amplitude})
 
+coef_sfft_df <- do.call(cbind,list_coef_fft_df)
+
+View(coef_sfft_df)
+plot(coef_sfft_df[2,],type="l") #first harmonic amplitude for this time series
 
 ############################## END OF SCRIPT #############################################
 
