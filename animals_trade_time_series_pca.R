@@ -2,15 +2,16 @@
 ## Performing PCA on animals trade data at SESYNC.
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 08/16/2017
+## DATE MODIFIED: 11/09/2017
 ## AUTHORS: Benoit Parmentier 
-## PROJECT: Animals Trade, Elizabeth Daut
+## PROJECT: Animals Trade and Tree Demography, Elizabeth Daut, J. Zambrano
 ## ISSUE: 
 ## TO DO:
 ##
-## COMMIT: initial pca run for animals trade data
+## COMMIT: changes to pca run for animals trade data
 ##
 ## Links to investigate:
+#http://web.missouri.edu/~huangf/data/mvnotes/Documents/pca_in_r_2.html
 
 ###################################################
 #
@@ -66,7 +67,7 @@ script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 
-function_pca_eof <- "pca_eof_functions_08022017.R" #PARAM 1
+function_pca_eof <- "pca_eof_functions_11092017b.R" #PARAM 1
 source(file.path(script_path,function_pca_eof)) #source all functions used in this script 1.
 
 ############################################################################
@@ -79,6 +80,7 @@ in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
 #ARGS 2
 infile_name <- "vert_sp_gst_original_08162017.csv"
 infile_name_gst_totals <- "total_monthly_gst_averages.csv"
+#infile_name <- "vert_sp_gst_original_08162017.csv"
 
 #ARGS 3
 start_date <- "2004-01-01"
@@ -93,7 +95,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"vert_sp_pca_08022017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"vert_sp_pca_11082017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -127,7 +129,7 @@ if(create_out_dir_param==TRUE){
 ############### PART 1: Imported and time series transformation #####
 ## Step 1: read in the data and generate time stamps
 
-infile_name <- "vert_sp_gst_original_08162017.csv"
+#infile_name <- "vert_sp_gst_original_08162017.csv"
 #infile_name <- file.path(in_dir,infile_name)
 
 data_ts_filename <- import_data_ts(infile_name = infile_name,
@@ -179,7 +181,7 @@ names(df_ts) <- names_col
 
 ##### PART 2: Run different variants of PCA analysis
 
-### 1) Run PCA on genes ncis with original data
+### 1) Run PCA on data with default (corr)
 
 ## By default we use the correlation matrix in T mode,
 #this will be changed later on.
@@ -188,10 +190,10 @@ data_df <- as.data.frame(t(df_ts))
 
 selected_var1 <- names(data_df)[1:163]
 out_suffix_str <- paste0("all_species_countires_analyses1_cor_",out_suffix)
-npc <- 10
-var_labels <- selected_var1
+npc <- 10 #number of components to retain
+var_labels <- selected_var1 #This is a list of dates!!
 
-pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5))
+pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5)) #planes to represent loadings and scores
 
 #debug(run_pca_analysis)  
 pca_obj1 <- run_pca_analysis(data_df,
@@ -200,16 +202,24 @@ pca_obj1 <- run_pca_analysis(data_df,
                              pcs_selected=pcs_selected,
                              time_series_loadings=T,
                              var_labels=var_labels,
-                             mode_val=T,
+                             mode_val="T", # T-mode PCA
                              rotation_opt="none",
                              scores_opt=TRUE,
                              out_dir=".",
                              out_suffix=out_suffix_str )
 
+names(pca_obj1)
+
+names(pca_obj1$principal_pca_obj)
 
 scores_df <- pca_obj1$principal_pca_obj$scores
 
 loadings_df <- pca_obj1$principal_pca_obj$loadings
+
+eigen_values <- pca_obj1$eigen_values
+plot(eigen_values)
+
+
 
 dim(loadings_df)
 
@@ -252,7 +262,7 @@ pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5))
 
 
 #debug(run_pca_analysis)
-matrix_var <- var(data_df)
+matrix_var <- var(data_df) #use variance
 
 pca_obj2 <- run_pca_analysis(data_df,
                              matrix_val=matrix_var,
@@ -260,20 +270,17 @@ pca_obj2 <- run_pca_analysis(data_df,
                              pcs_selected=pcs_selected,
                              time_series_loadings=T,
                              var_labels=var_labels,
-                             mode_val=T,
+                             mode_val="T",
                              rotation_opt="none",
                              scores_opt=FALSE,
                              out_dir=".",
                              out_suffix=out_suffix_str )
 
 ####
-### 3) Run PCA on genes ncis square matrix of data
+### 3) Run PCA on genes square matrix of data
 
 # ## By default we use the correlation matrix in T mode,
 # #this will be changed later on.
-# 
-# #Scale values to ease computation of eigenvalues
-# #genes_ncis_rescaled_df <- genes_ncis_df[,2:1007]*1000
 # 
 # selected_var3 <- names(genes_ncis_rescaled_df)[1:1006]
 # out_suffix_str <- paste0("ncis_analyses3_scaled_square_matrix_",out_suffix)
@@ -308,6 +315,56 @@ pca_obj2 <- run_pca_analysis(data_df,
 # columns_selected <- unlist(index_selected)
 # df_ts_subset <- df_ts[,columns_selected]
 # dim(df_ts_subset)  
+
+selected_var3 <- names(data_df)[1:163]
+out_suffix_str <- paste0("all_species_countries_analyses3_var_",out_suffix)
+
+npc <- 10
+var_labels <- selected_var3
+
+pcs_selected <- list(c(1,2),c(2,3),c(3,4),c(4,5))
+
+
+#debug(run_pca_analysis)
+#matrix_var <- var(data_df) #use variance
+matrix_square <-  t(as.matrix(data_df)) %*% (as.matrix(data_df)) #1 163x163
+
+
+debug(run_pca_analysis)
+pca_obj3 <- run_pca_analysis(data_df,
+                              matrix_val=matrix_square,
+                              npc=npc,
+                              pcs_selected=pcs_selected,
+                              time_series_loadings=F,
+                              var_labels=var_labels, #selected variables
+                              mode_val="T",
+                              rotation_opt="none",
+                              scores_opt=FALSE,
+                              out_dir=".",
+                              out_suffix=out_suffix_str )
+
+principal_pca_obj <- pca_obj3$principal_pca_obj
+
+names(pca_obj3)
+
+names(pca_obj3$principal_pca_obj)
+
+scores_df <- pca_obj3$principal_pca_obj$scores
+
+loadings_df <- pca_obj3$principal_pca_obj$loadings
+
+eigen_values <- pca_obj3$eigen_values
+plot(eigen_values)
+
+dim(loadings_df)
+
+#create ts zoo object
+loadings_df_ts <- zoo(loadings_df,range_dates)
+plot(loadings_df_ts[,])
+
+dim(scores_df)
+names(scores_df)
+
 
 
 ############################## END OF SCRIPT #############################################
