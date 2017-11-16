@@ -475,7 +475,7 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
     #ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
     
-    #x_ts_filtered <- x_ts
+    x_ts_filtered <- x_ts
     for(i in 1:length(selected_df)){
       
       freq_range <- c(selected_df[i]-0.01,selected_df[i]+0.01)
