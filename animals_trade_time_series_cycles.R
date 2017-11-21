@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 11/15/2017
+## DATE MODIFIED: 11/20/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -88,7 +88,7 @@ load_obj <- function(f){
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11082017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11202017.R" #PARAM 1
 
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
@@ -129,12 +129,16 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_11152017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_11202017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
 #ARGS 10
 num_cores <- 2
+
+#ARGS 11
+selected_ts_infile <- "/nfs/bparmentier-data/Data/projects/animals_trade/data/selected_species_with_pattern_112018.csv"
+range_window <- c("2012-01-01","2017-01-01")
 
 ################# START SCRIPT ###############################
 
@@ -196,8 +200,20 @@ range_dates_str <- as.character(range_dates)
 range_dates<- ymd(range_dates_str)
  
 #Transform and scale data
-df_subset <- df_original
-df_ts <- t(df_original[n_col_start_date:ncol(df_subset)]) #transpose the data
+
+## get subset list in a text file?
+
+
+if(is.null(selected_ts_infile)){
+  df_subset <- df_original
+}else{
+  df_selected_ts_names <- read.table(selected_ts_infile,sep=",",header=T,check.names = F,stringsAsFactors = F)
+  #df_subset <- subset(df_original,df_original$sci_name %in% df_selected_ts_names$sci_name)
+  df_subset <- filter(df_original, sci_name %in% df_selected_ts_names$sci_name )
+  df_subset <- filter(df_subset, country %in% df_selected_ts_names$country)
+}
+
+df_ts <- t(df_subset[n_col_start_date:ncol(df_subset)]) #transpose the data
 df_ts <- as.data.frame(df_ts)
 # #dim(df_ts)
 df_ts_scaled <- df_ts[,]*scaling_factor  
@@ -205,6 +221,7 @@ df_ts_scaled <- df_ts[,]*scaling_factor
 #create ts zoo object
 df_ts <- zoo(df_ts_scaled,range_dates)
 class(df_ts)
+dim(df_ts)
 #combine country-species as column names
 names_countries <- as.character(df_subset$country)
 names_species <- as.character(df_subset$sci_name)
@@ -220,42 +237,55 @@ names(df_ts) <- names_col
 
 #functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11072017b.R" #PARAM 1
 #source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
-x_ts1 <- df_ts[,15150]
-x_ts1 <- df_ts[,7798]
 
-plot(df_ts[,15150])
-#View(df_ts[,14000])
-plot(x_ts1,type="l")
+j<- 10
+x_ts1 <- df_ts[,j]
+names(df_ts)
+plot(x_ts1,type="l",main=names(df_ts)[j])
+x_ts1 <- window(x_ts1,start=range_window[1],end=range_window[2])
+plot(x_ts1,type="l",main=names(df_ts)[j])
 
-freq_range <- c(20,50)
+freq_range <- c(11,13)
 ### Use the new function
 test <- filter_freq(x_ts=x_ts1,
                     freq_range=freq_range,
                     w_length=NULL,
                     overlap_w=NULL)
-plot(x_ts1,type="l")
-lines(test,type="l",col="red")
+
+plot(x_ts1,type="l",ylim=c(0,max(x_ts1)))
+lines(as.numeric(test[,1]),type="l",col="red")
 plot(test,type="l",col="red")
 
-test <- filter_freq(x_ts=x_ts1,
-                    freq_range=c(22.999,23.001),
-                    w_length=NULL,
-                    overlap_w=90)
+freq_range <- c(9,14)
 
-plot(x_ts1,type="l")
+undebug(filter_freq)
+test <- filter_freq(x_ts=as.numeric(x_ts1),
+                    freq_range=freq_range,
+                    w_length=NULL,
+                    overlap_w=80)
+test <- filter_freq(x_ts=as.numeric(x_ts1),
+                    freq_range=freq_range,
+                    w_length=NULL,
+                    overlap_w=80)
+plot(test)
+length(test)
+plot(x_ts1)
+plot(test)
+
+y_range <- range(c(test,x_ts1))
+plot(x_ts1,type="l",ylim=y_range)
 lines(test,type="l",col="red")
 
 
-freq_range <- c(20,50)
-
-x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts3,freq_range=freq_range)
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=freq_range)
 
 
-selected_period <- 23 
+selected_period <- 12
 
 undebug(filter_frequency_and_generate_harmonics)
 
-x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts3,
+
+x_ts1_filtered <- filter_frequency_and_generate_harmonics(x_ts1,
                                                          freq_range=NULL,
                                                          selected_period=selected_period,
                                                          variance_threshold=NULL,
@@ -264,6 +294,30 @@ x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts3,
 plot(x_ts3,type="l")
 lines(x_ts_filtered,col="red")
 
+coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(x_ts1[1:60]))
+View(coef_fft_df)
+plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
+
+test<- fft(x_ts1)
+time_val <- 1:length(x_ts1)
+mod <- lm(x_ts1~time_val)
+
+vect_z <- residuals(mod)
+plot(vectz)
+coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
+View(coef_fft_df)
+plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
+
+freq_range <- c(4,6)
+debug(filter_frequency_and_generate_harmonics)
+x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=freq_range)
+plot(x_ts1,ylim=c(-10000,100000))
+
+
+zoo(x_ts1_filtered,
+lines(c(0,x_ts_filtered,0),col="red")
+
+plot(x_ts_filtered)
 
 ############################## END OF SCRIPT #############################################
 
