@@ -2,7 +2,7 @@
 #### General functions to examine and detect periodic cycles such as seasonality.
 ## 
 ## DATE CREATED: 08/17/2017
-## DATE MODIFIED: 11/07/2017
+## DATE MODIFIED: 12/04/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 2
 ## PROJECT: Animals trade
@@ -404,14 +404,16 @@ filter_freq <- function(x_ts,freq_range,w_length=NULL,overlap_w=NULL){
     overlap_w <- 80
   }
   x_ts_filtered <- ffilter(as.matrix(x_ts),f=nt,from=freq_range[1],to=freq_range[2],wl=w_length,ovlp=overlap_w) #this works
-  
-  plot(x_ts,type="l")
+  #x_ts_filtered <- ffilter(as.numeric(x_ts),
+  #                         f=nt,from=freq_range[1],to=freq_range[2],wl=w_length,ovlp=overlap_w) #this works
+  ylim_range <- range(c(x_ts,x_ts_filtered))
+  plot(x_ts,type="l",ylim=ylim_range)
   lines(x_ts_filtered,col="red")
   
   return(x_ts_filtered)
 }
 
-filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selected_period=NULL,variance_threshold=NULL,peak_opt=NULL){
+filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selected_period=NULL,variance_threshold=NULL,rank_freq=NULL,peak_opt=NULL){
   #
   # This function removes/filters specific frequencies out of the original time series.
   # There are several methods implemented:
@@ -475,7 +477,7 @@ filter_frequency_and_generate_harmonics <- function(x_ts,freq_range=NULL,selecte
     #spectrum_analysis_fft_obj <- spectrum_analysis_fft_run(x_ts) 
     #ranked_freq_df <- spectrum_analysis_fft_obj$spectrum_obj$ranked_freq_df
     
-    x_ts_filtered <- x_ts
+    #x_ts_filtered <- x_ts
     for(i in 1:length(selected_df)){
       
       freq_range <- c(selected_df[i]-0.01,selected_df[i]+0.01)
