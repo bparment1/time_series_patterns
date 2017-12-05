@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 11/20/2017
+## DATE MODIFIED: 12/03/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -23,7 +23,7 @@
 ##        - PCA on spectral density matrix to identify and remove important harmonics
 ##        - implement harmonic option
 ##
-## COMMIT: testing window generate on time series
+## COMMIT: using new data
 ##
 ## Links to investigate:
 ##
@@ -87,7 +87,7 @@ load_obj <- function(f){
 ###### Functions used in this script
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
-functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
+functions_processing_data_script <- "processing_data_google_search_time_series_functions_12032017.R" #PARAM 1
 functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11202017.R" #PARAM 1
 
 
@@ -109,7 +109,7 @@ source(file.path(script_path,functions_time_series_cycles_analyses_script)) #sou
 in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
 
 #ARGS 2
-infile_name <- "vert_sp_gst_original_08162017.csv"
+infile_name <- "vert_sp_gst_original_11062017.csv"
 #infile_name_gst_totals <- "total_monthly_gst_averages.csv"
 #use test data:
 #infile_name <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
@@ -117,7 +117,9 @@ infile_name <- "vert_sp_gst_original_08162017.csv"
 ## Use data with known cycles:
 
 #ARGS 3
-start_date <- "2004-01-01"
+#start_date <- "2004-01-01"
+start_date <- "2012-11-01"  #new data starts in November 2012
+
 #ARGS 4
 end_date <- NULL
 #ARGS 5
@@ -129,12 +131,14 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_11202017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_12032017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
-n_col_start_date <- 4
+n_col_start_date <- 3 #4 four old version
 #ARGS 10
-num_cores <- 2
+version <- 2 #new google search format
+
+num_cores <- 2 # number of cores
 
 #ARGS 11
 selected_ts_infile <- "/nfs/bparmentier-data/Data/projects/animals_trade/data/selected_species_with_pattern_112018.csv"
@@ -178,12 +182,12 @@ if(create_out_dir_param==TRUE){
 
 ############### PART 1: Imported and time series transformation #####
 ## Step 1: read in the data and generate time stamps
-
-infile_name <- "vert_sp_gst_original_08162017.csv"
+undebug(import_data_ts)
 data_ts_filename <- import_data_ts(infile_name = infile_name,
+                                   version = version,
                                    in_dir = in_dir,
                                    scaling = scaling,
-                                   n_col_start_date=4,
+                                   n_col_start_date=n_col_start_date,
                                    start_date = start_date,
                                    end_date=NULL,
                                    out_dir = out_dir,
@@ -291,7 +295,7 @@ x_ts1_filtered <- filter_frequency_and_generate_harmonics(x_ts1,
                                                          variance_threshold=NULL,
                                                          peak_opt=NULL)
 
-plot(x_ts3,type="l")
+plot(x_ts1,type="l")
 lines(x_ts_filtered,col="red")
 
 coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(x_ts1[1:60]))
@@ -314,8 +318,8 @@ x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=f
 plot(x_ts1,ylim=c(-10000,100000))
 
 
-zoo(x_ts1_filtered,
-lines(c(0,x_ts_filtered,0),col="red")
+#zoo(x_ts1_filtered,
+#lines(c(0,x_ts_filtered,0),col="red")
 
 plot(x_ts_filtered)
 
