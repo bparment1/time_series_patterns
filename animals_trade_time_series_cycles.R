@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 12/03/2017
+## DATE MODIFIED: 12/11/2017
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -23,7 +23,7 @@
 ##        - PCA on spectral density matrix to identify and remove important harmonics
 ##        - implement harmonic option
 ##
-## COMMIT: using new data
+## COMMIT: fixed issues related to quotation in the last column
 ##
 ## Links to investigate:
 ##
@@ -87,7 +87,7 @@ load_obj <- function(f){
 ###### Functions used in this script
 
 functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
-functions_processing_data_script <- "processing_data_google_search_time_series_functions_12032017.R" #PARAM 1
+functions_processing_data_script <- "processing_data_google_search_time_series_functions_12112017.R" #PARAM 1
 functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11202017.R" #PARAM 1
 
 
@@ -131,17 +131,18 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_12032017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_12112017" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 3 #4 four old version
 #ARGS 10
-version <- 2 #new google search format
+version <- 2 #new google search format, there is no gid
 
 num_cores <- 2 # number of cores
 
 #ARGS 11
-selected_ts_infile <- "/nfs/bparmentier-data/Data/projects/animals_trade/data/selected_species_with_pattern_112018.csv"
+selected_ts_infile <- NULL
+#selected_ts_infile <- "/nfs/bparmentier-data/Data/projects/animals_trade/data/selected_species_with_pattern_112018.csv"
 range_window <- c("2012-01-01","2017-01-01")
 
 ################# START SCRIPT ###############################
@@ -182,7 +183,8 @@ if(create_out_dir_param==TRUE){
 
 ############### PART 1: Imported and time series transformation #####
 ## Step 1: read in the data and generate time stamps
-undebug(import_data_ts)
+
+#undebug(import_data_ts)
 data_ts_filename <- import_data_ts(infile_name = infile_name,
                                    version = version,
                                    in_dir = in_dir,
@@ -206,7 +208,6 @@ range_dates<- ymd(range_dates_str)
 #Transform and scale data
 
 ## get subset list in a text file?
-
 
 if(is.null(selected_ts_infile)){
   df_subset <- df_original
@@ -262,7 +263,7 @@ plot(test,type="l",col="red")
 
 freq_range <- c(9,14)
 
-undebug(filter_freq)
+#undebug(filter_freq)
 test <- filter_freq(x_ts=as.numeric(x_ts1),
                     freq_range=freq_range,
                     w_length=NULL,
@@ -286,7 +287,7 @@ x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=f
 
 selected_period <- 12
 
-undebug(filter_frequency_and_generate_harmonics)
+#undebug(filter_frequency_and_generate_harmonics)
 
 
 x_ts1_filtered <- filter_frequency_and_generate_harmonics(x_ts1,
@@ -298,30 +299,30 @@ x_ts1_filtered <- filter_frequency_and_generate_harmonics(x_ts1,
 plot(x_ts1,type="l")
 lines(x_ts_filtered,col="red")
 
-coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(x_ts1[1:60]))
-View(coef_fft_df)
-plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
+#coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(x_ts1[1:60]))
+#View(coef_fft_df)
+#plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
 
-test<- fft(x_ts1)
-time_val <- 1:length(x_ts1)
-mod <- lm(x_ts1~time_val)
+#test<- fft(x_ts1)
+#time_val <- 1:length(x_ts1)
+#mod <- lm(x_ts1~time_val)
 
-vect_z <- residuals(mod)
-plot(vectz)
-coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
-View(coef_fft_df)
-plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
+#vect_z <- residuals(mod)
+#plot(vectz)
+#coef_fft_df <- extract_harmonic_fft_parameters_run(as.numeric(vect_z))
+#View(coef_fft_df)
+#plot(coef_fft_df$amplitude[-1],type="h",xlab="harmonic") #highest amplitude is 23
 
-freq_range <- c(4,6)
-debug(filter_frequency_and_generate_harmonics)
-x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=freq_range)
-plot(x_ts1,ylim=c(-10000,100000))
+#freq_range <- c(4,6)
+#debug(filter_frequency_and_generate_harmonics)
+#x_ts_filtered <- filter_frequency_and_generate_harmonics(x_ts=x_ts1,freq_range=freq_range)
+#plot(x_ts1,ylim=c(-10000,100000))
 
 
 #zoo(x_ts1_filtered,
 #lines(c(0,x_ts_filtered,0),col="red")
 
-plot(x_ts_filtered)
+#plot(x_ts_filtered)
 
 ############################## END OF SCRIPT #############################################
 
