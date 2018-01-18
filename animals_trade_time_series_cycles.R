@@ -13,15 +13,16 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 12/11/2017
+## DATE MODIFIED: 01/16/2018
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
+ 
 ## TO DO: - add windowed/Short-Term Fourier transform option
 ##        - add wavelet option
 ##        - lag analyis with PCA to remove seasonality?
 ##        - PCA on spectral density matrix to identify and remove important harmonics
-##        - implement harmonic option
+##        - implement harmonic option 
 ##
 ## COMMIT: fixed issues related to quotation in the last column
 ##
@@ -106,10 +107,12 @@ source(file.path(script_path,functions_time_series_cycles_analyses_script)) #sou
 
 #ARGS 1
 #in_dir <- "C:/Users/edaut/Documents/gst_ts"
-in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
+#in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
+in_dir <- "/nfs/edaut-data/gst_ts"
 
 #ARGS 2
-infile_name <- "vert_sp_gst_original_11062017.csv"
+#infile_name <- "vert_sp_gst_original_11062017.csv"
+infile_name <- "vert_sp_gst_original_01062018.csv"
 #infile_name_gst_totals <- "total_monthly_gst_averages.csv"
 #use test data:
 #infile_name <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
@@ -118,7 +121,7 @@ infile_name <- "vert_sp_gst_original_11062017.csv"
 
 #ARGS 3
 #start_date <- "2004-01-01"
-start_date <- "2012-11-01"  #new data starts in November 2012
+start_date <- "2011-01-01"  #new data starts in November 2012
 
 #ARGS 4
 end_date <- NULL
@@ -131,7 +134,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_12112017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_01162018" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 3 #4 four old version
@@ -143,7 +146,7 @@ num_cores <- 2 # number of cores
 #ARGS 11
 selected_ts_infile <- NULL
 #selected_ts_infile <- "/nfs/bparmentier-data/Data/projects/animals_trade/data/selected_species_with_pattern_112018.csv"
-range_window <- c("2012-01-01","2017-01-01")
+range_window <- c("2011-01-01","2017-12-01")
 
 ################# START SCRIPT ###############################
 
@@ -237,8 +240,34 @@ names(df_ts) <- names_col
 
 #http://www.di.fc.ul.pt/~jpn/r/fourier/fourier.html
 
+##### SELECT SPECIFIC SPECIES AS EXAMPLE ###########
 
+selected_species <- "USA_Pyrrhura_molinae"
+names(df_ts)
+
+df_ts_subset <- subset(df_ts,select=selected_species)
+#df_ts_subset <- select(df_ts,selected_species)
+#df_ts_subset <- select(as.data.frame(df_ts),selected_species)
+
+dim(df_ts_subset)
+names(df_ts_subset)
+View(df_ts_subset)
 ### Now let's remove the the most important components
+plot(df_ts_subset)
+
+
+freq_range <- c(11,13)
+### Use the new function
+test <- filter_freq(x_ts=df_ts_subset,
+                    freq_range=freq_range,
+                    w_length=NULL,
+                    overlap_w=80)
+
+plot(df_ts_subset,ylim=c(0,100))
+lines(test,col="red")
+plot(test,col="red")
+dim(test)
+dim(df_ts_subset)
 
 #functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11072017b.R" #PARAM 1
 #source(file.path(script_path,functions_time_series_cycles_analyses_script)) #source all functions used in this script 1.
