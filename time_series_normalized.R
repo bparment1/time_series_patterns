@@ -2,7 +2,7 @@
 ##
 ## 
 ## DATE CREATED: 05/15/2017
-## DATE MODIFIED: 07/17/2017
+## DATE MODIFIED: 08/01/2017
 ## AUTHORS: Benoit Parmentier and Elizabeth Daut
 ## Version: 1
 ## PROJECT: Animals trade
@@ -25,10 +25,10 @@ library(lubridate)
 
 ###### Functions used in this script
 
-functions_time_series_analyses_script <- "time_series_functions_07272017_rolling_right.R" #PARAM 1
+functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
-#script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
+#script_path <- "/nfs/edaut-data/Time Series MARSS" #path to script #PARAM 2
+script_path <- "/nfs/bparmentier-data/projects/animals_trade/scripts" #path to script #PARAM 2
 source(file.path(script_path,functions_processing_data_script)) #source all functions used in this script 1.
 source(file.path(script_path,functions_time_series_analyses_script)) #source all functions used in this script 1.
 
@@ -36,9 +36,11 @@ source(file.path(script_path,functions_time_series_analyses_script)) #source all
 #####  Parameters and argument set up ###########
 
 #ARGS 1
-in_dir <- "C:/Users/edaut/Documents/gst_ts"
+#in_dir <- "/nfs/bparmentier-data/"
+in_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/data"
 #ARGS 2
 infile_name <- "hi_gst60k_species_concatenated2.csv" 
+#infile_name <- "hi_gst60k_species_normalized_csv2.csv" 
 #ARGS 3
 start_date <- "2011-01-01"
 #ARGS 4
@@ -47,12 +49,12 @@ end_date <- NULL
 #scaling_factor <- 100000 #MODIFY THE SCALING FACTOR - FOR NORMALIZED DATA SHOULD BE 10,000 AT LEAST
 scaling_factor <- 1000 
 #ARGS 6
-out_dir <- NULL #"C:/Users/edaut/Documents/gst_ts/outputs" #parent directory where the new output directory is placed
-#out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
+#out_dir <- "/nfs/edaut-data/Time Series MARSS/outputs" #parent directory where the new output directory is placed
+out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <- "60k_ts_analyses_07202017_norm"
+out_suffix <- "60k_time_series_analyses_08012017_norm"
 #ARGS_9
 n_col_start_date <- 4
 #ARGS 10
@@ -61,7 +63,7 @@ num_cores <- 8
 ################# START SCRIPT ###############################
 
 
-### PART I. READ AND PREPARE DATA #######
+### PART I READ AND PREPARE DATA #######
 #set up the working directory
 #Create output directory
 
@@ -69,6 +71,7 @@ if(is.null(out_dir)){
   out_dir <- in_dir #output will be created in the input dir
   
 }
+#out_dir <- in_dir #output will be created in the input dir
 
 out_suffix_s <- out_suffix #can modify name of output suffix
 if(create_out_dir_param==TRUE){
@@ -101,8 +104,8 @@ df_norm <- df_original_norm
 dim(df_norm)
 
 
-#remove "ALL" country category 
-#df_norm <- filter(df_norm, !(country == "All"))  
+############## RUN WITHOUT "ALL" CATEGORY BECAUSE WANT COUNTRY-SPECIFIC RESULTS AND "ALL" IS DOMINATING##################
+#df_norm <- filter(df_norm, !(country == "All")) # All have already been removed from in imported CSV     
 
 
 ########### NEED TO FILTER TO KEEP JUST THOSE ROWS WHERE THE LAST VALUE IS GREATER THAN THE SECOND TO LAST VALUE ##################
@@ -111,8 +114,6 @@ selected_last <- df_norm[,c("2017-05-01")] > df_norm[,c("2017-04-01")]  #can cha
 #sum(selected_last)
 df_last <- df_norm[selected_last,]
 df_norm <- df_last
-dim(df_norm)
-
 #write.csv(df, "df_check_last_values.csv", row.names = FALSE) YES - last month values are greater then previous month
 
 #View(df_dat_animals)
@@ -168,9 +169,6 @@ dim(df_ts_subset)
 
 
 
-
-
-
 #########################################
 # need to get list of co_sp column names to use for the graphing csv and script
 
@@ -205,7 +203,7 @@ plot(df_ts[,"USA_Aegithina tiphia"])  ###################### script out of bound
 
 ## Moving average, smoothing and rollingmean
 # #an example of smoothing from zoo
- rollmean_ts <- rollmean(df_ts_subset[,108], 6) #can change the length #108 is seasonal
+rollmean_ts <- rollmean(df_ts_subset[,108], 6) #can change the length #108 is seasonal
 # 
 # rollmean_ts <- rollmean(df_ts_subset[,"Malaysia_Balaenoptera_musculus"], 12) #HOW TO DO BY SP_CO
 # rollmean_ts <- rollmean(df_ts_subset[,], 12) #HOW TO RUN FOR EACH ROW
@@ -432,24 +430,6 @@ View(df_ts_removed)
 dim(df_ts_removed)
 class(df_ts_removed)
 
-
-
-# df_ts_removed[,1]
-# 
-# range1 <- c("2011-01-01","2016-11-01") #reference  full ts
-# range2 <- c("2016-12-01","2017-05-01") #current 6 months
-# 
-# 
-# df_ts_ref <- window(df_ts_removed,start=range1[1],end=range1[2]) 
-# df_ts_current <- window(df_ts_removed,start=range2[1],end=range2[2])  
-# df_ts_removed_ratio <- mean(df_ts_current)/mean(df_ts_ref)
-# 
-# 
-# df_ts_removed_roll <- rollmean(df_ts_removed,k=12,align="right")
-#      
-# plot(df_ts_removed_roll[,1]) 
-
-
 #####################################
 ##### Add code to compute de ratio: 07/24
 df_ts_removed[,1]
@@ -462,30 +442,24 @@ df_ts_removed_current <- window(df_ts_removed,start=range2[1],end=range2[2])
 
 plot(df_ts_removed[,1])
 
-df_ts_removed_ratio <- df_ts_removed
-
 df_ts_removed_ratio[,1] <- mean(df_ts_removed_current[,1])/mean(df_ts_removed_ref[,1])
-class(df_ts_removed_current)
-class(df_ts_removed_ref)
 
 
-mean_ratio <- lapply(1:ncol(df_w_ts_ref),
-                     FUN=function(i){  mean_ratio_val <- mean(df_w_ts_current[,i])/mean(df_w_ts_ref[,i])}
-)
-mean_ratio <- unlist(mean_ratio)
 
 
+lapply(1:ncol(df_w_ts_ref),
+       FUN=function(i){  df_ts_ratio[,i] <- mean(df_w_ts_current[,i])/mean(df_w_ts_removed[,i])})
 
 
 ### New updated function 07/24/2017
 test_ratio <- trend_pattern_detection(df_ts_removed,
-                                      range1=NULL,
-                                      range2=NULL,
-                                      roll_window=12,
-                                      align_val="right",
-                                      out_suffix="",
-                                      out_dir=".")
-
+                        range1=NULL,
+                        range2=NULL,
+                        roll_window=12,
+                        align_val="right",
+                        out_suffix="",
+                        out_dir=".")
+  
 
 
 df_ts_removed_roll <- rollmean(df_ts_removed,k=12,align="right")
@@ -500,18 +474,10 @@ plot(df_ts_removed_ratio[,1]) #
 
 #df_ts_removed
 
-
-
-
-
-
 # FOR GRAPHS
-# df_ts_removed_stl <- as.data.frame(df_ts_removed)
-# class(df_ts_removed_stl)
-# write.csv(df_ts_removed_stl, "df_ts_removed_stl.csv", row.names = FALSE)
-
-
-
+df_ts_removed_stl <- as.data.frame(df_ts_removed)
+class(df_ts_removed_stl)
+write.csv(df_ts_removed_stl, "df_ts_removed_stl.csv", row.names = FALSE)
 
 # df_ts_removed_decom <- as.data.frame(df_ts_removed)
 # class(df_ts_removed_decom)
@@ -579,8 +545,8 @@ out_filename <- paste0("theil_sen_trend_detection_test_decom_full",out_suffix,".
 write.csv(test_decom,out_filename,row.names = F)
 
 
-range1 <- c("2015-04-01","2016-10-01") #reference  # total 2 years; 6month current
-range2 <- c("2016-11-01","2017-05-01") #current
+range1 <- c("2015-04-01","2016-11-01") #reference  # total 2 years; 6month current
+range2 <- c("2016-12-01","2017-05-01") #current
 # TEST (No Rolling average)
 test_decom_a <- trend_pattern_detection_decom(df_ts_decom,range1=range1,range2=range2,out_suffix="",out_dir=".")
 View(test_decom_a)
@@ -625,17 +591,6 @@ write.csv(test_decom4,out_filename,row.names = F)
 
 ######### try Theil-sen on STL data ##############
 
-test_stl_roll_right <- trend_pattern_detection(df_ts_removed,
-                                      range1=NULL,
-                                      range2=NULL,
-                                      roll_window=3,
-                                      #align_val="right",
-                                      out_suffix="",
-                                      out_dir=".")
-
-View(test_stl_roll_right)
-
-
 # TEST (No Rolling average with default dates (full time period))
 test_stl <- trend_pattern_detection_stl(df_ts_removed,range1=NULL,range2=NULL,out_suffix="",out_dir=".")
 View(test_stl)
@@ -647,84 +602,50 @@ write.csv(test_stl,out_filename,row.names = F)
 
 # PLOT SPECIFIC COUNTRY-SPECIES COMBOS
 
-plot(df_ts_subset$Indonesia_Bubo_scandiacus) #normalized-original
-lines(df_ts_removed$Indonesia_Bubo_scandiacus,col="red") #de-seasoned
+plot(df_ts_subset$USA_Agelasticus_thilius) #normalized-original
+lines(df_ts_removed$USA_Agelasticus_thilius,col="red") #de-seasoned
 
 ####################################################
 
 
 
-range1 <- c("2011-01-01","2016-09-01") #reference  # total 2 years; 6month current
-range2 <- c("2016-10-01","2017-05-01") #current
 
-range1 <- c("2015-09-01","2016-10-01") #reference  #5months# 
-range2 <- c("2016-11-01","2017-05-01") #current #5months
-
+range1 <- c("2015-04-01","2016-11-01") #reference  # total 2 years; 6month current
+range2 <- c("2016-12-01","2017-05-01") #current
 # TEST (No Rolling average)
-test_stl.4 <- trend_pattern_detection_stl(df_ts_removed,range1=range1,range2=range2,out_suffix="",out_dir=".")
-View(test_stl.4)
+test_stl_a <- trend_pattern_detection_stl(df_ts_removed,range1=range1,range2=range2,out_suffix="",out_dir=".")
+View(test_stl_a)
 out_filename <- paste0("theil_sen_trend_detection_test_stl_a_",out_suffix,".csv")
 write.csv(test_stl_a,out_filename,row.names = F)
 
 
-test_stl_roll_right <- trend_pattern_detection(df_ts_removed,
-                                               range1=range1,
-                                               range2=range2,
-                                               roll_window=3,
-                                               #align_val="right",
-                                               out_suffix="",
-                                               out_dir=".")
-
-View(test_stl_roll_right)
-
-
-
-
-
-
 # TEST_1 (Rolling average with default dates: REF = "2011-01-01","2016-12-01" AND CURRENT = "2017-01-01","2017-05-01"
-test_stl.4a <- trend_pattern_detection_stl(df_ts_removed,range1=NULL,roll_window = 3,range2=NULL,out_suffix="",out_dir=".")
+test_stl.2 <- trend_pattern_detection_stl(df_ts_removed,range1=NULL,roll_window = 4,range2=NULL,out_suffix="",out_dir=".")
 # does not work when roll_window >7 with current time period = 5 months b/c of the way rolling shortens the ts
-View(test_stl.4a)
+View(test_stl.2)
 out_filename <- paste0("theil_sen_trend_detection_test_stl2_",out_suffix,".csv")
 write.csv(test_stl.2,out_filename,row.names = F)
 
 
 #range1 <- c("2013-12-01","2016-12-01") #reference  #MIDWAY - 1/2 OF TIME OF TIME SERIES EXCLUDING LAST 5 TEST MONTHS
-#range1 <- c("2011-01-01","2016-09-01") #reference  #FULL - time period
-range1 <- c("2015-06-01","2016-12-01") #reference  # total 2 years; 5month current
+range1 <- c("2011-01-01","2016-07-01") #reference  #FULL - time period
+# range1 <- c("2015-06-01","2016-12-01") #reference  # total 2 years; 5month current
 # range2 <- c("2017-01-01","2017-05-01") #current
 #range1 <- c("2015-04-01","2016-09-01") #reference  # total 2 years; 6month current
 #range2 <- c("2016-12-01","2017-05-01") #current
-range2 <- c("2016-10-01","2017-05-01") #current
-
-range1 <- c("2015-09-01","2016-10-01") #reference  #5months# 
-range2 <- c("2016-11-01","2017-05-01") #current #5months
-
-
-
+range2 <- c("2016-08-01","2017-05-01") #current
 
 # TEST_2  
-test_stl.5r <- trend_pattern_detection_stl(df_ts_removed,range1=range1,roll_window =4,range2=range2,out_suffix="",out_dir=".")
-View(test_stl.5r)
+test_stl.8r <- trend_pattern_detection_stl(df_ts_removed,range1=range1,roll_window =5,range2=range2,out_suffix="",out_dir=".")
+View(test_stl.8r)
 out_filename <- paste0("theil_sen_trend_detection_test_stl.3r_",out_suffix,".csv")
 write.csv(test_stl.3r,out_filename,row.names = F)
 
 
 # PLOT SPECIFIC COUNTRY-SPECIES COMBOS
 
-
-plot(df_ts_subset$USA_Acanthonus_armatus) #normalized-original
-lines(df_ts_removed$USA_Acanthonus_armatus,col="red") #de-seasoned
-
-
-
-# # TRYING TO PLOT ROLLED DATA
-# rollmean_ts <- rollmean(df_ts_removed_stl[,108], 12) #can change the length #108 is seasonal
-# par(mfrow=c(1,1))
-# plot(rollmean_ts)
-# lines((df_ts_removed_stl[,108]))
-# 
+plot(df_ts_subset$USA_Bunolagus_monticularis) #normalized-original
+lines(df_ts_removed$USA_Bunolagus_monticularis,col="red") #de-seasoned
 
 
 
