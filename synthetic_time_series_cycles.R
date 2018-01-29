@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 11/08/2017
+## DATE MODIFIED: 01/29/2018
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -88,7 +88,7 @@ load_obj <- function(f){
 
 #functions_time_series_analyses_script <- "time_series_functions_08012017.R" #PARAM 1
 #functions_processing_data_script <- "processing_data_google_search_time_series_functions_07202017.R" #PARAM 1
-functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11082017.R" #PARAM 1
+functions_time_series_cycles_analyses_script <- "time_series_cycles_analyses_functions_11202017.R" #PARAM 1
 
 #script_path <- "C:/Users/edaut/Documents/gst_ts" #path to script #PARAM 2
 script_path <- "/nfs/bparmentier-data/Data/projects/animals_trade/scripts" #path to script #PARAM 2
@@ -128,7 +128,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 7
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 8
-out_suffix <-"cycles_test_11062017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"cycles_test_01292018" #output suffix for the files and ouptut folder #param 12
 
 #ARGS_9
 n_col_start_date <- 4
@@ -161,41 +161,41 @@ if(create_out_dir_param==TRUE){
 #set up the working directory
 #Create output directory
 
-infile_name <- file.path(in_dir,infile_name)
-data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
-names(data_df)
-dim(data_df)
-data_df <- data_df[,1:230]
-
-#?na.omit
-data_df <- na.omit(data_df)
-dim(data_df)
-
-df_ts <- (t(data_df))
-dim(df_ts)
-date_range <- c("2001.01.01","2010.12.31") #PARAM 15, NDVI Katrina
-range_dates <- generate_dates_by_step(date_range[1],date_range[2],16)$dates #NDVI Katrina
-class(range_dates)
-
-df_ts <- zoo(df_ts,range_dates)
-#
-(df_ts[1:10,])
-
-plot(df_ts[,1])
-dim(df_ts)
-
-### 
-nt <- 230
-
-#??fft
-vect_z <- df_ts[,1]
-test <- fft(vect_z)
-plot(as.complex(test),type="p")
-plot(Real(test))
-plot(Im(test))
-plot(vect_z)
-class(test) # zoo object
-### See part 3 for more in depth analyses and removal of frequencies for 
+# infile_name <- file.path(in_dir,infile_name)
+# data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
+# names(data_df)
+# dim(data_df)
+# data_df <- data_df[,1:230]
+# 
+# #?na.omit
+# data_df <- na.omit(data_df)
+# dim(data_df)
+# 
+# df_ts <- (t(data_df))
+# dim(df_ts)
+# date_range <- c("2001.01.01","2010.12.31") #PARAM 15, NDVI Katrina
+# range_dates <- generate_dates_by_step(date_range[1],date_range[2],16)$dates #NDVI Katrina
+# class(range_dates)
+# 
+# df_ts <- zoo(df_ts,range_dates)
+# #
+# (df_ts[1:10,])
+# 
+# plot(df_ts[,1])
+# dim(df_ts)
+# 
+# ### 
+# nt <- 230
+# 
+# #??fft
+# vect_z <- df_ts[,1]
+# test <- fft(vect_z)
+# plot(as.complex(test),type="p")
+# plot(Real(test))
+# plot(Im(test))
+# plot(vect_z)
+# class(test) # zoo object
+# ### See part 3 for more in depth analyses and removal of frequencies for 
 
 ######################################################################
 ################ PART 2: Generate Synthetic Data Time Series and Run tests ##########
@@ -236,10 +236,15 @@ x_ts2_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600
 x_ts3_8000 <- ts_synthetic_8000$t_period_800 + ts_synthetic_8000$t_period_1600 + ts_synthetic_8000$norm
 x_ts4_8000 <- ts_synthetic_8000$t_period_800/2 + ts_synthetic_8000$t_period_1600
 
+plot(x_ts1_8000)
+
 plot(x_ts2_8000,type="l") #peaks for period 1600 and 800
+plot(x_ts3_8000,type="l") #peaks for period 1600 and 800
+
 spectrum(x_ts2_8000)
 
 periodogram(x_ts2_8000)
+periodogram(x_ts2_8000,xlim=c(0,0.05))
 
 ## Test to filter out periods/frequencies
 ## Use default filter window: Hanning
@@ -250,7 +255,7 @@ lines(x_ts_filtered) #mostly filtered out!!!
 
 x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=100,to=2000)
 #test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
-
+aqqswww11
 plot(x_ts3_8000,col="red")
 lines(x_ts_filtered) #mostly filtered out!!!
 periodogram(x_ts_filtered) #still peak but if with noise might not appear
