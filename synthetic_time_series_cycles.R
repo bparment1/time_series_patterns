@@ -13,7 +13,7 @@
 ## 
 ## 
 ## DATE CREATED: 06/15/2017
-## DATE MODIFIED: 01/29/2018
+## DATE MODIFIED: 02/02/2018
 ## AUTHORS: Benoit Parmentier 
 ## PROJECT: Animals Trade, Elizabeth Daut
 ## ISSUE: 
@@ -250,12 +250,13 @@ periodogram(x_ts2_8000,xlim=c(0,0.05))
 ## Use default filter window: Hanning
 #ffilter(as.matrix(x_ts2),f=230,from=40,to=45)
 x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=0.18,to=0.2)
+
 plot(x_ts3_8000,col="red")
 lines(x_ts_filtered) #mostly filtered out!!!
 
 x_ts_filtered <- ffilter(as.matrix(x_ts3_8000),f=8000,from=100,to=2000)
 #test<- ffilter(as.matrix(x_ts2),f=8000,from=0.18,to=22)
-aqqswww11
+
 plot(x_ts3_8000,col="red")
 lines(x_ts_filtered) #mostly filtered out!!!
 periodogram(x_ts_filtered) #still peak but if with noise might not appear
@@ -284,7 +285,7 @@ spectrum(x_ts_filtered,xlim=c(0,0.2))
 
 
 #type_spatialstructure[5] <- "periodic_x1"
-amp<- c(2,1) #amplitude in this case
+amp <- c(2,1) #amplitude in this case
 b<- 0
 T<- c(23,46) #annual cycle of 23
 
@@ -347,11 +348,12 @@ mesh_val<- meshgrid(Real(test2),Im(test2))
 plot(Real(test2),type="l")
 plot(Im(test2),type="l")
 
-#x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
+x_ts1 <- test$t_period_23 + test$trend + test$unif + test$norm
 
 plot(ts_synthetic$t_period_23,type="l")
 plot(ts_synthetic$trend,type="l")
 plot(ts_synthetic$unif)
+plot(x_ts1)
 
 #Error in seq.default(1, n - wl, wl - (ovlp * wl/100)) : 
 #  wrong sign in 'by' argument
@@ -436,7 +438,7 @@ plot(mod$residuals,type="l")
 x_ts1_lm <- mod$residuals
 
 periodogram(x_ts1) #need to remove trends or will impact low frequencies
-periodogram(x_ts1_lm)
+periodogram(x_ts1_lm) #plotting based on the residuals
 periodogram(x_ts2)
 
 spec_obj <- spectrum(x_ts1,fast=F)
@@ -465,7 +467,7 @@ plot(x_ts1_diff,type="l") #loosing one data point, also note that this affected 
 #undebug(harmonic_analysis_fft_run)
 
 ### find harmonic cycles
-undebug(spectrum_analysis_fft_run)
+#undebug(spectrum_analysis_fft_run)
 spectrum_analysis_fft_obj_diff <- spectrum_analysis_fft_run(x_ts1_diff)
 spectrum_analysis_fft_obj_lm <- spectrum_analysis_fft_run(x_ts1_lm)
 
