@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 04/17/2019
+## DATE MODIFIED: 04/22 /2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managin Hurricanes
@@ -89,5 +89,26 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   return(harmonic_results_obj)
 }
 
+split_sequence <- function(x,n,overlap=0){
+  if(overlap==0){
+    n_splits <- floor(length(x)/n)
+    #n_modified <- n - overlap
+    intervals_val <- seq(1,to=length(x),by=n)
+    intervals_val <- c(intervals_val,length(x))
+    n_splits
+    list_intervals <- lapply(2:length(intervals_val),function(i){data.frame(start=intervals_val[[i-1]],end=intervals_val[[i]])})
+    intervals_df <- do.call(rbind,list_intervals)
+    intervals_df
+    #lapply(2:length(intervals_val),function(i){intervals_val[[i]]-overlap})
+    #length(intervals_val)
+    
+  }
+  ##implement the other option later
+  
+  ## now split:
+  test <- lapply(1:nrow(intervals_df),function(i){x[intervals_df[i,]$start:intervals_df[i,]$end-1]})
+  
+  return(test)
+}
 ################################### End of script #######################################
 
