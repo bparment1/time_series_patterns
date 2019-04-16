@@ -32,7 +32,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <-"sta_12112017" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"example_ts_04162019" #output suffix for the files and ouptut folder #param 12
 #ARGS 8
 num_cores <- 2 # number of cores
 
@@ -43,7 +43,6 @@ num_cores <- 2 # number of cores
 ######### PART 0: Set up the output dir ################
 
 options(scipen=999)
-
 
 if(is.null(out_dir)){
   out_dir <- in_dir #output will be created in the input dir
@@ -64,28 +63,64 @@ if(create_out_dir_param==TRUE){
 #set up the working directory
 #Create output directory
 
+infile_name <- file.path(in_dir,infile_name)
+data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
+names(data_df)
 #start_date <- "2004-01-01"
 start_date <- "2012-11-01"  #new data starts in November 2012
 
-
 #y ~ A0 + b1 cos(x) + b2* sin(x)
-
 #y ~ b0 + b1*x1 + b2*x2
 
+y_all <- as.numeric(data_df[1400,1:230])
+y_all
+
+plot(y_all)
+plot(y_all[1:23])
+y <- y_all[1:23]
 n <- length(y)
 
 #first harmonic
 
-p=1 #from 1 to n/2
+p = 1 #from 1 to n/2
 
 omega= 2*pi*p/n
 
 t <- 1:n
 cos_val =cos(omega*t)
 sin_val =sin(omega*t)
+plot(cos_val)
+plot(sin_val)
 
 in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
 mod <- lm(y~cos_val + sin_val,data=in_df)
+summary(mod)
+
+plot(y)
+lines(mod$fitted.values)
+
+#### This is synthetic value
+
+x <- seq(1, 23)
+p <-1
+n=23
+omega= 2*pi*p/n
+
+y <- 2*cos(omega*x) + rnorm(23, sd=0.2)
+# y_clean <- sin(2*x + 5)
+plot(y)
+
+t <- 1:n
+cos_val =cos(omega*t)
+sin_val =sin(omega*t)
+plot(cos_val)
+plot(sin_val)
+
+in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
+mod <- lm(y~cos_val + sin_val,data=in_df)
+summary(mod)
+plot(y)
+lines(mod$fitted.values)
 
 
 ################################### End of script #######################################
