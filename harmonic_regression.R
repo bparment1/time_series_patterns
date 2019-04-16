@@ -1,12 +1,13 @@
 ############################## Harmonic regression #################### 
 ##
-## Performing harmonic regression time series data to evaluate amplitudes and phases.
+## Research Support.
+## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
 ## DATE MODIFIED: 04/09/2019
-## AUTHORS: Benoit Parmeniter
+## AUTHORS: Benoit Parmentier
 ## Version: 1
-## PROJECT: Time series analysis
+## PROJECT: Time series analysis Managin Hurricanes
 ## ISSUE: 
 ## TO DO:
 ##
@@ -80,6 +81,7 @@ plot(y_all[1:23])
 y <- y_all[1:23]
 n <- length(y)
 
+
 #first harmonic
 
 p = 1 #from 1 to n/2
@@ -99,6 +101,22 @@ summary(mod)
 plot(y)
 lines(mod$fitted.values)
 
+plot(mod$fitted.values,ylim=c(3000,10000))
+points(y,pch=2)
+
+mod$coefficients[2]
+plot(y)
+
+#amplitude
+A = atan(-mod$coefficients[3]/mod$coefficients[2])
+
+A
+
+### FFT, does not work with missing values
+barplot(Im(fft(y)))
+plot(Re(fft(y)))
+
+####################
 #### This is synthetic value
 
 x <- seq(1, 23)
@@ -122,6 +140,11 @@ summary(mod)
 plot(y)
 lines(mod$fitted.values)
 
+barplot(Im(fft(y)))
+plot(Re(fft(y)))
+
+#### generate function
+#### split in annual windows
 
 ################################### End of script #######################################
 
