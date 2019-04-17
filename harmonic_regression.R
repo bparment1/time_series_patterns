@@ -95,7 +95,42 @@ plot(y_all[1:24])
 y <- y_all[1:24]
 n <- length(y)
 
-
+harmonic_regression<- function(y,n,harmonic_val){
+  
+  ## Default to two first harmonic:
+  if(is.null(harmonic_val){
+    p <- 1:2
+  }
+  #harmonic_val = 1 # pr from 1 to n/2
+  
+  #n<-24
+  
+  omega = lappply(p,function(p){2*pi*p/n})
+  
+  t <- 1:n
+  cos_val =cos(omega*t)
+  sin_val =sin(omega*t)
+  plot(cos_val)
+  plot(sin_val)
+  
+  in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
+  mod <- lm(y~cos_val + sin_val,data=in_df)
+  summary(mod)
+  
+  plot(y)
+  lines(mod$fitted.values)
+  points(mod$fitted.values)
+  
+  plot(mod$fitted.values,ylim=c(3000,10000))
+  points(y,pch=2)
+  
+  plot(mod$fitted.values,ylim=c(4000,8000))
+  points(y,pch=2)
+  
+  mod$coefficients[2]
+  plot(y)
+  return()
+}
 #first harmonic
 
 p = 1 #from 1 to n/2
