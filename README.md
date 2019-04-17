@@ -9,6 +9,7 @@ This includes:
 - differencing
 - moving averages/kernels
 2) identification and removal of periodic cycles
+- harmonic regression
 - fast fourier transform spectrum
 - fast fourier transform periodogram
 - multitaper methods
