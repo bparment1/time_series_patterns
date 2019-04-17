@@ -158,9 +158,15 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
          mod_obj=mod_obj,
          figure=figure)
   
-  l_df <- lapply(l_harmonic_obj,function(x){x$harmonic_df}
+  l_df <- lapply(l_harmonic_obj,function(x){x$harmonic_df})
   harmonic_df <- do.call(rbind,l_df)
-  return()
+  rownames(harmonic_df) <- NULL
+  
+  #View(harmonic_df)
+  harmonic_results_obj  <- list(harmonic_df,l_harmonic_obj)
+  names(harmonic_results_obj) <- c("harmonic_df","l_harmonic_obj")
+  
+  return(harmonic_results_obj)
 }
 
 #first harmonic
