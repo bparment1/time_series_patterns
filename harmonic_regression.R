@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 04/09/2019
+## DATE MODIFIED: 04/17/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managin Hurricanes
@@ -13,6 +13,21 @@
 ##
 ## COMMIT: exploration of estimation
 ##
+
+###### Functions used in this script and sourced from other files
+
+create_dir_fun <- function(outDir,out_suffix=NULL){
+  #if out_suffix is not null then append out_suffix string
+  if(!is.null(out_suffix)){
+    out_name <- paste("output_",out_suffix,sep="")
+    outDir <- file.path(outDir,out_name)
+  }
+  #create if does not exists
+  if(!file.exists(outDir)){
+    dir.create(outDir)
+  }
+  return(outDir)
+}
 
 ############################################################################
 #####  Parameters and argument set up ###########
@@ -28,8 +43,7 @@ start_date <- "2012-11-01"  #new data starts in November 2012
 #ARGS 4
 end_date <- NULL
 #ARGS 5
-#out_dir <- NULL #"C:/Users/edaut/Documents/gst_ts/outputs" #parent directory where the new output directory is placed
-out_dir <- "/nfs/bparmentier-data/Data/projects/animals_trade/outputs"
+out_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs"
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
@@ -77,8 +91,8 @@ y_all <- as.numeric(data_df[1400,1:230])
 y_all
 
 plot(y_all)
-plot(y_all[1:23])
-y <- y_all[1:23]
+plot(y_all[1:24])
+y <- y_all[1:24]
 n <- length(y)
 
 
@@ -86,6 +100,7 @@ n <- length(y)
 
 p = 1 #from 1 to n/2
 
+n<-24
 omega= 2*pi*p/n
 
 t <- 1:n
@@ -100,8 +115,12 @@ summary(mod)
 
 plot(y)
 lines(mod$fitted.values)
+points(mod$fitted.values)
 
 plot(mod$fitted.values,ylim=c(3000,10000))
+points(y,pch=2)
+
+plot(mod$fitted.values,ylim=c(4000,8000))
 points(y,pch=2)
 
 mod$coefficients[2]
