@@ -109,7 +109,7 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F){
   
   #omega_val = lapply(p,function(p){2*pi*p/n})
   
-  fit_harmonic(p,n,y,mod_obj=F){
+  fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
     t <- 1:n
     omega=2*pi*p/n
     cos_val =cos(omega*t)
@@ -132,6 +132,12 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F){
     
     harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,phase=phase,harmonic=p,omega=omega)
     
+    ### Figure
+    if(figure==TRUE){
+      y_range <- range(mod$fitted.values,y,na.rm = T)
+      plot(mod$fitted.values,ylim=y_range)
+      points(y,col="blue",pch="+")
+    }
     ###
     harmonic_obj <- harmonic_df
     
@@ -148,8 +154,6 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F){
   lines(mod$fitted.values)
   points(mod$fitted.values)
   
-  plot(mod$fitted.values,ylim=c(3000,10000))
-  points(y,pch=2)
   
   plot(mod$fitted.values,ylim=c(4000,8000))
   points(y,pch=2)
