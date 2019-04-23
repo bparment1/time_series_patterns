@@ -135,31 +135,22 @@ plot(Re(fft(y)))
 
 x <- y_all
 
-split_sequence <- function(x,n,overlap=0){
-  if(overlap==0){
-    n_splits <- floor(length(x)/n)
-    #n_modified <- n - overlap
-    intervals_val <- seq(1,to=length(x),by=n)
-    intervals_val <- c(intervals_val,length(x))
-    n_splits
-    list_intervals <- lapply(2:length(intervals_val),function(i){data.frame(start=intervals_val[[i-1]],end=intervals_val[[i]])})
-    intervals_df <- do.call(rbind,list_intervals)
-    intervals_df
-    #lapply(2:length(intervals_val),function(i){intervals_val[[i]]-overlap})
-    #length(intervals_val)
-    
-  }
-  ##implement the other option later
-  
-  ## now split:
-  test <- lapply(1:nrow(intervals_df),function(i){x[intervals_df[i,]$start:intervals_df[i,]$end-1]})
-  
-  return(test)
-}
 
 test <- split_sequence(y_all,n=23)
 length(test[[9]])
 length(test[[10]])
+length(test[[1]])
+
+harmonic_results3 <- harmonic_regression(test[[1]],n=23,
+                                         harmonic_val=NULL,
+                                         mod_obj=T,figure=F)
+
+mod <- harmonic_results2$l_harmonic_obj[[1]]$mod
+
+summary(mod)
+plot(y)
+lines(mod$fitted.values)
+
 
 ################################### End of script #######################################
 
