@@ -135,13 +135,19 @@ plot(Re(fft(y)))
 
 x <- y_all
 
-split_sequence <- function(x,n,overlap=1){
+split_sequence <- function(x,n,overlap=0){
   if(overlap==0){
     n_splits <- floor(length(x)/n)
-    n_modified <- n - overlap
-    intervals_val <- seq(1,to=length(x),by=n_modified)
-    length(intervals_val)
-    
+    #n_modified <- n - overlap
+    intervals_val <- seq(1,to=length(x),by=n)
+    intervals_val <- c(intervals_val,length(x))
+    n_splits
+    list_intervals <- lapply(2:length(intervals_val),function(i){data.frame(start=intervals_val[[i-1]],end=intervals_val[[i]])})
+    intervals_df <- do.call(rbind,list_intervals)
+    intervals_df
+    #lapply(2:length(intervals_val),function(i){intervals_val[[i]]-overlap})
+    #length(intervals_val)
+    return(intervals_df)
   }
 }
 ################################### End of script #######################################
