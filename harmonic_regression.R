@@ -147,8 +147,19 @@ split_sequence <- function(x,n,overlap=0){
     intervals_df
     #lapply(2:length(intervals_val),function(i){intervals_val[[i]]-overlap})
     #length(intervals_val)
-    return(intervals_df)
+    
   }
+  ##implement the other option later
+  
+  ## now split:
+  test <- lapply(1:nrow(intervals_df),function(i){x[intervals_df[i,]$start:intervals_df[i,]$end-1]})
+  
+  return(test)
 }
+
+test <- split_sequence(y_all,n=23)
+length(test[[9]])
+length(test[[10]])
+
 ################################### End of script #######################################
 
