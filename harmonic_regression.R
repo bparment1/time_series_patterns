@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 04/22/2019
+## DATE MODIFIED: 04/24/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -53,7 +53,7 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs"
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <-"example_ts_04222019" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"example_ts_04242019" #output suffix for the files and ouptut folder #param 12
 #ARGS 8
 num_cores <- 2 # number of cores
 
