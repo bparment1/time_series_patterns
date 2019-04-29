@@ -42,7 +42,8 @@ source(file.path(script_path,crop_data_processing_functions))
 in_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/data"
 
 #ARGS 2
-infile_name <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
+infile_name_df <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
+infile_name_raster <- "reg2_NDVI_katrina.tif"
 #ARGS 3
 #start_date <- "2004-01-01"
 start_date <- "2012-11-01"  #new data starts in November 2012
@@ -71,7 +72,7 @@ if(is.null(out_dir)){
 }
 #out_dir <- in_dir #output will be created in the input dir
 
-out_suffix_s <- out_suffix #can modify name of output suffix
+out_suffix_s <- out_suffix #xcan modify name of output suffix
 if(create_out_dir_param==TRUE){
   out_dir <- create_dir_fun(out_dir,out_suffix)
   setwd(out_dir)
@@ -85,10 +86,14 @@ if(create_out_dir_param==TRUE){
 #Create output directory
 
 infile_name <- file.path(in_dir,infile_name)
-data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
-names(data_df)
+#
+#data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
+r <- brick(infile_name)
+names(r)
+plot(r,y=1)
+#names(data_df)
 #start_date <- "2004-01-01"
-start_date <- "2012-11-01"  #new data starts in November 2012
+#start_date <- "2012-11-01"  #new data starts in November 2012
 
 #y ~ A0 + b1 cos(x) + b2* sin(x)
 #y ~ b0 + b1*x1 + b2*x2
