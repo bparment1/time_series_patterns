@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 04/24/2019
+## DATE MODIFIED: 05/01/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -32,7 +32,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_04222019.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05012019d.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -99,14 +99,18 @@ y_all <- as.numeric(data_df[1400,1:230])
 y_all
 
 plot(y_all)
-plot(y_all[1:24])
-y <- y_all[1:24]
+plot(y_all[1:23])
+y <- y_all[1:23]
 n <- length(y)
 
 
-harmonic_results <- harmonic_regression(y,n,harmonic_val=NULL,mod_obj=F,figure=F)
+#debug(harmonic_regression)
+harmonic_results <- harmonic_regression(y,n,
+                                        harmonic_val=NULL,
+                                        mod_obj=F,
+                                        figure=F)
 
-harmo
+#View(harmonic_results)
 
 ####################
 #### This is synthetic value
@@ -123,6 +127,10 @@ plot(y)
 harmonic_results2 <- harmonic_regression(y,n,
                                          harmonic_val=NULL,
                                          mod_obj=T,figure=F)
+harmonic_results2 <- harmonic_regression(y,n,
+                                        harmonic_val=NULL,
+                                        mod_obj=T,
+                                        figure=F)
 
 mod <- harmonic_results2$l_harmonic_obj[[1]]$mod
 
@@ -157,10 +165,10 @@ lines(mod$fitted.values)
 
 #### Testing with raster time series and run across multiple time
 
-infile_name <- file.path(in_dir,infile_name)
+infile_name_raster <- file.path(in_dir,infile_name_raster)
 #
 #data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
-r <- brick(infile_name)
+r <- brick(infile_name_raster)
 names(r)
 plot(r,y=1)
 
@@ -183,7 +191,9 @@ harmonic_reg_f1 <- function(y){
 
 #fun=function(x) { if (is.na(x[1])){ NA } else { m = lm(x ~ time); summary(m)$coefficients[8] }}
 
-p <- calc(r, fun=harmonic_reg_f1)
+### harmonic 1 amplitude for first year
+
+p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
 
 plot(p)
 
