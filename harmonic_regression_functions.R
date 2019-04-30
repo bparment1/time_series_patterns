@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 04/22 /2019
+## DATE MODIFIED: 04/30/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managin Hurricanes
@@ -58,16 +58,34 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   #in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
   mod <- lm(model_formula_str ,data=in_df)
   summary(mod)
-  a <- mod$coefficients[2] #sine term
-  b <- mod$coefficients[3] #cosine term
-  A0 <- mod$coefficients[3] #mean
   
-  A = sqrt(a^2 + b^2)
-  phase = atan(-b/a)
+  ### Extract coefficients for each harmonic
+ 
+  p_val<-2
   
-  ## Add p values later?
+  extract_harmonic_coef <- function(p_val,mod){
+    
+    summary(mod)
+    coef_df <- (as.data.frame(t(mod$coefficients)))
   
-  harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,phase=phase,harmonic=p,omega=omega)
+    cos_term <- paste("cos",p_val,sep="")
+    sin_term <- paste("sin",p_val,sep="")
+    
+    a <- coef_df[[sin_term]] #sine term
+    b <- coef_df[[cos_term]] #cosine term
+    A0 <- coef_df[["(Intercept)"]] #mean
+    
+    A = sqrt(a^2 + b^2)
+    phase = atan(-b/a)
+    ## Add p values later?
+    n <- nrow(mod$model)
+    omega_val=2*pi*p_val/n #may be more than 1
+    
+    harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,phase=phase,harmonic=p,omega=omega_val)
+    
+    return(harmonic_df)
+  }
+  
   
   ### Figure
   if(figure==TRUE){
