@@ -85,12 +85,9 @@ if(create_out_dir_param==TRUE){
 #set up the working directory
 #Create output directory
 
-infile_name <- file.path(in_dir,infile_name)
+infile_name_df <- file.path(in_dir,infile_name_df)
 #
-#data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
-r <- brick(infile_name)
-names(r)
-plot(r,y=1)
+data_df <- read.table(infile_name_df,header=T,sep=",",stringsAsFactors = F)
 #names(data_df)
 #start_date <- "2004-01-01"
 #start_date <- "2012-11-01"  #new data starts in November 2012
@@ -109,6 +106,7 @@ n <- length(y)
 
 harmonic_results <- harmonic_regression(y,n,harmonic_val=NULL,mod_obj=F,figure=F)
 
+harmo
 
 ####################
 #### This is synthetic value
@@ -156,6 +154,37 @@ summary(mod)
 plot(y)
 lines(mod$fitted.values)
 
+
+#### Testing with raster time series and run across multiple time
+
+infile_name <- file.path(in_dir,infile_name)
+#
+#data_df <- read.table(infile_name,header=T,sep=",",stringsAsFactors = F)
+r <- brick(infile_name)
+names(r)
+plot(r,y=1)
+
+NAvalue(r)
+plot(r,y=1,colNA="black")
+
+#https://matinbrandt.wordpress.com/2013/11/15/pixel-wise-time-series-trend-anaylsis-with-ndvi-gimms-and-r/
+  
+
+harmonic_reg_f1 <- function(y){
+  harmonic_results <-harmonic_regression(y,n=23,
+                        harmonic_val=NULL,
+                        mod_obj=T,figure=F)
+  df_in <- subset(harmonic_results$harmonic_df,harmonic==1)
+  A <- df_in$A
+  
+  return(A)
+}
+
+#fun=function(x) { if (is.na(x[1])){ NA } else { m = lm(x ~ time); summary(m)$coefficients[8] }}
+
+p <- calc(r, fun=harmonic_reg_f1)
+
+plot(p)
 
 ################################### End of script #######################################
 
