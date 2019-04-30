@@ -31,9 +31,14 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   cos_val <- lapply(omega_val,function(omega){cos(omega*t)})
   sin_val <- lapply(omega_val,function(omega){sin(omega*t)})
   
-  cos_df <- do.call(cbind,cos_val)
-  sin_df <- do.call(cbind,sin_val)
+  cos_df <- as.data.frame(do.call(cbind,cos_val))
+  names(cos_df) <- paste("cos",p,sep="")
+  sin_df <- as.data.frame(do.call(cbind,sin_val))
+  names(sin_df) <- paste("sin",p,sep="")
   
+  in_df <- data.frame(y_var = y)
+  in_df <- cbind(in_df,cos_df,sin_df)
+  #View(in_df)
   #cos_val =cos(omega*t)
   #sin_val =sin(omega*t)
   
@@ -42,16 +47,16 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   #plot(cos_val)
   #plot(sin_val)
   
-  y_var <- "invasion.status"
-  in_dir[[y_var]] <- as.factor(data[[y_var]]) #this is needed for randomForest to get a classification
+  #y_var <- "invasion.status"
+  #in_dir[[y_var]] <- as.factor(data[[y_var]]) #this is needed for randomForest to get a classification
   
-  explanatory_variables <- names(data)[-1] #drop the first column
+  explanatory_variables <- names(in_df)[-1] #drop the first column
   
   right_side_formula <- paste(explanatory_variables,collapse = " + ")
-  model_formula_str <- paste0(y_var," ~ ",right_side_formula)
+  model_formula_str <- paste0("y_var"," ~ ",right_side_formula)
   
-  in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
-  mod <- lm(y~ sin_val+ cos_val ,data=in_df)
+  #in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
+  mod <- lm(model_formula_str ,data=in_df)
   summary(mod)
   a <- mod$coefficients[2] #sine term
   b <- mod$coefficients[3] #cosine term
