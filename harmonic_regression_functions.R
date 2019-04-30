@@ -16,14 +16,39 @@
 
 ###### Functions used in this script and sourced from other files
 
+#https://stats.stackexchange.com/questions/60500/how-to-find-a-good-fit-for-semi-sinusoidal-model-in-r
+
+
+### This needs to be modified.
+#SSTlm2 <- lm(Degrees ~ sin(2*pi*ToY)+cos(2*pi*ToY)
+#             +sin(4*pi*ToY)+cos(4*pi*ToY),data=SST)
+#summary(SSTlm2)
+
 fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   t <- 1:n
-  omega=2*pi*p/n
-  cos_val =cos(omega*t)
-  sin_val =sin(omega*t)
+  omega_val=2*pi*p/n #may be more than 1
+  
+  cos_val <- lapply(omega_val,function(omega){cos(omega*t)})
+  sin_val <- lapply(omega_val,function(omega){sin(omega*t)})
+  
+  cos_df <- do.call(cbind,cos_val)
+  sin_df <- do.call(cbind,sin_val)
+  
+  #cos_val =cos(omega*t)
+  #sin_val =sin(omega*t)
+  
+  #omega_val = lapply(p,function(p){2*pi*p/n})
   
   #plot(cos_val)
   #plot(sin_val)
+  
+  y_var <- "invasion.status"
+  in_dir[[y_var]] <- as.factor(data[[y_var]]) #this is needed for randomForest to get a classification
+  
+  explanatory_variables <- names(data)[-1] #drop the first column
+  
+  right_side_formula <- paste(explanatory_variables,collapse = " + ")
+  model_formula_str <- paste0(y_var," ~ ",right_side_formula)
   
   in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
   mod <- lm(y~ sin_val+ cos_val ,data=in_df)
@@ -64,19 +89,20 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   ## Default to two first harmonic:
   if(is.null(harmonic_val)){
     p <- 1:2
+  }else{
+    p <- 1:harmonic_val
   }
+  
   #harmonic_val = 1 # pr from 1 to n/2
   
   #n<-24
   
-  #omega_val = lapply(p,function(p){2*pi*p/n})
-  
-  l_harmonic_obj <- lapply(p,
-         FUN=fit_harmonic,
-         n=n,
-         y=y,
-         mod_obj=mod_obj,
-         figure=figure)
+  #l_harmonic_obj <- lapply(p,
+  #       FUN=fit_harmonic,
+  #       n=n,
+  #       y=y,
+  #       mod_obj=mod_obj,
+  #       figure=figure)
   
   l_df <- lapply(l_harmonic_obj,function(x){x$harmonic_df})
   harmonic_df <- do.call(rbind,l_df)
