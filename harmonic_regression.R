@@ -169,6 +169,7 @@ plot(r,y=1,colNA="black")
 
 #https://matinbrandt.wordpress.com/2013/11/15/pixel-wise-time-series-trend-anaylsis-with-ndvi-gimms-and-r/
   
+### need to check the computation of Amplitudes!!!!
 
 harmonic_reg_f1 <- function(y){
   harmonic_results <-harmonic_regression(y,n=23,
