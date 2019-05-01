@@ -146,11 +146,10 @@ plot(Re(fft(y)))
 
 x <- y_all
 
-
-test <- split_sequence(y_all,n=23)
-length(test[[9]])
-length(test[[10]])
-length(test[[1]])
+debug(split_sequence)
+split_obj <- split_sequence(y_all,n=23)
+split_obj$list_y[[9]]
+length(split_obj$list_y[[9]])
 
 harmonic_results3 <- harmonic_regression(test[[1]],n=23,
                                          harmonic_val=NULL,
@@ -193,9 +192,27 @@ harmonic_reg_f1 <- function(y){
 
 ### harmonic 1 amplitude for first year
 
-p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
+x <- 1:230
 
-plot(p)
+#debug(split_sequence)
+split_obj <- split_sequence(x,n=23)
+intervals_df <- split_obj$intervals
 
+n_split <- nrow(intervals_df)
+
+## make this a function later
+l_r_A1 <- vector("list",length=n_split)
+for(i in 1:n_split){
+  start_val <- intervals_df$start[i]
+  end_val <- intervals_df$end[i]
+  #p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
+  p <- calc(subset(,end_val:start_val), fun=harmonic_reg_f1)
+  l_r_A1[[i]] <- p
+  plot(p)
+  #rm(p)
+}
+
+
+  
 ################################### End of script #######################################
 
