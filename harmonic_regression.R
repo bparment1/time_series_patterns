@@ -198,6 +198,8 @@ harmonic_reg_f1 <- function(y,n=24,harmonic=1){
   return(A)
 }
 
+#Does work with calc
+#Note that A has two outputs right now and it creates multiple outputs in raster
 harmonic_reg_raster <- function(y,n=24,harmonic=1){
   harmonic_results <-harmonic_regression(y,n=n,
                                          harmonic_val=NULL,
@@ -218,30 +220,39 @@ x <- 1:230
 split_obj <- split_sequence(x,n=23)
 intervals_df <- split_obj$intervals
 #lengh(split_obj$list_y[[1]])
-split_obj$list_y
+split_obj$list_y[[1]]
 n_split <- nrow(intervals_df)
 
 ## make this a function later
 
-### for A1
+### for A1, function seems to work for A1 and A2
 l_r_A1 <- vector("list",length=n_split)
+n_val <- 23
+harmonic_val <- 1
+
 for(i in 1:n_split){
   start_val <- intervals_df$start[i]
   end_val <- intervals_df$end[i]
   #p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
-  p <- calc(subset(r,end_val:start_val), fun=harmonic_reg_f1)
+  #r_out <- try(calc(subset(r,end_val:start_val), fun=harmonic_reg_f1))
   #multiple arg does not work
   #p <- calc(subset(r,end_val:start_val), fun=harmonic_reg_f1,
   #          n=24,harmonic=1)
-  p <- calc(subset(r,end_val:start_val), 
-            fun=function(y){harmonic_reg_raster(y,n=n+1,harmonic=1)})
+  n_val <- end_val - start_val + 1
+  #test <- calc(subset(r,end_val:start_val), 
+  #          fun=function(y){harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val)})
+  r_out <- try(calc(subset(r,end_val:start_val), 
+               fun=function(y){harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val)}))
   
-  l_r_A1[[i]] <- p
-  plot(p)
+  l_r_A1[[i]] <- r_out
+  #plot(p)
   #rm(p)
 }
 
+r_A1 <- stack(l_r_A1)
+plot(r_A1)
+l_r_A1
+plot(r_A1,y=1:2)
 
-  
 ################################### End of script #######################################
 
