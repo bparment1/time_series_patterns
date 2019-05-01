@@ -14,6 +14,34 @@
 ## COMMIT: exploration of estimation
 ##
 
+###Loading R library and packages                                                      
+#library(gstat) #spatial interpolation and kriging methods
+library(sp) # spatial/geographic objects and functions
+library(rgdal) #GDAL/OGR binding for R with functionalities
+library(spdep) #spatial analyses operations, functions etc.
+library(gtools) # contains mixsort and other useful functions
+library(maptools) # tools to manipulate spatial data
+library(parallel) # parallel computation, part of base package no
+library(rasterVis) # raster visualization operations
+library(raster) # raster functionalities
+library(forecast) #ARIMA forecasting
+library(xts) #extension for time series object and analyses
+library(zoo) # time series object and analysis
+library(lubridate) # dates functionality
+library(colorRamps) #contains matlab.like color palette
+library(rgeos) #contains topological operations
+library(sphet) #contains spreg, spatial regression modeling
+library(BMS) #contains hex2bin and bin2hex, Bayesian methods
+library(bitops) # function for bitwise operations
+library(foreign) # import datasets from SAS, spss, stata and other sources
+library(gdata) #read xls, dbf etc., not recently updated but useful
+library(classInt) #methods to generate class limits
+library(plyr) #data wrangling: various operations for splitting, combining data
+library(readxl) #functionalities to read in excel type data
+library(sf) # spatial ojbects simple feature model implementation OGC
+#library(gstat)
+#library(spacetime)
+
 ###### Functions used in this script and sourced from other files
 
 create_dir_fun <- function(outDir,out_suffix=NULL){
@@ -100,7 +128,7 @@ y_all
 
 plot(y_all)
 plot(y_all[1:23])
-y <- y_all[1:23]
+y <- y_all[1:24]
 n <- length(y)
 
 
@@ -146,7 +174,7 @@ plot(Re(fft(y)))
 
 x <- y_all
 
-debug(split_sequence)
+#debug(split_sequence)
 split_obj <- split_sequence(y_all,n=23)
 split_obj$list_y[[9]]
 length(split_obj$list_y[[9]])
