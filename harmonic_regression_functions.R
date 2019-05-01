@@ -58,12 +58,16 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   #in_df <- data.frame(y=y,cos_val=cos_val,sin_val=sin_val)
   mod <- lm(model_formula_str ,data=in_df)
   summary(mod)
+  mod2 <- lm(model_formula_str ,data=in_df,na.action = na.exclude)
+  mod$coefficients
+  mod2$coefficients
+  mod2$model
   
   ### Extract coefficients for each harmonic
  
   p_val<-2
   
-  extract_harmonic_coef <- function(p_val,mod){
+  extract_harmonic_coef <- function(p_val,n,mod){
     
     summary(mod)
     coef_df <- (as.data.frame(t(mod$coefficients)))
@@ -74,14 +78,26 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
     a <- coef_df[[sin_term]] #sine term
     b <- coef_df[[cos_term]] #cosine term
     A0 <- coef_df[["(Intercept)"]] #mean
+    p_significance <- coef_df[["(Intercept)"]] #mean
     
     A = sqrt(a^2 + b^2)
     phase = atan(-b/a)
     ## Add p values later?
-    n <- nrow(mod$model)
+    #n <- nrow(mod$model)
     omega_val=2*pi*p_val/n #may be more than 1
     
-    harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,phase=phase,harmonic=p,omega=omega_val)
+    #class((summary(mod))$coefficients)
+    results_df <- (as.data.frame(summary(mod)$coefficients))
+    results_df <- results_df[rownames(results_df)%in%c(sin_term,cos_term,"(Intercept)"),]
+    
+    pr <- results_df$`Pr(>|t|)`
+    pr_a <- pr[3] 
+    pr_b <- pr[2]
+    pr_A0 <- pr[1]
+      
+    harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,
+                              pr_A0=pr_A0,pr_a=pr_a,pr_b=pr_b,
+                              phase=phase,harmonic=p,omega=omega_val)
     
     return(harmonic_df)
   }
@@ -126,6 +142,7 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   #       y=y,
   #       mod_obj=mod_obj,
   #       figure=figure)
+  fit_harmonic()
   
   l_df <- lapply(l_harmonic_obj,function(x){x$harmonic_df})
   harmonic_df <- do.call(rbind,l_df)
