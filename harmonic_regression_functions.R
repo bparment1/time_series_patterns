@@ -67,40 +67,6 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
  
   p_val<-2
   
-  extract_harmonic_coef <- function(p_val,n,mod){
-    
-    summary(mod)
-    coef_df <- (as.data.frame(t(mod$coefficients)))
-  
-    cos_term <- paste("cos",p_val,sep="")
-    sin_term <- paste("sin",p_val,sep="")
-    
-    a <- coef_df[[sin_term]] #sine term
-    b <- coef_df[[cos_term]] #cosine term
-    A0 <- coef_df[["(Intercept)"]] #mean
-    p_significance <- coef_df[["(Intercept)"]] #mean
-    
-    A = sqrt(a^2 + b^2)
-    phase = atan(-b/a)
-    ## Add p values later?
-    #n <- nrow(mod$model)
-    omega_val=2*pi*p_val/n #may be more than 1
-    
-    #class((summary(mod))$coefficients)
-    results_df <- (as.data.frame(summary(mod)$coefficients))
-    results_df <- results_df[rownames(results_df)%in%c(sin_term,cos_term,"(Intercept)"),]
-    
-    pr <- results_df$`Pr(>|t|)`
-    pr_a <- pr[3] 
-    pr_b <- pr[2]
-    pr_A0 <- pr[1]
-      
-    harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,
-                              pr_A0=pr_A0,pr_a=pr_a,pr_b=pr_b,
-                              phase=phase,harmonic=p,omega=omega_val)
-    
-    return(harmonic_df)
-  }
   
   
   ### Figure
@@ -176,5 +142,42 @@ split_sequence <- function(x,n,overlap=0){
   
   return(test)
 }
+
+
+extract_harmonic_coef <- function(p_val,n,mod){
+  
+  summary(mod)
+  coef_df <- (as.data.frame(t(mod$coefficients)))
+  
+  cos_term <- paste("cos",p_val,sep="")
+  sin_term <- paste("sin",p_val,sep="")
+  
+  a <- coef_df[[sin_term]] #sine term
+  b <- coef_df[[cos_term]] #cosine term
+  A0 <- coef_df[["(Intercept)"]] #mean
+  p_significance <- coef_df[["(Intercept)"]] #mean
+  
+  A = sqrt(a^2 + b^2)
+  phase = atan(-b/a)
+  ## Add p values later?
+  #n <- nrow(mod$model)
+  omega_val=2*pi*p_val/n #may be more than 1
+  
+  #class((summary(mod))$coefficients)
+  results_df <- (as.data.frame(summary(mod)$coefficients))
+  results_df <- results_df[rownames(results_df)%in%c(sin_term,cos_term,"(Intercept)"),]
+  
+  pr <- results_df$`Pr(>|t|)`
+  pr_a <- pr[3] 
+  pr_b <- pr[2]
+  pr_A0 <- pr[1]
+  
+  harmonic_df <- data.frame(A0=A0,A=A,a=a,b=b,
+                            pr_A0=pr_A0,pr_a=pr_a,pr_b=pr_b,
+                            phase=phase,harmonic=p,omega=omega_val)
+  
+  return(harmonic_df)
+}
+
 ################################### End of script #######################################
 
