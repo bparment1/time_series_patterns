@@ -188,6 +188,26 @@ harmonic_reg_f1 <- function(y){
   return(A)
 }
 
+harmonic_reg_f1 <- function(y,n=24,harmonic=1){
+  harmonic_results <-harmonic_regression(y,n=n,
+                                         harmonic_val=NULL,
+                                         mod_obj=T,figure=F)
+  df_in <- subset(harmonic_results$harmonic_df,harmonic==1)
+  A <- df_in$A
+  
+  return(A)
+}
+
+harmonic_reg_raster <- function(y,n=24,harmonic=1){
+  harmonic_results <-harmonic_regression(y,n=n,
+                                         harmonic_val=NULL,
+                                         mod_obj=T,figure=F)
+  df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
+  A <- df_in$A
+  
+  return(A)
+}
+
 #fun=function(x) { if (is.na(x[1])){ NA } else { m = lm(x ~ time); summary(m)$coefficients[8] }}
 
 ### harmonic 1 amplitude for first year
@@ -197,16 +217,25 @@ x <- 1:230
 #debug(split_sequence)
 split_obj <- split_sequence(x,n=23)
 intervals_df <- split_obj$intervals
-
+#lengh(split_obj$list_y[[1]])
+split_obj$list_y
 n_split <- nrow(intervals_df)
 
 ## make this a function later
+
+### for A1
 l_r_A1 <- vector("list",length=n_split)
 for(i in 1:n_split){
   start_val <- intervals_df$start[i]
   end_val <- intervals_df$end[i]
   #p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
-  p <- calc(subset(,end_val:start_val), fun=harmonic_reg_f1)
+  p <- calc(subset(r,end_val:start_val), fun=harmonic_reg_f1)
+  #multiple arg does not work
+  #p <- calc(subset(r,end_val:start_val), fun=harmonic_reg_f1,
+  #          n=24,harmonic=1)
+  p <- calc(subset(r,end_val:start_val), 
+            fun=function(y){harmonic_reg_raster(y,n=n+1,harmonic=1)})
+  
   l_r_A1[[i]] <- p
   plot(p)
   #rm(p)
