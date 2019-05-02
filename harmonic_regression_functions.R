@@ -156,6 +156,7 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
 }
 
 split_sequence <- function(x,n,overlap=0){
+  
   if(overlap==0){
     n_splits <- floor(length(x)/n)
     #n_modified <- n - overlap
@@ -172,9 +173,11 @@ split_sequence <- function(x,n,overlap=0){
   ##implement the other option later
   
   ## now split:
-  test <- lapply(1:nrow(intervals_df),function(i){x[intervals_df[i,]$start:intervals_df[i,]$end-1]})
+  list_y <- lapply(1:nrow(intervals_df),function(i){x[intervals_df[i,]$start:intervals_df[i,]$end-1]})
   
-  return(test)
+  split_obj <- list(list_y,intervals_df)
+  names(split_obj) <- c("list_y","intervals")
+  return(split_obj)
 }
 
 
