@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/01/2019
+## DATE MODIFIED: 05/03/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -60,7 +60,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05012019d.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05012019e.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -189,7 +189,6 @@ summary(mod)
 plot(y)
 lines(mod$fitted.values)
 
-
 #### Testing with raster time series and run across multiple time
 
 infile_name_raster <- file.path(in_dir,infile_name_raster)
@@ -245,6 +244,7 @@ harmonic_reg_raster <- function(y,n=24,harmonic=1){
 x <- 1:230
 
 #debug(split_sequence)
+
 split_obj <- split_sequence(x,n=23)
 intervals_df <- split_obj$intervals
 #lengh(split_obj$list_y[[1]])
@@ -279,6 +279,9 @@ for(i in 1:n_split){
 
 r_A1 <- stack(l_r_A1)
 plot(r_A1)
+plot(l_r_A1[[5]])
+plot(l_r_A1[[6]])
+
 l_r_A1
 plot(r_A1,y=1:2)
 
