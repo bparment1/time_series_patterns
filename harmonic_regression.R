@@ -1,10 +1,10 @@
 ############################## Harmonic regression #################### 
 ##
-## Research Support.
+## Functions from SESYNC Research Support and various projects.
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/03/2019
+## DATE MODIFIED: 05/06/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -60,7 +60,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05012019e.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05062019.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -153,13 +153,11 @@ y <- 2*cos(omega*x) + rnorm(n, sd=0.2)
 plot(y)
 
 harmonic_results2 <- harmonic_regression(y,n,
-                                         harmonic_val=NULL,
-                                         mod_obj=T,figure=F)
-harmonic_results2 <- harmonic_regression(y,n,
                                         harmonic_val=NULL,
                                         mod_obj=T,
                                         figure=F)
 
+harmonic_results2$l_harmonic_obj
 mod <- harmonic_results2$l_harmonic_obj[[1]]$mod
 
 summary(mod)
@@ -201,43 +199,6 @@ plot(r,y=1)
 NAvalue(r)
 plot(r,y=1,colNA="black")
 
-#https://matinbrandt.wordpress.com/2013/11/15/pixel-wise-time-series-trend-anaylsis-with-ndvi-gimms-and-r/
-  
-### need to check the computation of Amplitudes!!!!
-
-harmonic_reg_f1 <- function(y){
-  harmonic_results <-harmonic_regression(y,n=23,
-                        harmonic_val=NULL,
-                        mod_obj=T,figure=F)
-  df_in <- subset(harmonic_results$harmonic_df,harmonic==1)
-  A <- df_in$A
-  
-  return(A)
-}
-
-harmonic_reg_f1 <- function(y,n=24,harmonic=1){
-  harmonic_results <-harmonic_regression(y,n=n,
-                                         harmonic_val=NULL,
-                                         mod_obj=T,figure=F)
-  df_in <- subset(harmonic_results$harmonic_df,harmonic==1)
-  A <- df_in$A
-  
-  return(A)
-}
-
-#Does work with calc
-#Note that A has two outputs right now and it creates multiple outputs in raster
-harmonic_reg_raster <- function(y,n=24,harmonic=1){
-  harmonic_results <-harmonic_regression(y,n=n,
-                                         harmonic_val=NULL,
-                                         mod_obj=T,figure=F)
-  df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
-  A <- df_in$A
-  
-  return(A)
-}
-
-#fun=function(x) { if (is.na(x[1])){ NA } else { m = lm(x ~ time); summary(m)$coefficients[8] }}
 
 ### harmonic 1 amplitude for first year
 
