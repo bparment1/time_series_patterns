@@ -252,11 +252,24 @@ harmonic_reg_f1 <- function(y,n=24,harmonic=1){
 
 #Does work with calc
 #Note that A has two outputs right now and it creates multiple outputs in raster
-harmonic_reg_raster <- function(y,n=24,harmonic_val=NULL,var_name){
-  
-  #y: input data, in this function the name of raster layer is expected
-  #n: number of elements in the time series/sequence used for the harmonic reg.
+#harmonic_reg_raster <- function(y,var_name,n=24,harmonic_val=NULL){
+harmonic_reg_raster <- function(y,var_name,n=24,harmonic_val=NULL){
   #
+  ## Function to generate outputs from harmonic regression for every pixel in a raster image.
+  ## Note that the output needed for the calc function used is a vector of values.
+  ## The output values can be amplitudes (A0, A1, A2), phases, p significance etc.
+  #
+  ### INPUTS:
+  #1) y: input data, in this function the name of raster layer is expected
+  #2) var_name: number of elements in the time series/sequence used for the harmonic reg.
+  #3) n: number of elements in the time series/sequence used for the harmonic reg.
+  #4) harmonic_val: number of harmonic to consider, if NULL then use default 2
+  ### OUTPUTS
+  #1) value_var_name: numeric vector of values from harmonic modeling
+  
+  ####### Start script #######
+  
+  #n <- layers(y)
   
   harmonic_results <-harmonic_regression(y,n=n,
                                          harmonic_val=harmonic_val,
@@ -265,7 +278,7 @@ harmonic_reg_raster <- function(y,n=24,harmonic_val=NULL,var_name){
   #df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
   df_in <- harmonic_results$harmonic_df
   
-  #A <- df_in$A
+  ## Select variables to predict for every pixels
   value_var_name <- df_in[[var_name]]
   
   ## Return values for raster:
