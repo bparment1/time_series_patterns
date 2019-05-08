@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/07/2019
+## DATE MODIFIED: 05/08/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -252,20 +252,23 @@ harmonic_reg_f1 <- function(y,n=24,harmonic=1){
 
 #Does work with calc
 #Note that A has two outputs right now and it creates multiple outputs in raster
-harmonic_reg_raster <- function(y,n=24,harmonic=1,var_name){
+harmonic_reg_raster <- function(y,n=24,harmonic_val=NULL,var_name){
   
   #y: input data, in this function the name of raster layer is expected
   #n: number of elements in the time series/sequence used for the harmonic reg.
   #
   
   harmonic_results <-harmonic_regression(y,n=n,
-                                         harmonic_val=NULL,
+                                         harmonic_val=harmonic_val,
                                          mod_obj=T,figure=F)
   
-  df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
-  #A <- df_in$A
-  value_var_name <- df_in[var_name]
+  #df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
+  df_in <- harmonic_results$harmonic_df
   
+  #A <- df_in$A
+  value_var_name <- df_in[[var_name]]
+  
+  ## Return values for raster:
   return(value_var_name)
 }
 
