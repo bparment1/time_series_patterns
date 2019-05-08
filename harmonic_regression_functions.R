@@ -1,10 +1,10 @@
 ############################## Harmonic regression #################### 
 ##
-## Research Support.
+## Functions from SESYNC Research Support and various projects.
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/03/2019
+## DATE MODIFIED: 05/06/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -142,7 +142,7 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   #       figure=figure)
   
   #debug(fit_harmonic)
-  l_harmonic_obj <- fit_harmonic(p,n,y,mod_obj=F,figure=F)
+  l_harmonic_obj <- fit_harmonic(p,n,y,mod_obj=mod_obj,figure=F)
   
   l_df <- lapply(p,function(i){l_harmonic_obj$harmonic_df[[i]]})
   harmonic_df <- do.call(rbind,l_df)
@@ -150,7 +150,7 @@ harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   
   #View(harmonic_df)
   harmonic_results_obj  <- list(harmonic_df,l_harmonic_obj)
-  names(harmonic_results_obj) <- c("harmonic_df","l_harmonic_obj")
+  names(harmonic_results_obj) <- c("harmonic_df","harmonic_obj")
   
   return(harmonic_results_obj)
 }
