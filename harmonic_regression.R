@@ -1,13 +1,13 @@
 ############################## Harmonic regression #################### 
 ##
-## Functions from SESYNC Research Support and various projects.
+## Functions generetaed through various research projects and SESYNC research support.
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/06/2019
+## DATE MODIFIED: 05/08/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
-## PROJECT: Time series analysis Managing Hurricanes
+## PROJECT: General use script
 ## ISSUE: 
 ## TO DO:
 ##
@@ -60,7 +60,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05062019.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05082019b.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -177,11 +177,11 @@ split_obj <- split_sequence(y_all,n=23)
 split_obj$list_y[[9]]
 length(split_obj$list_y[[9]])
 
-harmonic_results3 <- harmonic_regression(test[[1]],n=23,
+harmonic_results3 <- harmonic_regression(split_obj$list_y[[9]],n=23+1,
                                          harmonic_val=NULL,
                                          mod_obj=T,figure=F)
 
-mod <- harmonic_results2$l_harmonic_obj[[1]]$mod
+mod <- harmonic_results3$l_harmonic_obj[[1]]$mod
 
 summary(mod)
 plot(y)
@@ -218,6 +218,7 @@ n_split <- nrow(intervals_df)
 l_r_A1 <- vector("list",length=n_split)
 n_val <- 23
 harmonic_val <- 1
+var_name <- "A"
 
 for(i in 1:n_split){
   start_val <- intervals_df$start[i]
@@ -230,11 +231,17 @@ for(i in 1:n_split){
   n_val <- end_val - start_val + 1
   #test <- calc(subset(r,end_val:start_val), 
   #          fun=function(y){harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val)})
-  r_out <- try(calc(subset(r,end_val:start_val), 
-               fun=function(y){harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val)}))
+  #debug(harmonic_reg_raster)
+  #harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val,var_name=)
   
+  r_out <- try(calc(subset(r,end_val:start_val), 
+               fun=function(y){harmonic_reg_raster(y,
+                                                   var_name="A",
+                                                   n=n_val,
+                                                   harmonic=NULL)}))
+  names(r_out)
   l_r_A1[[i]] <- r_out
-  #plot(p)
+  #plot(r_out)
   #rm(p)
 }
 
