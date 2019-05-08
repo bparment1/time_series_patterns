@@ -1,10 +1,10 @@
 ############################## Harmonic regression #################### 
 ##
-## Functions from SESYNC Research Support and various projects.
+## Functions generetaed through various research projects and SESYNC research support.
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/06/2019
+## DATE MODIFIED: 05/07/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -14,6 +14,16 @@
 ## COMMIT: exploration of estimation
 ##
 
+####### This script contains the following functions:
+#
+#1) fit_harmonic
+#2) harmonic_regression
+#3) split_sequence
+#4) extract_harmonic_coef
+#5) harmonic_reg_raster
+#
+
+############################
 ###Loading R library and packages                                                      
 #library(gstat) #spatial interpolation and kriging methods
 library(sp) # spatial/geographic objects and functions
@@ -119,7 +129,7 @@ fit_harmonic <- function(p,n,y,mod_obj=F,figure=F){
   return(harmonic_obj)
 }
 
-harmonic_regression<- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
+harmonic_regression <- function(y,n,harmonic_val=NULL,mod_obj=F,figure=F){
   ##
   # if mod_obj is True then return the model object 
   #
@@ -242,14 +252,21 @@ harmonic_reg_f1 <- function(y,n=24,harmonic=1){
 
 #Does work with calc
 #Note that A has two outputs right now and it creates multiple outputs in raster
-harmonic_reg_raster <- function(y,n=24,harmonic=1){
+harmonic_reg_raster <- function(y,n=24,harmonic=1,var_name){
+  
+  #y: input data, in this function the name of raster layer is expected
+  #n: number of elements in the time series/sequence used for the harmonic reg.
+  #
+  
   harmonic_results <-harmonic_regression(y,n=n,
                                          harmonic_val=NULL,
                                          mod_obj=T,figure=F)
-  df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
-  A <- df_in$A
   
-  return(A)
+  df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
+  #A <- df_in$A
+  value_var_name <- df_in[var_name]
+  
+  return(value_var_name)
 }
 
 #fun=function(x) { if (is.na(x[1])){ NA } else { m = lm(x ~ time); summary(m)$coefficients[8] }}
