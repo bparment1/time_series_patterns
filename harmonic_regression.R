@@ -217,7 +217,7 @@ n_split <- nrow(intervals_df)
 ### for A1, function seems to work for A1 and A2
 l_r_A1 <- vector("list",length=n_split)
 n_val <- 23
-harmonic_val <- 1
+harmonic_val <- NULL
 var_name <- "A"
 
 for(i in 1:n_split){
@@ -236,10 +236,16 @@ for(i in 1:n_split){
   
   r_out <- try(calc(subset(r,end_val:start_val), 
                fun=function(y){harmonic_reg_raster(y,
-                                                   var_name="A",
+                                                   var_name=var_name,
                                                    n=n_val,
-                                                   harmonic=NULL)}))
-  names(r_out)
+                                                   harmonic=harmonic_val)}))
+  if(is.null(harmonic_val)){
+    h_val <- 2
+  }else{
+    h_val <- harmonic_val
+  }
+  layer_names <- paste(var_name,1:h_val,sep="_")
+  names(r_out) <- layer_names
   l_r_A1[[i]] <- r_out
   #plot(r_out)
   #rm(p)
