@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/10/2019
+## DATE MODIFIED: 05/14/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: Time series analysis Managing Hurricanes
@@ -323,6 +323,8 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
                                                             var_name=var_name,
                                                             n=n_val,
                                                             harmonic=harmonic_val)}))
+      names(r_out) <- paste0(var_name,"_",1:nlayers(r_out))
+      
       if(is.null(harmonic_val)){
         h_val <- 2
       }else{
@@ -332,11 +334,12 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
       names(r_out) <- layer_names
       
       ########## Write out
+      
       if(is.null(raster_name)){
-        raster_name <- paste(var_name,"_",i,file_format,sep="") 
+        out_raster_name <- paste(var_name,"_",i,file_format,sep="") 
       }else{
-        raster_name <- sub(file_format,"",raster_name)
-        raster_name <- paste(raster_name,"_",i,file_format,sep="") 
+        out_raster_name <- sub(file_format,"",raster_name)
+        out_raster_name <- paste(out_raster_name,"_",i,file_format,sep="") 
       }
       
       #if(multiband==TRUE){
@@ -350,14 +353,14 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
       #  bylayer_val <- FALSE #don't write out separate layer files for each "band"
       #  rast_list <- file.path(out_dir,raster_name_tmp) #as return from function
       #}
-      if(multiband==FALSE){
-        raster_name <- sub(file_format,"",raster_name)
-        raster_name_tmp <- paste(raster_name,file_format,sep="") #don't add output suffix because in suffix_str
-        bylayer_val <- TRUE #write out separate layer files for each "band"
-        rast_list <- file.path(out_dir,(paste(raster_name,"_",suffix_str,file_format,sep=""))) 
-      }
-      
       suffix_str <- names(r_out)
+      
+      if(multiband==FALSE){
+        out_raster_name <- sub(file_format,"",out_raster_name)
+        raster_name_tmp <- paste(out_raster_name,file_format,sep="") #don't add output suffix because in suffix_str
+        bylayer_val <- TRUE #write out separate layer files for each "band"
+        rast_list <- file.path(out_dir,(paste(out_raster_name,"_",suffix_str,file_format,sep=""))) 
+      }
       
       #Use compression option for tif
       writeRaster(r_out,
@@ -382,12 +385,13 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
                                                           var_name=var_name,
                                                           n=nlayers(r),
                                                           harmonic=harmonic_val)}))
+    names(r_out) <- paste0(var_name,"_",1:nlayers(r_out))
     
     if(multiband==FALSE){
-      raster_name <- sub(file_format,"",raster_name)
-      raster_name_tmp <- paste(raster_name,file_format,sep="") #don't add output suffix because in suffix_str
+      out_raster_name <- sub(file_format,"",out_raster_name)
+      raster_name_tmp <- paste(out_raster_name,file_format,sep="") #don't add output suffix because in suffix_str
       bylayer_val <- TRUE #write out separate layer files for each "band"
-      rast_list <- file.path(out_dir,(paste(raster_name,"_",suffix_str,file_format,sep=""))) 
+      rast_list <- file.path(out_dir,(paste(out_raster_name,"_",suffix_str,file_format,sep=""))) 
     }
     
     suffix_str <- names(r_out)
@@ -404,6 +408,7 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
     
   }
   
+  #### return object
   
   return(rast_list)
 }
