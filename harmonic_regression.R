@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/08/2019
+## DATE MODIFIED: 05/10/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: General use script
@@ -60,7 +60,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05082019b.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05102019.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -82,10 +82,9 @@ out_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs"
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <-"example_ts_04242019" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"example_ts_05102019" #output suffix for the files and ouptut folder #param 12
 #ARGS 8
 num_cores <- 2 # number of cores
-
 #range_window <- c("2012-01-01","2017-01-01")
 
 ################# START SCRIPT ###############################
@@ -209,156 +208,27 @@ x <- 1:230
 
 ## make this a function later
 
-raster_name <- "NDVI_amplitude.tif"
 harmonic_val <- NULL
 var_name <- "A"
-raster_name <- NULL
+#raster_name <- NULL
 raster_name <- "NDVI_amplitude.tif"
 file_format <- ".tif"
-multiband=F
-window_val <- 3
+multiband <- FALSE
+window_val <- 23
 
-debug(calcHarmonicRaster)
+#debug(calcHarmonicRaster)
 
 list_r <- calcHarmonicRaster(r,
                    harmonic_val=harmonic_val,
                    var_name=var_name,
                    window_val=window_val,
                    file_format=file_format,
-                   multiband=mulitband,
+                   multiband=multiband,
                    num_cores=num_cores,
                    raster_name=raster_name,
                    out_dir=out_dir)
 
   
-calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,file_format=".tif",multiband=F,num_cores=1,raster_name=NULL,out_dir=NULL){
-  
-  ### for A1, function seems to work for A1 and A2
-  #l_r_A1 <- vector("list",length=n_split)
-  
-  n_val <- window_val
-  #harmonic_val <- NULL
-  #var_name <- "A"
-  #raster_name <- NULL
-  #raster_name <- "NDVI_amplitude.tif"
-  #file_format <- ".tif"
-  #multiband=F
-  
-  ############ Start script ##################
-  
-  if(!is.null(window_val)){
-    split_obj <- split_sequence(x,n=window_val)
-    intervals_df <- split_obj$intervals
-    #lengh(split_obj$list_y[[1]])
-    split_obj$list_y[[1]]
-    n_split <- nrow(intervals_df)
-    
-    for(i in 1:n_split){
-      start_val <- intervals_df$start[i]
-      end_val <- intervals_df$end[i]
-      #p <- calc(subset(r,1:23), fun=harmonic_reg_f1)
-      #r_out <- try(calc(subset(r,end_val:start_val), fun=harmonic_reg_f1))
-      #multiple arg does not work
-      #p <- calc(subset(r,end_val:start_val), fun=harmonic_reg_f1,
-      #          n=24,harmonic=1)
-      n_val <- end_val - start_val + 1
-      #test <- calc(subset(r,end_val:start_val), 
-      #          fun=function(y){harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val)})
-      #debug(harmonic_reg_raster)
-      #harmonic_reg_raster(y,n=n_val,harmonic=harmonic_val,var_name=)
-      
-      r_out <- try(calc(subset(r,end_val:start_val), 
-                        fun=function(y){harmonic_reg_raster(y,
-                                                            var_name=var_name,
-                                                            n=n_val,
-                                                            harmonic=harmonic_val)}))
-      if(is.null(harmonic_val)){
-        h_val <- 2
-      }else{
-        h_val <- harmonic_val
-      }
-      layer_names <- paste(var_name,1:h_val,sep="_")
-      names(r_out) <- layer_names
-      
-      #plot(r_out)
-      #rm(p)
-      
-      ########## Write out
-      if(is.null(raster_name)){
-        raster_name <- paste(var_name,"_",i,file_format,sep="") 
-      }else{
-        raster_name <- sub(file_format,"",raster_name)
-        raster_name <- paste(raster_name,"_",i,file_format,sep="") 
-      }
-      
-      #if(multiband==TRUE){
-      #  #raster_name_tmp <- basename(rast_name_var)
-      #  #raster_name <- basename(sub(file_format,"",raster_name))
-      #  if(out_suffix!=""){
-      #    raster_name_tmp <- paste(raster_name,"_",out_suffix,file_format,sep="")
-      #  }else{
-      #    raster_name_tmp <- paste(raster_name,file_format,sep="")
-      # }
-      #  bylayer_val <- FALSE #don't write out separate layer files for each "band"
-      #  rast_list <- file.path(out_dir,raster_name_tmp) #as return from function
-      #}
-      if(multiband==FALSE){
-        raster_name <- sub(file_format,"",raster_name)
-        raster_name_tmp <- paste(raster_name,file_format,sep="") #don't add output suffix because in suffix_str
-        bylayer_val <- TRUE #write out separate layer files for each "band"
-        rast_list <- file.path(out_dir,(paste(raster_name,"_",suffix_str,file_format,sep=""))) 
-      }
-      
-      suffix_str <- names(r_out)
-      
-      #Use compression option for tif
-      writeRaster(r_out,
-                  filename=file.path(out_dir,raster_name_tmp),
-                  bylayer=bylayer_val,
-                  suffix=suffix_str,
-                  overwrite=TRUE,
-                  #NAflag=NA_flag_val,
-                  #datatype=data_type_str,
-                  options=c("COMPRESS=LZW"))
-      
-      #l_r_A1[[i]] <- r_out    
-    }
-    
-  }
-  
-  ##### now splitting of raster time series stack
-  
-  if(is.null(window_val)){
-    r_out <- try(calc(r, 
-                      fun=function(y){harmonic_reg_raster(y,
-                                                          var_name=var_name,
-                                                          n=n_val,
-                                                          harmonic=harmonic_val)}))
-    
-    if(multiband==FALSE){
-      raster_name <- sub(file_format,"",raster_name)
-      raster_name_tmp <- paste(raster_name,file_format,sep="") #don't add output suffix because in suffix_str
-      bylayer_val <- TRUE #write out separate layer files for each "band"
-      rast_list <- file.path(out_dir,(paste(raster_name,"_",suffix_str,file_format,sep=""))) 
-    }
-    
-    suffix_str <- names(r_out)
-    
-    #Use compression option for tif
-    writeRaster(r_out,
-                filename=file.path(out_dir,raster_name_tmp),
-                bylayer=bylayer_val,
-                suffix=suffix_str,
-                overwrite=TRUE,
-                #NAflag=NA_flag_val,
-                #datatype=data_type_str,
-                options=c("COMPRESS=LZW"))
-    
-  }
-  
-  
-  return()
-}
 
 r_A1 <- stack(l_r_A1)
 plot(r_A1)
