@@ -210,9 +210,28 @@ x <- 1:230
 ## make this a function later
 
 raster_name <- "NDVI_amplitude.tif"
+harmonic_val <- NULL
+var_name <- "A"
+raster_name <- NULL
+raster_name <- "NDVI_amplitude.tif"
+file_format <- ".tif"
+multiband=F
+window_val <- 3
 
+debug(calcHarmonicRaster)
 
-calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,file_format=".tif",multiband=F,num_cores=1,raster_name=NULL,out_dir=NULL,){
+list_r <- calcHarmonicRaster(r,
+                   harmonic_val=harmonic_val,
+                   var_name=var_name,
+                   window_val=window_val,
+                   file_format=file_format,
+                   multiband=mulitband,
+                   num_cores=num_cores,
+                   raster_name=raster_name,
+                   out_dir=out_dir)
+
+  
+calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,file_format=".tif",multiband=F,num_cores=1,raster_name=NULL,out_dir=NULL){
   
   ### for A1, function seems to work for A1 and A2
   #l_r_A1 <- vector("list",length=n_split)
@@ -307,10 +326,38 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
     
   }
   
-  if()
+  ##### now splitting of raster time series stack
+  
+  if(is.null(window_val)){
+    r_out <- try(calc(r, 
+                      fun=function(y){harmonic_reg_raster(y,
+                                                          var_name=var_name,
+                                                          n=n_val,
+                                                          harmonic=harmonic_val)}))
+    
+    if(multiband==FALSE){
+      raster_name <- sub(file_format,"",raster_name)
+      raster_name_tmp <- paste(raster_name,file_format,sep="") #don't add output suffix because in suffix_str
+      bylayer_val <- TRUE #write out separate layer files for each "band"
+      rast_list <- file.path(out_dir,(paste(raster_name,"_",suffix_str,file_format,sep=""))) 
+    }
+    
+    suffix_str <- names(r_out)
+    
+    #Use compression option for tif
+    writeRaster(r_out,
+                filename=file.path(out_dir,raster_name_tmp),
+                bylayer=bylayer_val,
+                suffix=suffix_str,
+                overwrite=TRUE,
+                #NAflag=NA_flag_val,
+                #datatype=data_type_str,
+                options=c("COMPRESS=LZW"))
+    
+  }
   
   
-  
+  return()
 }
 
 r_A1 <- stack(l_r_A1)
