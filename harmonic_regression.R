@@ -61,7 +61,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
 harmonic_regression_functions <- "harmonic_regression_functions_05142019b.R"
-trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019.R"
+trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019c.R"
 source(file.path(script_path,harmonic_regression_functions))
 source(file.path(script_path,trend_methods_time_series_functions))
 
@@ -265,13 +265,12 @@ plot(r_phase,y=1)
 #y ~ A0 + b1 cos(x) + b2* sin(x)
 #y ~ b0 + b1*x1 + b2*x2
 
-#y_all <- as.numeric(data_df[1400,1:230])
-#y_all
+y_all <- as.numeric(data_df[1400,1:230])
+y_all
 
-i <- 1400
-dim(data_df)
-debug(calculate_theil_sen_time_series)
-test <- calculate_theil_sen_time_series(i,data_df,save_opt=FALSE,out_dir=".",out_suffix="")
+y <- y_all
+#debug(calculate_trend)
+test <- calculate_trend(y,mod_obj=FALSE,method="theil_sen")
   
   
 ################################### End of script #######################################
