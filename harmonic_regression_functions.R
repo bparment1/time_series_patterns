@@ -313,6 +313,8 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
     #split_obj$list_y[[1]]
     n_split <- nrow(intervals_df)
     
+    list_rast_out <- vector("list", length=n_split)
+    
     for(i in 1:n_split){
       start_val <- intervals_df$start[i]
       end_val <- intervals_df$end[i]
@@ -372,9 +374,11 @@ calcHarmonicRaster <- function(r,harmonic_val=NULL,var_name="A",window_val=23,fi
                   #datatype=data_type_str,
                   options=c("COMPRESS=LZW"))
       
-      #l_r_A1[[i]] <- r_out    
+      #l_r_A1[[i]] <- r_out
+      list_rast_out[[i]] <- rast_list 
+      
     }
-    
+    rast_list <- unlist(list_rast_out) 
   }
   
   ##### now splitting of raster time series stack
