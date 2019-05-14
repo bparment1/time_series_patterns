@@ -253,5 +253,7 @@ r_phase <- stack(list_r_phase)
 plot(r_phase)
 plot(r_phase,y=1)
 
+###### Now get the trend from stack (OLS and Theil Sen, as well as Kendall)
+
 ################################### End of script #######################################
 
