@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/10/2019
+## DATE MODIFIED: 05/14/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: General use script
@@ -60,7 +60,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05102019.R"
+crop_data_processing_functions <- "harmonic_regression_functions_05142019b.R"
 source(file.path(script_path,crop_data_processing_functions))
 
 ############################################################################
@@ -68,8 +68,10 @@ source(file.path(script_path,crop_data_processing_functions))
 
 #ARGS 1
 in_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/data"
-
 #ARGS 2
+out_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs"
+
+#ARGS 3
 infile_name_df <- "dat_reg2_var_list_NDVI_NDVI_Katrina_04102015.txt" #use this data to test filtering
 infile_name_raster <- "reg2_NDVI_katrina.tif"
 #ARGS 3
@@ -77,12 +79,10 @@ infile_name_raster <- "reg2_NDVI_katrina.tif"
 start_date <- "2012-11-01"  #new data starts in November 2012
 #ARGS 4
 end_date <- NULL
-#ARGS 5
-out_dir <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs"
 #ARGS 6
 create_out_dir_param=TRUE #create a new ouput dir if TRUE
 #ARGS 7
-out_suffix <-"example_ts_05102019" #output suffix for the files and ouptut folder #param 12
+out_suffix <-"example_ts_05142019" #output suffix for the files and ouptut folder #param 12
 #ARGS 8
 num_cores <- 2 # number of cores
 #range_window <- c("2012-01-01","2017-01-01")
@@ -113,7 +113,6 @@ if(create_out_dir_param==TRUE){
 #Create output directory
 
 infile_name_df <- file.path(in_dir,infile_name_df)
-#
 data_df <- read.table(infile_name_df,header=T,sep=",",stringsAsFactors = F)
 #names(data_df)
 #start_date <- "2004-01-01"
@@ -229,7 +228,6 @@ list_r <- calcHarmonicRaster(r,
                    out_dir=out_dir)
 
   
-
 r_A1 <- stack(l_r_A1)
 plot(r_A1)
 plot(l_r_A1[[5]])
