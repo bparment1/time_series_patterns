@@ -137,6 +137,7 @@ harmonic_results <- harmonic_regression(y,n,
                                         figure=F)
 
 #View(harmonic_results)
+harmonic_results$harmonic_df
 
 ####################
 #### This is synthetic value
@@ -210,14 +211,14 @@ x <- 1:230
 harmonic_val <- NULL
 var_name <- "A"
 #raster_name <- NULL
-raster_name <- "NDVI_amplitude.tif"
+raster_name <- "NDVI_amplitude_year.tif"
 file_format <- ".tif"
 multiband <- FALSE
 window_val <- 23
 
 #debug(calcHarmonicRaster)
 
-list_r <- calcHarmonicRaster(r,
+list_r_amplitude <- calcHarmonicRaster(r,
                    harmonic_val=harmonic_val,
                    var_name=var_name,
                    window_val=window_val,
@@ -227,14 +228,30 @@ list_r <- calcHarmonicRaster(r,
                    raster_name=raster_name,
                    out_dir=out_dir)
 
-  
-r_A1 <- stack(l_r_A1)
-plot(r_A1)
-plot(l_r_A1[[5]])
-plot(l_r_A1[[6]])
 
-l_r_A1
-plot(r_A1,y=1:2)
+harmonic_val <- NULL
+var_name <- "phase" #wiill be included in name
+#raster_name <- NULL
+raster_name <- "NDVI_year.tif"
+file_format <- ".tif"
+multiband <- FALSE
+window_val <- 23
+
+#debug(calcHarmonicRaster)
+
+list_r_phase <- calcHarmonicRaster(r,
+                             harmonic_val=harmonic_val,
+                             var_name=var_name,
+                             window_val=window_val,
+                             file_format=file_format,
+                             multiband=multiband,
+                             num_cores=num_cores,
+                             raster_name=raster_name,
+                             out_dir=out_dir)
+
+r_phase <- stack(list_r_phase)
+plot(r_phase)
+plot(r_phase,y=1)
 
 ################################### End of script #######################################
 
