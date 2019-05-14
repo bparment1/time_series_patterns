@@ -4,7 +4,7 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/14/2019
+## DATE MODIFIED: 05/15/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
 ## PROJECT: General use script
@@ -60,8 +60,10 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-crop_data_processing_functions <- "harmonic_regression_functions_05142019b.R"
-source(file.path(script_path,crop_data_processing_functions))
+harmonic_regression_functions <- "harmonic_regression_functions_05142019b.R"
+trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019.R"
+source(file.path(script_path,harmonic_regression_functions))
+source(file.path(script_path,trend_methods_time_series_functions))
 
 ############################################################################
 #####  Parameters and argument set up ###########
@@ -228,7 +230,7 @@ list_r_amplitude <- calcHarmonicRaster(r,
                    raster_name=raster_name,
                    out_dir=out_dir)
 
-
+list_r_amplitude
 harmonic_val <- NULL
 var_name <- "phase" #wiill be included in name
 #raster_name <- NULL
@@ -255,5 +257,22 @@ plot(r_phase,y=1)
 
 ###### Now get the trend from stack (OLS and Theil Sen, as well as Kendall)
 
+#data_df <- read.table(infile_name_df,header=T,sep=",",stringsAsFactors = F)
+#names(data_df)
+#start_date <- "2004-01-01"
+#start_date <- "2012-11-01"  #new data starts in November 2012
+
+#y ~ A0 + b1 cos(x) + b2* sin(x)
+#y ~ b0 + b1*x1 + b2*x2
+
+#y_all <- as.numeric(data_df[1400,1:230])
+#y_all
+
+i <- 1400
+dim(data_df)
+debug(calculate_theil_sen_time_series)
+test <- calculate_theil_sen_time_series(i,data_df,save_opt=FALSE,out_dir=".",out_suffix="")
+  
+  
 ################################### End of script #######################################
 
