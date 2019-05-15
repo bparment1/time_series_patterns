@@ -61,7 +61,7 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
 harmonic_regression_functions <- "harmonic_regression_functions_05142019b.R"
-trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019c.R"
+trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019f.R"
 source(file.path(script_path,harmonic_regression_functions))
 source(file.path(script_path,trend_methods_time_series_functions))
 
@@ -270,8 +270,21 @@ y_all
 
 y <- y_all
 #debug(calculate_trend)
-test <- calculate_trend(y,mod_obj=FALSE,method="theil_sen")
-  
-  
+test1 <- calculate_trend(y,mod_obj=FALSE,method="theil_sen")
+test2 <- calculate_trend(y,mod_obj=FALSE,method="ols")
+
+var_name="slope"
+test <- calc(r,FUN=trend_reg_raster)
+
+#debug(trend_reg_raster)
+test5 <- trend_reg_raster(y,var_name,method="ols")
+
+r_out <- try(calc(r, 
+                  fun=function(y){trend_reg_raster(y,
+                                                    var_name=var_name,
+                                                      method=method)}))
+
+plot(r_out)
+
 ################################### End of script #######################################
 
