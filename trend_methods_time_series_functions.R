@@ -159,8 +159,7 @@ trend_reg_raster <- function(y,var_name,method="theil_sen"){
   ### INPUTS:
   #1) y: input data, in this function the name of raster layer is expected
   #2) var_name: number of elements in the time series/sequence used for the harmonic reg.
-  #3) n: number of elements in the time series/sequence used for the harmonic reg.
-  #4) harmonic_val: number of harmonic to consider, if NULL then use default 2
+  #4) method: theil_sen or ols
   ### OUTPUTS
   #1) value_var_name: numeric vector of values from harmonic modeling
   
@@ -173,7 +172,7 @@ trend_reg_raster <- function(y,var_name,method="theil_sen"){
                                    method="theil_sen")
     
   #df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
-  df_in <- trend_results$trend_df
+  df_in <- trend_results$df_trend
   
   ## Select variables to predict for every pixels
   value_var_name <- df_in[[var_name]]
