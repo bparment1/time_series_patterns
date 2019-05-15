@@ -150,5 +150,37 @@ calculate_trend <- function(y,mod_obj=F,method="theil_sen"){
   return(trend_obj)
 }
 
+trend_reg_raster <- function(y,var_name,method="theil_sen"){
+  #
+  ## Function to generate outputs from harmonic regression for every pixel in a raster image.
+  ## Note that the output needed for the calc function used is a vector of values.
+  ## The output values can be amplitudes (A0, A1, A2), phases, p significance etc.
+  #
+  ### INPUTS:
+  #1) y: input data, in this function the name of raster layer is expected
+  #2) var_name: number of elements in the time series/sequence used for the harmonic reg.
+  #3) n: number of elements in the time series/sequence used for the harmonic reg.
+  #4) harmonic_val: number of harmonic to consider, if NULL then use default 2
+  ### OUTPUTS
+  #1) value_var_name: numeric vector of values from harmonic modeling
+  
+  ####### Start script #######
+  
+  #n <- layers(y)
+  
+  trend_results <- calculate_trend(y,
+                                   mod_obj=F,
+                                   method="theil_sen")
+    
+  #df_in <- subset(harmonic_results$harmonic_df,harmonic==harmonic)
+  df_in <- trend_results$trend_df
+  
+  ## Select variables to predict for every pixels
+  value_var_name <- df_in[[var_name]]
+  
+  ## Return values for raster:
+  return(value_var_name)
+}
+
 ########################## End of script #######################################
 
