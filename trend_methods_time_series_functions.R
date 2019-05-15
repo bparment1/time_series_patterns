@@ -50,15 +50,14 @@ library(mblm)
 
 ###### Functions used in this script and sourced from other files
 
-calculate_theil_sen_trend <- function(y,mod_obj=F){
+calculate_trend <- function(y,mod_obj=F,method="theil_sen"){
   #y,n,harmonic_val=NULL,mod_obj=F,figure=F
   #This function generates Theil Sen slope estimate using mblm package.
   #
   #INPUTS
-  #1) i: column index for input data.frame, used as y variable (trend variable)
-  #2) data_df: input data containing time series
-  #4) out_dir: output directory
-  #5) out_suffix: output suffix appended to written output on drive
+  #1) y:  y variable (trend variable)
+  #2) mod_obj: save mod obj?
+  #4) method: theil sen or ols option for trend
   #
   #OUTPUTS
   #1)
@@ -83,7 +82,7 @@ calculate_theil_sen_trend <- function(y,mod_obj=F){
   #df_mblm$time_index <- time_index
   #names(df_mblm)
   
-  if(method="theil_sen"){
+  if(method=="theil_sen"){
     df_val <- na.omit(df_val) # removes NA, might need to think about that later on
     ### automate formula input
     formula_str <- paste0(names(df_val)[1]," ~ ","time_index")
@@ -92,7 +91,7 @@ calculate_theil_sen_trend <- function(y,mod_obj=F){
     mod_obj <- mblm(formula_val,df_val)
   }
   
-  if(method="ols"){
+  if(method=="ols"){
     #df_val <- na.omit(df_val) # removes NA, might need to think about that later on
     ### automate formula input
     formula_str <- paste0(names(df_val)[1]," ~ ","time_index")
@@ -111,7 +110,8 @@ calculate_theil_sen_trend <- function(y,mod_obj=F){
   intercept <- coef(mod_obj)[1]
   
   #ID_ts <- subset_name
-  method_str <- "theil_sen"
+  #method_str <- "theil_sen"
+  n_obs <- sum(!is.na(y))
   
   if(!is.null(dates_val)){
     nt <- length(dates_val)
@@ -123,30 +123,31 @@ calculate_theil_sen_trend <- function(y,mod_obj=F){
     end_date <- NA
   }
   
-  duration_ts <- nt
-  slope_sign <- sign(slope_theil_sen)
+  n <- length(y)
+  slope_sign <- sign(slope)
+  #slope_sign <- sign(slope_theil_sen)
   
-  df_trend <- data.frame(ID_ts=ID_ts,
-                             intercept=intercept_theil_sen,
-                             slope=slope_theil_sen,
+  df_trend <- data.frame(intercept=intercept,
+                             slope=slope,
                              slope_sign=slope_sign,
-                             method=method_str,
+                             method=method,
                              start_date= start_date,
                              end_date = end_date,
-                             duration=nt)
+                             n=n,
+                             n_obs=n_obs)#number of valid observation (not NA) 
   
   #### Prepare object to return
-  obj_theil_sen <- list(mod_mblm,df_trend)
-  names(obj_theil_sen) <- c("mod_mblm","df_trend")
+  trend_obj <- list(mod_obj,df_trend)
+  names(trend_obj) <- c("mod_obj","df_trend")
   
   ##### save to disk
   
-  if(mod_obj==TRUE){
+  #if(mod_obj==TRUE){
     #obj_theil_sen_filename <- file.path(out_dir,paste("theil_sen_obj_",subset_name,"_",out_suffix,".RData",sep=""))
     #save(obj_theil_sen,file= obj_theil_sen_filename)
-  } 
+  #} 
   
-  return(obj_theil_sen)
+  return(trend_obj)
 }
 
 ########################## End of script #######################################
