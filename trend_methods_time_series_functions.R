@@ -50,7 +50,7 @@ library(mblm)
 
 ###### Functions used in this script and sourced from other files
 
-calculate_theil_sen_trend <- function(y,save_opt=FALSE,out_dir=".",out_suffix=""){
+calculate_theil_sen_trend <- function(y,mod_obj=F){
   #y,n,harmonic_val=NULL,mod_obj=F,figure=F
   #This function generates Theil Sen slope estimate using mblm package.
   #
@@ -79,21 +79,37 @@ calculate_theil_sen_trend <- function(y,save_opt=FALSE,out_dir=".",out_suffix=""
   
   dates_val <- NULL # set this later
   
-  df_mblm <- data.frame(y=y,time_index=time_index) #convert to data.frame since it was a zoo df
+  df_val <- data.frame(y=y,time_index=time_index) #convert to data.frame since it was a zoo df
   #df_mblm$time_index <- time_index
   #names(df_mblm)
   
-  df_mblm <- na.omit(df_mblm) # removes NA, might need to think about that later on
-  ### automate formula input
-  formula_str <- paste0(names(df_mblm)[1]," ~ ","time_index")
-  formula_mblm <- as.formula(formula_str) #transform object into formula
+  if(method="theil_sen"){
+    df_val <- na.omit(df_val) # removes NA, might need to think about that later on
+    ### automate formula input
+    formula_str <- paste0(names(df_val)[1]," ~ ","time_index")
+    formula_val <- as.formula(formula_str) #transform object into formula
+    
+    mod_obj <- mblm(formula_val,df_val)
+  }
   
-  mod_mblm <- mblm(formula_mblm,df_mblm)
+  if(method="ols"){
+    #df_val <- na.omit(df_val) # removes NA, might need to think about that later on
+    ### automate formula input
+    formula_str <- paste0(names(df_val)[1]," ~ ","time_index")
+    formula_val <- as.formula(formula_str) #transform object into formula
+    
+    mod_obj <- lm(formula_val,df_val)
+    
+  }
   
   ##### Extract information from model object mblm
   
-  slope_theil_sen <- coef(mod_mblm)[2]
-  intercept_theil_sen <- coef(mod_mblm)[1]
+  #slope_theil_sen <- coef(mod_mblm)[2]
+  #intercept_theil_sen <- coef(mod_mblm)[1]
+  
+  slope <- coef(mod_obj)[2]
+  intercept <- coef(mod_obj)[1]
+  
   #ID_ts <- subset_name
   method_str <- "theil_sen"
   
@@ -120,14 +136,14 @@ calculate_theil_sen_trend <- function(y,save_opt=FALSE,out_dir=".",out_suffix=""
                              duration=nt)
   
   #### Prepare object to return
-  obj_theil_sen <- list(mod_mblm,df_theil_sen)
-  names(obj_theil_sen) <- c("mod_mblm","df_theil_sen")
+  obj_theil_sen <- list(mod_mblm,df_trend)
+  names(obj_theil_sen) <- c("mod_mblm","df_trend")
   
   ##### save to disk
   
-  if(save_opt==TRUE){
-    obj_theil_sen_filename <- file.path(out_dir,paste("theil_sen_obj_",subset_name,"_",out_suffix,".RData",sep=""))
-    save(obj_theil_sen,file= obj_theil_sen_filename)
+  if(mod_obj==TRUE){
+    #obj_theil_sen_filename <- file.path(out_dir,paste("theil_sen_obj_",subset_name,"_",out_suffix,".RData",sep=""))
+    #save(obj_theil_sen,file= obj_theil_sen_filename)
   } 
   
   return(obj_theil_sen)
