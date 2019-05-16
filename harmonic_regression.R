@@ -131,7 +131,6 @@ plot(y_all[1:23])
 y <- y_all[1:24]
 n <- length(y)
 
-
 #debug(harmonic_regression)
 harmonic_results <- harmonic_regression(y,n,
                                         harmonic_val=NULL,
@@ -152,6 +151,8 @@ omega= 2*pi*p/n
 y <- 2*cos(omega*x) + rnorm(n, sd=0.2)
 # y_clean <- sin(2*x + 5)
 plot(y)
+
+#cor.test(y,method="kendall")
 
 harmonic_results2 <- harmonic_regression(y,n,
                                         harmonic_val=NULL,
