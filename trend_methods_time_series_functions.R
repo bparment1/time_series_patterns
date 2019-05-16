@@ -181,5 +181,56 @@ trend_reg_raster <- function(y,var_name,method="theil_sen"){
   return(value_var_name)
 }
 
+calcTrendRaster <- function(r,method="theil_sen",var_name="slope",file_format=".tif",multiband=F,num_cores=1,raster_name=NULL,out_dir=NULL){
+  
+  #var_name <- "A"
+  #raster_name <- NULL
+  #raster_name <- "NDVI_amplitude.tif"
+  #file_format <- ".tif"
+  #multiband=F
+  
+  ############ Start script ##################
+  
+  r_out <- try(calc(r, 
+                    fun=function(y){trend_reg_raster(y,
+                                                     var_name=var_name,
+                                                     method=method)}))
+  
+  names(r_out) <- paste0(var_name,"_",method)
+      
+  ########## Write out
+      
+  if(is.null(raster_name)){
+    out_raster_name <- paste(var_name,"_",i,file_format,sep="") 
+  }else{
+    out_raster_name <- sub(file_format,"",raster_name)
+    out_raster_name <- paste(out_raster_name,"_",i,file_format,sep="") 
+  }
+      
+      #if(multiband==TRUE){
+      #  #raster_name_tmp <- basename(rast_name_var)
+      #  #raster_name <- basename(sub(file_format,"",raster_name))
+      #  if(out_suffix!=""){
+      #    raster_name_tmp <- paste(raster_name,"_",out_suffix,file_format,sep="")
+      #  }else{
+      #    raster_name_tmp <- paste(raster_name,file_format,sep="")
+      # }
+      #  bylayer_val <- FALSE #don't write out separate layer files for each "band"
+      #  rast_list <- file.path(out_dir,raster_name_tmp) #as return from function
+      #}
+      suffix_str <- names(r_out)
+      
+  if(multiband==FALSE){
+    out_raster_name <- sub(file_format,"",out_raster_name)
+    raster_name_tmp <- paste(out_raster_name,file_format,sep="") #don't add output suffix because in suffix_str
+    bylayer_val <- TRUE #write out separate layer files for each "band"
+    rast_list <- file.path(out_dir,(paste(out_raster_name,"_",suffix_str,file_format,sep=""))) 
+  }
+      
+  #### return object
+  
+  return(rast_list)
+}
+
 ########################## End of script #######################################
 
