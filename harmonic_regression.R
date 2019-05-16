@@ -4,10 +4,10 @@
 ## Performing harmonic regression time series data to evaluate amplitudes and phases for Managing Hurriance Group.
 ##
 ## DATE CREATED: 10/01/2018
-## DATE MODIFIED: 05/15/2019
+## DATE MODIFIED: 05/16/2019
 ## AUTHORS: Benoit Parmentier
 ## Version: 1
-## PROJECT: General use script
+## PROJECT: General use script for different projects
 ## ISSUE: 
 ## TO DO:
 ##
@@ -60,8 +60,8 @@ create_dir_fun <- function(outDir,out_suffix=NULL){
 #Benoit setup
 script_path <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/scripts"
 
-harmonic_regression_functions <- "harmonic_regression_functions_05142019b.R"
-trend_methods_time_series_functions <- "trend_methods_time_series_functions_05152019f.R"
+harmonic_regression_functions <- "harmonic_regression_functions_05152019.R"
+trend_methods_time_series_functions <- "trend_methods_time_series_functions_05162019b.R"
 source(file.path(script_path,harmonic_regression_functions))
 source(file.path(script_path,trend_methods_time_series_functions))
 
@@ -255,6 +255,7 @@ r_phase <- stack(list_r_phase)
 plot(r_phase)
 plot(r_phase,y=1)
 
+##############################
 ###### Now get the trend from stack (OLS and Theil Sen, as well as Kendall)
 
 #data_df <- read.table(infile_name_df,header=T,sep=",",stringsAsFactors = F)
@@ -285,6 +286,26 @@ r_out <- try(calc(r,
                                                       method=method)}))
 
 plot(r_out)
+calcTrendRaster
+
+raster_name <- "NDVI_trend.tif"
+file_format <- ".tif"
+method <- "theil_sen"
+var_name <- "slope"
+
+#undebug(calcTrendRaster)
+list_r_ols_NDVI <- calcTrendRaster(r,
+                method=method,
+                var_name=var_name,
+                file_format=file_format,
+                multiband=F,
+                num_cores=1,
+                raster_name=raster_name,
+                out_dir=out_dir)
+list_r_ols_NDVI <- "/nfs/bparmentier-data/Data/projects/managing_hurricanes/outputs/output_example_ts_05142019/NDVI_trend_slope_theil_sen.tif"  
+list_r_ols_NDVI <- raster(list_r_ols_NDVI)
+
+### Will need kendall later on!!
 
 ################################### End of script #######################################
 
